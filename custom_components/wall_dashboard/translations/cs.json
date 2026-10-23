@@ -1,0 +1,140 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub je nástěnný dashboard pro Home Assistant. Po potvrzení se objeví na postranním panelu jako „Nucleum Hub“, pro všechny uživatele a na všech obrazovkách. Navíc u vás doma převádí do JPEG obaly hudby, které tablet neumí zobrazit (například obaly HEIC z Apple TV), aniž by se ptal internetu. Není co nastavovat."
+      },
+      "trial": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub je nástěnný dashboard pro Home Assistant. Po potvrzení se objeví na postranním panelu jako „Nucleum Hub“, pro všechny uživatele a na všech obrazovkách. Navíc u vás doma převádí do JPEG obaly hudby, které tablet neumí zobrazit (například obaly HEIC z Apple TV), aniž by se ptal internetu. Není co nastavovat.\n\n**Bezplatná 60minutová zkušební doba začne, jakmile zvolíte Odeslat.** Integrace pak kontaktuje náš licenční server, aby ji spustila a později ověřovala vaši licenci. Zvolením Odeslat přijímáte [licenční smlouvu (EULA)](https://nucleumhub.com/cs/legal/eula) pro zkušební dobu. Jak zacházíme s údaji: [Soukromí a cookies](https://nucleumhub.com/cs/legal/privacy)."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nucleum Hub je už nastavený. Pro každý Home Assistant stačí jeden."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Licence Nucleum Hub",
+        "description": "{status}",
+        "menu_options": {
+          "activate": "Zadat licenční klíč",
+          "check": "Ověřit licenci hned",
+          "release": "Odebrat licenci z tohoto Home Assistantu"
+        }
+      },
+      "activate": {
+        "title": "Aktivace licence",
+        "description": "{status}\n\nVložte licenční klíč z e-mailu, který jste dostali po nákupu. Nucleum Hub ho jednou aktivuje online a potom ho sám ověřuje u licenčního serveru. Klíč se tu neukládá: e-mail si uschovejte.",
+        "data": {
+          "key": "Licenční klíč",
+          "role": "Tento Home Assistant je"
+        },
+        "data_description": {
+          "key": "Jako v e-mailu: WD-XXXXX-XXXXX-XXXXX-XXXXX. Na velikosti písmen a mezerách nezáleží.",
+          "role": "Jedna licence platí pro jednu domácnost plus jednu testovací instanci. Dashboard ji v Nastavení › O aplikaci označuje jako testovací instanci; zastaví se, když se 7 dní nespojí s licenčním serverem."
+        }
+      },
+      "move": {
+        "title": "Přesunout licenci sem?",
+        "description": "Tato licence je aktivní v jiné domácnosti, naposledy viděné {last_seen}. Potvrďte přesun na tento Home Assistant: druhá domácnost při svém dalším ověření zobrazí obrazovku aktivace. Licenci můžete sami přesunout 3krát za 12 měsíců; zbývající přesuny: {moves_left}."
+      },
+      "move_staging": {
+        "title": "Přesunout testovací instanci sem?",
+        "description": "Testovací instancí této licence je jiný Home Assistant, naposledy viděný {last_seen}. Potvrďte, aby se testovací instancí stal tento: ten druhý při svém dalším ověření zobrazí obrazovku aktivace. Přesun testovací instance se jako přesun nepočítá."
+      },
+      "release": {
+        "title": "Odebrat licenci z tohoto Home Assistantu?",
+        "description": "Potvrďte uvolnění licence, abyste ji mohli aktivovat na jiné instalaci stejným klíčem. Panel tady pak zobrazí obrazovku aktivace. Počítá se to jako jeden ze 3 přesunů, které můžete sami udělat za 12 měsíců; zbývající přesuny: {moves_left}."
+      },
+      "release_staging": {
+        "title": "Odebrat licenci z této testovací instance?",
+        "description": "Potvrďte uvolnění licence z této testovací instance, která pak zobrazí obrazovku aktivace. Jako přesun se to nepočítá."
+      }
+    },
+    "error": {
+      "invalid_key": "Klíč je zadaný špatně: jeden z jeho znaků nesedí. Zkopírujte ho znovu z e-mailu.",
+      "unknown_key": "Žádná licence nemá tento klíč. Zkontrolujte, že jste z e-mailu zkopírovali celý klíč.",
+      "licence_inactive": "Licence tohoto klíče byla vrácena nebo zastavena. Napište podpoře, pokud si myslíte, že jde o chybu.",
+      "subscription_ended": "Předplatné tohoto klíče skončilo. Nové si můžete založit na webu.",
+      "plan_unsupported": "Tento klíč patří ke staršímu plánu. Napište podpoře a vyřešíme to.",
+      "active_elsewhere": "Tato licence je aktivní v jiné domácnosti.",
+      "move_limit": "Využili jste 3 přesuny za posledních 12 měsíců. Pro přesun licence napište podpoře.",
+      "home_has_licence": "Tento Home Assistant už má jinou licenci. Nejdřív ji odeberte (Odebrat licenci z tohoto Home Assistantu) a pak zadejte nový klíč.",
+      "role_conflict": "Tento Home Assistant už má tuto licenci v druhé roli. Nejdřív licenci odeberte a pak ji znovu aktivujte s požadovanou rolí.",
+      "conflict": "Licence se ve stejné chvíli změnila jinde. Zkuste to znovu.",
+      "rate_limited": "Příliš mnoho pokusů v krátké době. Zkuste to znovu za {minutes} min.",
+      "not_configured": "Tato verze Nucleum Hub zatím nezná adresu licenčního serveru, takže se nic neodeslalo. Nainstalujte vydanou verzi.",
+      "cannot_connect": "Licenční server se nepodařilo zastihnout. Zkontrolujte, že je Home Assistant připojený k internetu, a zkuste to znovu.",
+      "identity": "Home Assistant zatím neposkytl údaje o své instalaci. Restartujte Home Assistant a zkuste to znovu.",
+      "invalid_token": "Odpověď licenčního serveru se na tomto Home Assistantu nepodařilo ověřit. Zkontrolujte datum, čas a časové pásmo Home Assistantu, a pokud to trvá, aktualizujte Nucleum Hub.",
+      "not_bound": "Tento Home Assistant už licenci nemá. Zadejte klíč znovu.",
+      "unavailable": "Licence teď na tomto Home Assistantu nemůže fungovat (důvod je v protokolu Home Assistantu). Panel zůstává plně použitelný.",
+      "unknown": "Něco nečekaného se pokazilo. Zkuste to znovu; pokud to trvá, hledejte wall_dashboard v protokolu Home Assistantu."
+    },
+    "abort": {
+      "licence_not_running": "Licence neběží: Nucleum Hub není načtený, nebo se jeho licence nemohla spustit (hledejte wall_dashboard v protokolu Home Assistantu). Panel zůstává plně použitelný.",
+      "activated": "Vaše licence je na tomto Home Assistantu aktivní.\n\n{status}",
+      "checked": "{status}",
+      "check_failed": "Licenční server se nepodařilo zastihnout. Licence pokračuje jako dosud a ověří se znovu později.\n\n{status}",
+      "check_later": "Licence byla ověřena před chvílí. Znovu ji můžete ověřit za {minutes} min.\n\n{status}",
+      "not_configured": "Tato verze Nucleum Hub zatím nezná adresu licenčního serveru, takže se nic neodeslalo.\n\n{status}",
+      "not_licensed": "Na tomto Home Assistantu není aktivní žádná licence.\n\n{status}",
+      "released": "Licence byla z tohoto Home Assistantu odebrána. Stejným klíčem ji můžete aktivovat na jiné instalaci. Zbývající přesuny: {moves_left}.\n\n{status}",
+      "released_staging": "Licence byla z této testovací instance odebrána.\n\n{status}"
+    }
+  },
+  "selector": {
+    "role": {
+      "options": {
+        "prod": "Moje domácnost",
+        "staging": "Testovací instance"
+      }
+    },
+    "licence_plan": {
+      "options": {
+        "sub": "Měsíční předplatné",
+        "life": "Jednorázová licence",
+        "trial": "Zkušební doba",
+        "other": "Licence"
+      }
+    },
+    "licence_status": {
+      "options": {
+        "trial_pending": "Spouští se vaše 60minutová zkušební doba…",
+        "full": "Licence je aktivní.",
+        "full_until": "Licence je aktivní, aktuální období do {until}.",
+        "trial": "Zkušební doba: vše je otevřené do {until}.",
+        "payment_due": "Poslední platba neprošla. Vše funguje dál do {until}: zaplaťte přes odkaz v e-mailu od Paddle.",
+        "provisional": "Vaše licence potřebuje jedno ověření u licenčního serveru. Připojte Home Assistant k internetu do {until}.",
+        "renewal_due": "Vaši licenci je třeba obnovit do {until}.",
+        "kept_lts": "Váš rok aktualizací skončil: tuto verzi si ponecháváte, s bezpečnostními opravami její řady LTS.",
+        "uncovered": "Tato verze vyšla až po konci vašich aktualizací. Vraťte se k verzi, kterou licence pokrývá, nebo licenci obnovte.",
+        "broken_environment": "Licenci nelze na tomto Home Assistantu ověřit (důvod je v protokolu), takže panel zůstává plně použitelný.",
+        "no_token": "Zatím žádná licence. Vložte klíč z e-mailu o nákupu.",
+        "lost": "Údaje o licenci na tomto Home Assistant se ztratily (poškozený nebo smazaný soubor), ale vaše licence je stále vázaná na tuto domácnost. Vložte znovu klíč z e-mailu o nákupu: nepočítá se to jako přesun.",
+        "invalid": "Licenci se nepodařilo ověřit. Zadejte klíč znovu.",
+        "moved": "Licence byla přesunuta na jiný Home Assistant. Zadejte klíč znovu, abyste ji vrátili sem.",
+        "trial_over": "60minutová zkušební doba skončila. Kupte si licenci, abyste mohli panel dál používat.",
+        "subscription_expired": "Předplatné vypršelo. Obnovte ho, abyste mohli panel znovu používat.",
+        "staging_unverified": "Tuto testovací instanci se 7 dní nepodařilo ověřit u licenčního serveru, proto je zastavená. Připojte ji k internetu a pak licenci ověřte.",
+        "life_unverified": "Připojte Home Assistant k internetu, abyste potvrdili svou licenci. Jediné úspěšné ověření ji učiní trvalou.",
+        "refunded": "Tato licence byla vrácena, a proto skončila.",
+        "revoked": "Tuto licenci zastavila podpora. Napište podpoře, pokud si myslíte, že jde o chybu.",
+        "expired": "Platnost této licence vypršela.",
+        "verify_security": "Vaše licence nebyla ověřena u licenčního serveru déle než 30 dní. Připojte Home Assistant k internetu, aby panel dál dostával bezpečnostní opravy.",
+        "cloned": "Stejná licence běží ve dvou domácnostech. Jednu z nich přesuňte: odeberte tam licenci, nebo jí dejte vlastní klíč.",
+        "checked": "Naposledy ověřeno u licenčního serveru: {when}."
+      }
+    },
+    "licence_link": {
+      "options": {
+        "buy": "Koupit licenci: {link}",
+        "renew": "Obnovit: {link}",
+        "payment": "Váš účet: {link}"
+      }
+    }
+  }
+}

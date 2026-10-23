@@ -1,0 +1,140 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub este un dashboard de perete pentru Home Assistant. Apasă Trimite și apare în bara laterală ca „Nucleum Hub”, pentru toți utilizatorii și pe toate ecranele. În plus, convertește în JPEG, în casă, copertele muzicii pe care o tabletă nu le poate arăta (de exemplu cele HEIC de la un Apple TV), fără să ceară nimic de pe internet. Nu e nimic de setat."
+      },
+      "trial": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub este un dashboard de perete pentru Home Assistant. Apasă Trimite și apare în bara laterală ca „Nucleum Hub”, pentru toți utilizatorii și pe toate ecranele. În plus, convertește în JPEG, în casă, copertele muzicii pe care o tabletă nu le poate arăta (de exemplu cele HEIC de la un Apple TV), fără să ceară nimic de pe internet. Nu e nimic de setat.\n\n**Evaluarea gratuită de 60 de minute pornește când apeși Trimite.** Integrarea contactează atunci serverul nostru de licențe, ca s-o pornească și, mai târziu, ca să-ți verifice licența. Apăsând Trimite, accepți [contractul de licență (EULA)](https://nucleumhub.com/ro/legal/eula) pentru evaluare. Cum folosim datele: [Confidențialitate și cookie-uri](https://nucleumhub.com/ro/legal/privacy)."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nucleum Hub este deja configurat. Unul ajunge pentru fiecare Home Assistant."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Licența Nucleum Hub",
+        "description": "{status}",
+        "menu_options": {
+          "activate": "Introdu o cheie de licență",
+          "check": "Verifică licența acum",
+          "release": "Scoate licența de pe acest Home Assistant"
+        }
+      },
+      "activate": {
+        "title": "Activează licența",
+        "description": "{status}\n\nLipește cheia de licență din e-mailul primit după cumpărare. Nucleum Hub o activează o dată online, apoi o verifică singur cu serverul de licențe. Cheia nu se păstrează aici: păstrează e-mailul.",
+        "data": {
+          "key": "Cheia de licență",
+          "role": "Acest Home Assistant este"
+        },
+        "data_description": {
+          "key": "Ca în e-mail: WD-XXXXX-XXXXX-XXXXX-XXXXX. Literele mari sau mici și spațiile nu contează.",
+          "role": "O licență acoperă o casă, plus o instanță de test. Dashboard-ul o arată ca instanță de test în Setări › Despre; se oprește dacă nu ajunge la serverul de licențe timp de 7 zile."
+        }
+      },
+      "move": {
+        "title": "Muți licența aici?",
+        "description": "Licența e activă în altă casă, văzută ultima dată pe {last_seen}. Confirmă ca s-o muți pe acest Home Assistant: cealaltă casă va arăta ecranul de activare la următoarea ei verificare. Poți muta singur licența de 3 ori în 12 luni; mutări rămase: {moves_left}."
+      },
+      "move_staging": {
+        "title": "Muți instanța de test aici?",
+        "description": "Instanța de test a acestei licențe e alt Home Assistant, văzut ultima dată pe {last_seen}. Confirmă ca acesta să devină instanța de test: celălalt va arăta ecranul de activare la următoarea lui verificare. Mutarea instanței de test nu se numără ca mutare."
+      },
+      "release": {
+        "title": "Scoți licența de pe acest Home Assistant?",
+        "description": "Confirmă ca să eliberezi licența, ca s-o poți activa pe altă instalare cu aceeași cheie. Dashboard-ul de aici va arăta apoi ecranul de activare. Se numără ca una din cele 3 mutări pe care le poți face singur în 12 luni; mutări rămase: {moves_left}."
+      },
+      "release_staging": {
+        "title": "Scoți licența de pe această instanță de test?",
+        "description": "Confirmă ca să eliberezi licența de pe această instanță de test, care va arăta apoi ecranul de activare. Nu se numără ca mutare."
+      }
+    },
+    "error": {
+      "invalid_key": "Cheia e scrisă greșit: unul din caractere nu e bun. Copiaz-o din nou din e-mail.",
+      "unknown_key": "Nicio licență nu are această cheie. Verifică dacă ai copiat toată cheia din e-mail.",
+      "licence_inactive": "Licența acestei chei a fost rambursată sau oprită. Scrie-ne la suport dacă ți se pare o greșeală.",
+      "subscription_ended": "Abonamentul acestei chei s-a încheiat. Poți începe unul nou pe site.",
+      "plan_unsupported": "Cheia aparține unui plan mai vechi. Scrie-ne la suport și rezolvăm.",
+      "active_elsewhere": "Licența e activă în altă casă.",
+      "move_limit": "Ai folosit cele 3 mutări din ultimele 12 luni. Scrie-ne la suport ca să muți licența.",
+      "home_has_licence": "Acest Home Assistant are deja altă licență. Scoate-o întâi (Scoate licența de pe acest Home Assistant), apoi introdu cheia nouă.",
+      "role_conflict": "Acest Home Assistant are deja această licență în celălalt rol. Scoate întâi licența, apoi activeaz-o din nou cu rolul dorit.",
+      "conflict": "Licența s-a schimbat în același moment în altă parte. Încearcă din nou.",
+      "rate_limited": "Prea multe încercări într-un timp scurt. Încearcă din nou peste {minutes} minute.",
+      "not_configured": "Această versiune de Nucleum Hub nu știe încă adresa serverului de licențe, deci nu s-a trimis nimic. Instalează o versiune lansată.",
+      "cannot_connect": "Serverul de licențe nu a putut fi contactat. Verifică dacă Home Assistant e conectat la internet, apoi încearcă din nou.",
+      "identity": "Home Assistant nu și-a dat încă datele instalării. Repornește Home Assistant și încearcă din nou.",
+      "invalid_token": "Răspunsul serverului de licențe nu a putut fi verificat pe acest Home Assistant. Verifică data, ora și fusul orar din Home Assistant, apoi, dacă rămâne așa, actualizează Nucleum Hub.",
+      "not_bound": "Acest Home Assistant nu mai ține licența. Introdu din nou cheia.",
+      "unavailable": "Licența nu poate funcționa acum pe acest Home Assistant (jurnalul Home Assistant spune de ce). Dashboard-ul rămâne complet utilizabil.",
+      "unknown": "Ceva neașteptat n-a mers. Încearcă din nou; dacă rămâne, caută wall_dashboard în jurnalul Home Assistant."
+    },
+    "abort": {
+      "licence_not_running": "Licența nu rulează: Nucleum Hub nu e încărcat sau licența lui nu a putut porni (caută wall_dashboard în jurnalul Home Assistant). Dashboard-ul rămâne complet utilizabil.",
+      "activated": "Licența ta e activă pe acest Home Assistant.\n\n{status}",
+      "checked": "{status}",
+      "check_failed": "Serverul de licențe nu a putut fi contactat. Licența merge mai departe ca până acum și se verifică din nou mai târziu.\n\n{status}",
+      "check_later": "Licența a fost verificată acum câteva clipe. O poți verifica din nou peste {minutes} minute.\n\n{status}",
+      "not_configured": "Această versiune de Nucleum Hub nu știe încă adresa serverului de licențe, deci nu s-a trimis nimic.\n\n{status}",
+      "not_licensed": "Nicio licență nu e activă pe acest Home Assistant.\n\n{status}",
+      "released": "Licența a fost scoasă de pe acest Home Assistant. O poți activa pe altă instalare cu aceeași cheie. Mutări rămase: {moves_left}.\n\n{status}",
+      "released_staging": "Licența a fost scoasă de pe această instanță de test.\n\n{status}"
+    }
+  },
+  "selector": {
+    "role": {
+      "options": {
+        "prod": "Casa mea",
+        "staging": "O instanță de test"
+      }
+    },
+    "licence_plan": {
+      "options": {
+        "sub": "Abonament lunar",
+        "life": "Licență o dată",
+        "trial": "Perioadă de probă",
+        "other": "Licență"
+      }
+    },
+    "licence_status": {
+      "options": {
+        "trial_pending": "Pornește perioada ta de probă de 60 de minute…",
+        "full": "Licență activă.",
+        "full_until": "Licență activă, perioada curentă până pe {until}.",
+        "trial": "Perioadă de probă: totul e deschis până pe {until}.",
+        "payment_due": "Ultima plată nu a reușit. Totul merge mai departe până pe {until}: plătește cu linkul din e-mailul de la Paddle.",
+        "provisional": "Licența ta are nevoie de o verificare cu serverul de licențe. Conectează Home Assistant la internet înainte de {until}.",
+        "renewal_due": "Licența ta trebuie reînnoită înainte de {until}.",
+        "kept_lts": "Anul tău de actualizări s-a încheiat: păstrezi această versiune, cu reparațiile de securitate ale liniei ei LTS.",
+        "uncovered": "Această versiune a apărut după ce s-au încheiat actualizările tale. Întoarce-te la o versiune acoperită de licență sau reînnoiește.",
+        "broken_environment": "Licența nu poate fi verificată pe acest Home Assistant (jurnalul spune de ce), deci dashboard-ul rămâne complet utilizabil.",
+        "no_token": "Nicio licență încă. Lipește cheia din e-mailul de cumpărare.",
+        "lost": "Datele licenței de pe acest Home Assistant s-au pierdut (un fișier deteriorat sau șters), dar licența ta e în continuare legată de această casă. Lipește din nou cheia din e-mailul de cumpărare: nu se socotește ca mutare.",
+        "invalid": "Licența nu a putut fi verificată. Introdu din nou cheia.",
+        "moved": "Licența a fost mutată pe alt Home Assistant. Introdu din nou cheia ca s-o aduci înapoi aici.",
+        "trial_over": "Perioada de probă de 60 de minute s-a încheiat. Cumpără o licență ca să folosești în continuare dashboard-ul.",
+        "subscription_expired": "Abonamentul a expirat. Reînnoiește-l ca să folosești din nou dashboard-ul.",
+        "staging_unverified": "Această instanță de test nu a putut fi verificată cu serverul de licențe timp de 7 zile, deci e oprită. Conectează-o la internet, apoi verifică licența.",
+        "life_unverified": "Leagă Home Assistant la internet ca să-ți confirmi licența. O singură verificare reușită o face permanentă.",
+        "refunded": "Această licență a fost rambursată, deci s-a încheiat.",
+        "revoked": "Această licență a fost oprită de suport. Scrie-ne la suport dacă ți se pare o greșeală.",
+        "expired": "Această licență a expirat.",
+        "verify_security": "Licența ta nu a mai fost verificată cu serverul de licențe de peste 30 de zile. Conectează Home Assistant la internet, ca dashboard-ul să primească în continuare reparațiile de securitate.",
+        "cloned": "Aceeași licență rulează în două case. Mută una dintre ele: scoate licența de acolo sau dă-i o cheie a ei.",
+        "checked": "Ultima verificare cu serverul de licențe: {when}."
+      }
+    },
+    "licence_link": {
+      "options": {
+        "buy": "Cumpără o licență: {link}",
+        "renew": "Reînnoiește: {link}",
+        "payment": "Contul tău: {link}"
+      }
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub is een wanddashboard voor Home Assistant. Na bevestigen verschijnt het in de zijbalk als ‘Nucleum Hub’, voor alle gebruikers en op alle schermen. Daarnaast zet het albumhoezen die een tablet niet kan tonen (bijvoorbeeld de HEIC-hoezen van een Apple TV) bij jou thuis om naar JPEG, zonder iets aan het internet te vragen. Er valt niets in te stellen."
+      },
+      "trial": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub is een wanddashboard voor Home Assistant. Na bevestigen verschijnt het in de zijbalk als ‘Nucleum Hub’, voor alle gebruikers en op alle schermen. Daarnaast zet het albumhoezen die een tablet niet kan tonen (bijvoorbeeld de HEIC-hoezen van een Apple TV) bij jou thuis om naar JPEG, zonder iets aan het internet te vragen. Er valt niets in te stellen.\n\n**De gratis proefperiode van 60 minuten begint wanneer je Verzenden kiest.** De integratie neemt dan contact op met onze licentieserver, om die te starten en later om je licentie te controleren. Door Verzenden te kiezen, aanvaard je de [licentieovereenkomst (EULA)](https://nucleumhub.com/nl/legal/eula) voor de proefperiode. Hoe we met gegevens omgaan: [Privacy en cookies](https://nucleumhub.com/nl/legal/privacy)."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nucleum Hub is al ingesteld. Eén per Home Assistant is genoeg."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Licentie van Nucleum Hub",
+        "description": "{status}",
+        "menu_options": {
+          "activate": "Een licentiesleutel invoeren",
+          "check": "De licentie nu controleren",
+          "release": "De licentie van deze Home Assistant verwijderen"
+        }
+      },
+      "activate": {
+        "title": "Je licentie activeren",
+        "description": "{status}\n\nPlak de licentiesleutel uit de e-mail die je na je aankoop kreeg. Nucleum Hub activeert hem één keer online en controleert hem daarna zelf bij de licentieserver. De sleutel wordt hier niet bewaard: bewaar de e-mail.",
+        "data": {
+          "key": "Licentiesleutel",
+          "role": "Deze Home Assistant is"
+        },
+        "data_description": {
+          "key": "Zoals in de e-mail: WD-XXXXX-XXXXX-XXXXX-XXXXX. Hoofdletters, kleine letters en spaties maken niet uit.",
+          "role": "Eén licentie geldt voor één huis plus één testinstantie. Het dashboard toont haar als testinstantie onder Instellingen › Over; ze stopt als ze de licentieserver 7 dagen niet bereikt."
+        }
+      },
+      "move": {
+        "title": "De licentie hierheen verhuizen?",
+        "description": "Deze licentie is actief in een ander huis, voor het laatst gezien op {last_seen}. Bevestig om hem naar deze Home Assistant te verhuizen: het andere huis toont bij zijn volgende controle het activeringsscherm. Je kunt de licentie zelf 3 keer in 12 maanden verhuizen; resterende verhuizingen: {moves_left}."
+      },
+      "move_staging": {
+        "title": "De testinstantie hierheen verhuizen?",
+        "description": "De testinstantie van deze licentie is een andere Home Assistant, voor het laatst gezien op {last_seen}. Bevestig om in plaats daarvan deze de testinstantie te maken: de andere toont bij zijn volgende controle het activeringsscherm. Het verhuizen van de testinstantie telt niet als verhuizing."
+      },
+      "release": {
+        "title": "De licentie van deze Home Assistant verwijderen?",
+        "description": "Bevestig om de licentie vrij te geven, zodat je hem met dezelfde sleutel op een andere installatie kunt activeren. Het dashboard hier toont daarna het activeringsscherm. Dit telt als een van de 3 verhuizingen die je zelf in 12 maanden kunt doen; resterende verhuizingen: {moves_left}."
+      },
+      "release_staging": {
+        "title": "De licentie van deze testinstantie verwijderen?",
+        "description": "Bevestig om de licentie van deze testinstantie vrij te geven; die toont daarna het activeringsscherm. Dit telt niet als verhuizing."
+      }
+    },
+    "error": {
+      "invalid_key": "De sleutel is verkeerd getypt: een van de tekens klopt niet. Kopieer hem opnieuw uit de e-mail.",
+      "unknown_key": "Geen enkele licentie heeft deze sleutel. Controleer of je de hele sleutel uit de e-mail hebt gekopieerd.",
+      "licence_inactive": "De licentie van deze sleutel is terugbetaald of stopgezet. Schrijf naar support als je denkt dat dit een vergissing is.",
+      "subscription_ended": "Het abonnement van deze sleutel is afgelopen. Je kunt op de website een nieuw abonnement nemen.",
+      "plan_unsupported": "Deze sleutel hoort bij een ouder plan. Schrijf naar support, dan lossen wij het op.",
+      "active_elsewhere": "Deze licentie is actief in een ander huis.",
+      "move_limit": "Je hebt de 3 verhuizingen van de afgelopen 12 maanden gebruikt. Schrijf naar support om de licentie te verhuizen.",
+      "home_has_licence": "Deze Home Assistant heeft al een andere licentie. Verwijder die eerst (De licentie van deze Home Assistant verwijderen) en voer dan de nieuwe sleutel in.",
+      "role_conflict": "Deze Home Assistant heeft deze licentie al in de andere rol. Verwijder eerst de licentie en activeer hem daarna opnieuw met de gewenste rol.",
+      "conflict": "De licentie is op hetzelfde moment ergens anders gewijzigd. Probeer het opnieuw.",
+      "rate_limited": "Te veel pogingen in korte tijd. Probeer het over {minutes} minuten opnieuw.",
+      "not_configured": "Deze build van Nucleum Hub kent het adres van de licentieserver nog niet, dus er is niets verstuurd. Installeer een uitgebrachte versie.",
+      "cannot_connect": "De licentieserver was niet bereikbaar. Controleer of Home Assistant met internet verbonden is en probeer het dan opnieuw.",
+      "identity": "Home Assistant heeft zijn installatiegegevens nog niet doorgegeven. Herstart Home Assistant en probeer het opnieuw.",
+      "invalid_token": "Het antwoord van de licentieserver kon op deze Home Assistant niet worden gecontroleerd. Controleer de datum, de tijd en de tijdzone van Home Assistant en werk Nucleum Hub bij als het zo blijft.",
+      "not_bound": "Deze Home Assistant heeft de licentie niet meer. Voer de sleutel opnieuw in.",
+      "unavailable": "De licentie kan nu niet werken op deze Home Assistant (het logboek van Home Assistant zegt waarom). Het dashboard blijft volledig bruikbaar.",
+      "unknown": "Er ging iets onverwachts mis. Probeer het opnieuw; als het zo blijft, zoek dan naar wall_dashboard in het logboek van Home Assistant."
+    },
+    "abort": {
+      "licence_not_running": "De licentie draait niet: Nucleum Hub is niet geladen, of de licentie kon niet starten (zoek naar wall_dashboard in het logboek van Home Assistant). Het dashboard blijft volledig bruikbaar.",
+      "activated": "Je licentie is actief op deze Home Assistant.\n\n{status}",
+      "checked": "{status}",
+      "check_failed": "De licentieserver was niet bereikbaar. De licentie gaat door zoals ze was en wordt later opnieuw gecontroleerd.\n\n{status}",
+      "check_later": "De licentie is net gecontroleerd. Je kunt hem over {minutes} minuten opnieuw controleren.\n\n{status}",
+      "not_configured": "Deze build van Nucleum Hub kent het adres van de licentieserver nog niet, dus er is niets verstuurd.\n\n{status}",
+      "not_licensed": "Er is geen licentie actief op deze Home Assistant.\n\n{status}",
+      "released": "De licentie is van deze Home Assistant verwijderd. Je kunt hem met dezelfde sleutel op een andere installatie activeren. Resterende verhuizingen: {moves_left}.\n\n{status}",
+      "released_staging": "De licentie is van deze testinstantie verwijderd.\n\n{status}"
+    }
+  },
+  "selector": {
+    "role": {
+      "options": {
+        "prod": "Mijn huis",
+        "staging": "Een testinstantie"
+      }
+    },
+    "licence_plan": {
+      "options": {
+        "sub": "Maandabonnement",
+        "life": "Eenmalige licentie",
+        "trial": "Proefperiode",
+        "other": "Licentie"
+      }
+    },
+    "licence_status": {
+      "options": {
+        "trial_pending": "Je proefperiode van 60 minuten start…",
+        "full": "Licentie actief.",
+        "full_until": "Licentie actief, huidige periode tot {until}.",
+        "trial": "Proefperiode: alles is open tot {until}.",
+        "payment_due": "De laatste betaling is niet gelukt. Alles blijft werken tot {until}: betaal via de link in de e-mail van Paddle.",
+        "provisional": "Je licentie heeft één controle bij de licentieserver nodig. Verbind Home Assistant vóór {until} met internet.",
+        "renewal_due": "Je licentie moet vóór {until} worden verlengd.",
+        "kept_lts": "Je jaar met updates is voorbij: je houdt deze versie, met de beveiligingsupdates van haar LTS-lijn.",
+        "uncovered": "Deze versie is verschenen nadat je updates afliepen. Ga terug naar een versie die je licentie dekt, of verleng.",
+        "broken_environment": "De licentie kan op deze Home Assistant niet worden gecontroleerd (het logboek zegt waarom), dus het dashboard blijft volledig bruikbaar.",
+        "no_token": "Nog geen licentie. Plak de sleutel uit je aankoopmail.",
+        "lost": "De licentiegegevens op deze Home Assistant zijn verloren gegaan (een beschadigd of verwijderd bestand), maar je licentie is nog steeds aan dit huis gekoppeld. Plak de sleutel uit je aankoopmail opnieuw: dit telt niet als verhuizing.",
+        "invalid": "De licentie kon niet worden gecontroleerd. Voer je sleutel opnieuw in.",
+        "moved": "De licentie is naar een andere Home Assistant verhuisd. Voer de sleutel opnieuw in om hem hierheen terug te halen.",
+        "trial_over": "De proefperiode van 60 minuten is voorbij. Koop een licentie om het dashboard te blijven gebruiken.",
+        "subscription_expired": "Het abonnement is verlopen. Verleng het om het dashboard weer te gebruiken.",
+        "staging_unverified": "Deze testinstantie kon 7 dagen lang niet bij de licentieserver worden gecontroleerd en is daarom gestopt. Verbind haar met internet en controleer dan de licentie.",
+        "life_unverified": "Verbind Home Assistant met internet om je licentie te bevestigen. Eén geslaagde controle maakt hem permanent.",
+        "refunded": "Deze licentie is terugbetaald en daarmee beëindigd.",
+        "revoked": "Deze licentie is door support stopgezet. Schrijf naar support als je denkt dat dit een vergissing is.",
+        "expired": "Deze licentie is verlopen.",
+        "verify_security": "Je licentie is al meer dan 30 dagen niet bij de licentieserver gecontroleerd. Verbind Home Assistant met internet, zodat het dashboard zijn beveiligingsupdates blijft krijgen.",
+        "cloned": "Dezelfde licentie draait in twee huizen. Verhuis een van beide: verwijder de licentie daar, of geef het een eigen sleutel.",
+        "checked": "Laatst gecontroleerd bij de licentieserver: {when}."
+      }
+    },
+    "licence_link": {
+      "options": {
+        "buy": "Koop een licentie: {link}",
+        "renew": "Verlengen: {link}",
+        "payment": "Je account: {link}"
+      }
+    }
+  }
+}

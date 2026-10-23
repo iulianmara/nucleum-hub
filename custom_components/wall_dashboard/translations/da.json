@@ -1,0 +1,140 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub er et vægdashboard til Home Assistant. Når du bekræfter, vises det i sidepanelet som »Nucleum Hub«, for alle brugere og på alle skærme. Det konverterer også musikcovers, som en tablet ikke kan vise (for eksempel HEIC-covers fra et Apple TV), til JPEG hjemme hos dig, uden at spørge internettet. Der er intet at indstille."
+      },
+      "trial": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub er et vægdashboard til Home Assistant. Når du bekræfter, vises det i sidepanelet som »Nucleum Hub«, for alle brugere og på alle skærme. Det konverterer også musikcovers, som en tablet ikke kan vise (for eksempel HEIC-covers fra et Apple TV), til JPEG hjemme hos dig, uden at spørge internettet. Der er intet at indstille.\n\n**Den gratis prøveperiode på 60 minutter starter, når du vælger Indsend.** Integrationen kontakter derefter vores licensserver for at starte den og senere for at kontrollere din licens. Ved at vælge Indsend accepterer du [licensaftalen (EULA)](https://nucleumhub.com/da/legal/eula) for prøveperioden. Sådan behandler vi data: [Privatliv og cookies](https://nucleumhub.com/da/legal/privacy)."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nucleum Hub er allerede sat op. Én er nok til hver Home Assistant."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Licens til Nucleum Hub",
+        "description": "{status}",
+        "menu_options": {
+          "activate": "Indtast en licensnøgle",
+          "check": "Kontrollér licensen nu",
+          "release": "Fjern licensen fra denne Home Assistant"
+        }
+      },
+      "activate": {
+        "title": "Aktivér din licens",
+        "description": "{status}\n\nIndsæt licensnøglen fra den e-mail, du fik efter dit køb. Nucleum Hub aktiverer den online én gang og kontrollerer den derefter selv hos licensserveren. Nøglen gemmes ikke her: gem e-mailen.",
+        "data": {
+          "key": "Licensnøgle",
+          "role": "Denne Home Assistant er"
+        },
+        "data_description": {
+          "key": "Som i e-mailen: WD-XXXXX-XXXXX-XXXXX-XXXXX. Store eller små bogstaver og mellemrum er ligegyldige.",
+          "role": "Én licens dækker ét hjem plus én testinstans. Dashboardet viser den som testinstans under Indstillinger › Om; den stopper, hvis den ikke når licensserveren i 7 dage."
+        }
+      },
+      "move": {
+        "title": "Flyt licensen hertil?",
+        "description": "Licensen er aktiv i et andet hjem, sidst set {last_seen}. Bekræft for at flytte den til denne Home Assistant: det andet hjem viser aktiveringsskærmen ved sin næste kontrol. Du kan selv flytte licensen 3 gange på 12 måneder; flytninger tilbage: {moves_left}."
+      },
+      "move_staging": {
+        "title": "Flyt testinstansen hertil?",
+        "description": "Licensens testinstans er en anden Home Assistant, sidst set {last_seen}. Bekræft for at gøre denne til testinstans i stedet: den anden viser aktiveringsskærmen ved sin næste kontrol. Flytning af testinstansen tæller ikke som en flytning."
+      },
+      "release": {
+        "title": "Fjern licensen fra denne Home Assistant?",
+        "description": "Bekræft for at frigive licensen, så du kan aktivere den på en anden installation med den samme nøgle. Dashboardet her viser derefter aktiveringsskærmen. Det tæller som en af de 3 flytninger, du selv kan foretage på 12 måneder; flytninger tilbage: {moves_left}."
+      },
+      "release_staging": {
+        "title": "Fjern licensen fra denne testinstans?",
+        "description": "Bekræft for at frigive licensen fra denne testinstans, som derefter viser aktiveringsskærmen. Det tæller ikke som en flytning."
+      }
+    },
+    "error": {
+      "invalid_key": "Nøglen er skrevet forkert: et af tegnene passer ikke. Kopiér den igen fra e-mailen.",
+      "unknown_key": "Ingen licens har denne nøgle. Kontrollér, at du har kopieret hele nøglen fra e-mailen.",
+      "licence_inactive": "Licensen for denne nøgle er blevet refunderet eller stoppet. Skriv til support, hvis du mener, at det er en fejl.",
+      "subscription_ended": "Abonnementet for denne nøgle er ophørt. Du kan starte et nyt på hjemmesiden.",
+      "plan_unsupported": "Denne nøgle hører til en ældre plan. Skriv til support, så ordner vi det.",
+      "active_elsewhere": "Licensen er aktiv i et andet hjem.",
+      "move_limit": "Du har brugt de 3 flytninger i de seneste 12 måneder. Skriv til support for at flytte licensen.",
+      "home_has_licence": "Denne Home Assistant har allerede en anden licens. Fjern den først (Fjern licensen fra denne Home Assistant), og indtast derefter den nye nøgle.",
+      "role_conflict": "Denne Home Assistant har allerede denne licens i den anden rolle. Fjern først licensen, og aktivér den så igen med den rolle, du ønsker.",
+      "conflict": "Licensen blev ændret et andet sted i samme øjeblik. Prøv igen.",
+      "rate_limited": "For mange forsøg på kort tid. Prøv igen om {minutes} minutter.",
+      "not_configured": "Denne version af Nucleum Hub kender endnu ikke licensserverens adresse, så intet blev sendt. Installér en udgivet version.",
+      "cannot_connect": "Licensserveren kunne ikke nås. Kontrollér, at Home Assistant har forbindelse til internettet, og prøv igen.",
+      "identity": "Home Assistant har endnu ikke givet oplysningerne om sin installation. Genstart Home Assistant, og prøv igen.",
+      "invalid_token": "Licensserverens svar kunne ikke kontrolleres på denne Home Assistant. Kontrollér dato, klokkeslæt og tidszone i Home Assistant, og opdatér Nucleum Hub, hvis det bliver ved.",
+      "not_bound": "Denne Home Assistant har ikke længere licensen. Indtast nøglen igen.",
+      "unavailable": "Licensen kan ikke fungere på denne Home Assistant lige nu (Home Assistants log siger hvorfor). Dashboardet kan stadig bruges fuldt ud.",
+      "unknown": "Noget uventet gik galt. Prøv igen; hvis det bliver ved, så søg efter wall_dashboard i Home Assistants log."
+    },
+    "abort": {
+      "licence_not_running": "Licensen kører ikke: Nucleum Hub er ikke indlæst, eller licensen kunne ikke starte (søg efter wall_dashboard i Home Assistants log). Dashboardet kan stadig bruges fuldt ud.",
+      "activated": "Din licens er aktiv på denne Home Assistant.\n\n{status}",
+      "checked": "{status}",
+      "check_failed": "Licensserveren kunne ikke nås. Licensen fortsætter som før og kontrolleres igen senere.\n\n{status}",
+      "check_later": "Licensen blev kontrolleret for et øjeblik siden. Du kan kontrollere den igen om {minutes} minutter.\n\n{status}",
+      "not_configured": "Denne version af Nucleum Hub kender endnu ikke licensserverens adresse, så intet blev sendt.\n\n{status}",
+      "not_licensed": "Der er ingen aktiv licens på denne Home Assistant.\n\n{status}",
+      "released": "Licensen er fjernet fra denne Home Assistant. Du kan aktivere den på en anden installation med den samme nøgle. Flytninger tilbage: {moves_left}.\n\n{status}",
+      "released_staging": "Licensen er fjernet fra denne testinstans.\n\n{status}"
+    }
+  },
+  "selector": {
+    "role": {
+      "options": {
+        "prod": "Mit hjem",
+        "staging": "En testinstans"
+      }
+    },
+    "licence_plan": {
+      "options": {
+        "sub": "Månedsabonnement",
+        "life": "Engangslicens",
+        "trial": "Prøveperiode",
+        "other": "Licens"
+      }
+    },
+    "licence_status": {
+      "options": {
+        "trial_pending": "Din prøveperiode på 60 minutter starter…",
+        "full": "Licensen er aktiv.",
+        "full_until": "Licensen er aktiv, nuværende periode til {until}.",
+        "trial": "Prøveperiode: alt er åbent til {until}.",
+        "payment_due": "Den seneste betaling gik ikke igennem. Alt virker til {until}: betal via linket i e-mailen fra Paddle.",
+        "provisional": "Din licens skal kontrolleres én gang hos licensserveren. Forbind Home Assistant til internettet før {until}.",
+        "renewal_due": "Din licens skal fornyes før {until}.",
+        "kept_lts": "Dit år med opdateringer er slut: du beholder denne version med sikkerhedsrettelserne for dens LTS-linje.",
+        "uncovered": "Denne version udkom, efter dine opdateringer sluttede. Gå tilbage til en version, som din licens dækker, eller forny.",
+        "broken_environment": "Licensen kan ikke kontrolleres på denne Home Assistant (loggen siger hvorfor), så dashboardet kan stadig bruges fuldt ud.",
+        "no_token": "Ingen licens endnu. Indsæt nøglen fra din købsmail.",
+        "lost": "Licensdataene på denne Home Assistant er gået tabt (en beskadiget eller slettet fil), men din licens er stadig knyttet til dette hjem. Indsæt nøglen fra din købsmail igen: det tæller ikke som en flytning.",
+        "invalid": "Licensen kunne ikke kontrolleres. Indtast din nøgle igen.",
+        "moved": "Licensen er flyttet til en anden Home Assistant. Indtast nøglen igen for at hente den tilbage hertil.",
+        "trial_over": "Prøveperioden på 60 minutter er slut. Køb en licens for at blive ved med at bruge dashboardet.",
+        "subscription_expired": "Abonnementet er udløbet. Forny det for at bruge dashboardet igen.",
+        "staging_unverified": "Denne testinstans har ikke kunnet kontrolleres hos licensserveren i 7 dage, så den er stoppet. Forbind den til internettet, og kontrollér derefter licensen.",
+        "life_unverified": "Forbind Home Assistant til internettet for at bekræfte din licens. Én vellykket kontrol gør den permanent.",
+        "refunded": "Denne licens er blevet refunderet og er dermed ophørt.",
+        "revoked": "Denne licens er blevet stoppet af support. Skriv til support, hvis du mener, at det er en fejl.",
+        "expired": "Denne licens er udløbet.",
+        "verify_security": "Din licens er ikke blevet kontrolleret hos licensserveren i over 30 dage. Forbind Home Assistant til internettet, så dashboardet bliver ved med at få sine sikkerhedsrettelser.",
+        "cloned": "Den samme licens kører i to hjem. Flyt et af dem: fjern licensen der, eller giv det sin egen nøgle.",
+        "checked": "Sidst kontrolleret hos licensserveren: {when}."
+      }
+    },
+    "licence_link": {
+      "options": {
+        "buy": "Køb en licens: {link}",
+        "renew": "Forny: {link}",
+        "payment": "Din konto: {link}"
+      }
+    }
+  }
+}

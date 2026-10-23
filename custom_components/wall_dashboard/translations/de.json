@@ -1,0 +1,140 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub ist ein Wand-Dashboard für Home Assistant. Nach dem Bestätigen erscheint es als „Nucleum Hub“ in der Seitenleiste, für alle Benutzer und auf allen Bildschirmen. Außerdem wandelt es Musik-Cover, die ein Tablet nicht anzeigen kann (zum Beispiel die HEIC-Cover eines Apple TV), bei dir zu Hause in JPEG um, ohne das Internet zu fragen. Es gibt nichts einzustellen."
+      },
+      "trial": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub ist ein Wand-Dashboard für Home Assistant. Nach dem Bestätigen erscheint es als „Nucleum Hub“ in der Seitenleiste, für alle Benutzer und auf allen Bildschirmen. Außerdem wandelt es Musik-Cover, die ein Tablet nicht anzeigen kann (zum Beispiel die HEIC-Cover eines Apple TV), bei dir zu Hause in JPEG um, ohne das Internet zu fragen. Es gibt nichts einzustellen.\n\n**Der kostenlose 60-Minuten-Test beginnt, sobald du Absenden wählst.** Die Integration kontaktiert dann unseren Lizenzserver, um ihn zu starten und später deine Lizenz zu prüfen. Indem du Absenden wählst, nimmst du den [Lizenzvertrag (EULA)](https://nucleumhub.com/de/legal/eula) für den Test an. Wie wir mit Daten umgehen: [Datenschutz und Cookies](https://nucleumhub.com/de/legal/privacy)."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nucleum Hub ist bereits eingerichtet. Eines pro Home Assistant genügt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lizenz für Nucleum Hub",
+        "description": "{status}",
+        "menu_options": {
+          "activate": "Lizenzschlüssel eingeben",
+          "check": "Lizenz jetzt prüfen",
+          "release": "Lizenz von diesem Home Assistant entfernen"
+        }
+      },
+      "activate": {
+        "title": "Lizenz aktivieren",
+        "description": "{status}\n\nFüge den Lizenzschlüssel aus der E-Mail nach deinem Kauf ein. Nucleum Hub aktiviert ihn einmal online und prüft ihn danach selbst beim Lizenzserver. Der Schlüssel wird hier nicht gespeichert: Bewahre die E-Mail auf.",
+        "data": {
+          "key": "Lizenzschlüssel",
+          "role": "Dieses Home Assistant ist"
+        },
+        "data_description": {
+          "key": "Wie in der E-Mail: WD-XXXXX-XXXXX-XXXXX-XXXXX. Groß- und Kleinschreibung sowie Leerzeichen spielen keine Rolle.",
+          "role": "Eine Lizenz gilt für ein Zuhause plus eine Testinstanz. Das Dashboard zeigt sie unter Einstellungen › Über als Testinstanz; sie wird gesperrt, wenn sie den Lizenzserver 7 Tage lang nicht erreicht."
+        }
+      },
+      "move": {
+        "title": "Lizenz hierher umziehen?",
+        "description": "Diese Lizenz ist in einem anderen Zuhause aktiv, zuletzt gesehen am {last_seen}. Bestätige, um sie auf dieses Home Assistant umzuziehen: Das andere Zuhause zeigt bei seiner nächsten Prüfung den Aktivierungsbildschirm. Du kannst die Lizenz 3-mal in 12 Monaten selbst umziehen; verbleibende Umzüge: {moves_left}."
+      },
+      "move_staging": {
+        "title": "Testinstanz hierher umziehen?",
+        "description": "Die Testinstanz dieser Lizenz ist ein anderes Home Assistant, zuletzt gesehen am {last_seen}. Bestätige, damit stattdessen dieses die Testinstanz wird: Das andere zeigt bei seiner nächsten Prüfung den Aktivierungsbildschirm. Der Umzug der Testinstanz zählt nicht als Umzug."
+      },
+      "release": {
+        "title": "Lizenz von diesem Home Assistant entfernen?",
+        "description": "Bestätige, um die Lizenz freizugeben, damit du sie mit demselben Schlüssel auf einer anderen Installation aktivieren kannst. Das Dashboard hier zeigt danach den Aktivierungsbildschirm. Das zählt als einer der 3 Umzüge, die du in 12 Monaten selbst machen kannst; verbleibende Umzüge: {moves_left}."
+      },
+      "release_staging": {
+        "title": "Lizenz von dieser Testinstanz entfernen?",
+        "description": "Bestätige, um die Lizenz von dieser Testinstanz freizugeben, die danach den Aktivierungsbildschirm zeigt. Das zählt nicht als Umzug."
+      }
+    },
+    "error": {
+      "invalid_key": "Der Schlüssel ist falsch geschrieben: Eines seiner Zeichen stimmt nicht. Kopiere ihn noch einmal aus der E-Mail.",
+      "unknown_key": "Keine Lizenz hat diesen Schlüssel. Prüfe, ob du den ganzen Schlüssel aus der E-Mail kopiert hast.",
+      "licence_inactive": "Die Lizenz dieses Schlüssels wurde erstattet oder gesperrt. Schreib dem Support, wenn du das für einen Fehler hältst.",
+      "subscription_ended": "Das Abo dieses Schlüssels ist beendet. Du kannst auf der Website ein neues abschließen.",
+      "plan_unsupported": "Dieser Schlüssel gehört zu einem älteren Plan. Schreib dem Support, wir kümmern uns darum.",
+      "active_elsewhere": "Diese Lizenz ist in einem anderen Zuhause aktiv.",
+      "move_limit": "Du hast die 3 Umzüge der letzten 12 Monate verbraucht. Schreib dem Support, um die Lizenz umzuziehen.",
+      "home_has_licence": "Dieses Home Assistant hat bereits eine andere Lizenz. Entferne sie zuerst (Lizenz von diesem Home Assistant entfernen) und gib dann den neuen Schlüssel ein.",
+      "role_conflict": "Dieses Home Assistant hat diese Lizenz bereits in der anderen Rolle. Entferne zuerst die Lizenz und aktiviere sie dann mit der gewünschten Rolle neu.",
+      "conflict": "Die Lizenz wurde im selben Moment anderswo geändert. Versuche es noch einmal.",
+      "rate_limited": "Zu viele Versuche in kurzer Zeit. Versuche es in {minutes} Minuten noch einmal.",
+      "not_configured": "Dieser Build von Nucleum Hub kennt die Adresse des Lizenzservers noch nicht, daher wurde nichts gesendet. Installiere eine veröffentlichte Version.",
+      "cannot_connect": "Der Lizenzserver war nicht erreichbar. Prüfe, ob Home Assistant mit dem Internet verbunden ist, und versuche es dann noch einmal.",
+      "identity": "Home Assistant hat seine Installationsdaten noch nicht bereitgestellt. Starte Home Assistant neu und versuche es noch einmal.",
+      "invalid_token": "Die Antwort des Lizenzservers konnte auf diesem Home Assistant nicht geprüft werden. Prüfe Datum, Uhrzeit und Zeitzone von Home Assistant und aktualisiere Nucleum Hub, wenn es so bleibt.",
+      "not_bound": "Dieses Home Assistant hat die Lizenz nicht mehr. Gib den Schlüssel noch einmal ein.",
+      "unavailable": "Die Lizenz kann auf diesem Home Assistant gerade nicht arbeiten (das Protokoll von Home Assistant sagt, warum). Das Dashboard bleibt voll nutzbar.",
+      "unknown": "Etwas Unerwartetes ist schiefgegangen. Versuche es noch einmal; bleibt es so, such im Protokoll von Home Assistant nach wall_dashboard."
+    },
+    "abort": {
+      "licence_not_running": "Die Lizenz läuft nicht: Nucleum Hub ist nicht geladen, oder seine Lizenz konnte nicht starten (such im Protokoll von Home Assistant nach wall_dashboard). Das Dashboard bleibt voll nutzbar.",
+      "activated": "Deine Lizenz ist auf diesem Home Assistant aktiv.\n\n{status}",
+      "checked": "{status}",
+      "check_failed": "Der Lizenzserver war nicht erreichbar. Die Lizenz läuft weiter wie bisher und wird später erneut geprüft.\n\n{status}",
+      "check_later": "Die Lizenz wurde gerade erst geprüft. Du kannst sie in {minutes} Minuten erneut prüfen.\n\n{status}",
+      "not_configured": "Dieser Build von Nucleum Hub kennt die Adresse des Lizenzservers noch nicht, daher wurde nichts gesendet.\n\n{status}",
+      "not_licensed": "Auf diesem Home Assistant ist keine Lizenz aktiv.\n\n{status}",
+      "released": "Die Lizenz wurde von diesem Home Assistant entfernt. Du kannst sie mit demselben Schlüssel auf einer anderen Installation aktivieren. Verbleibende Umzüge: {moves_left}.\n\n{status}",
+      "released_staging": "Die Lizenz wurde von dieser Testinstanz entfernt.\n\n{status}"
+    }
+  },
+  "selector": {
+    "role": {
+      "options": {
+        "prod": "Mein Zuhause",
+        "staging": "Eine Testinstanz"
+      }
+    },
+    "licence_plan": {
+      "options": {
+        "sub": "Monatsabo",
+        "life": "Einmallizenz",
+        "trial": "Testphase",
+        "other": "Lizenz"
+      }
+    },
+    "licence_status": {
+      "options": {
+        "trial_pending": "Deine 60-minütige Testphase startet…",
+        "full": "Lizenz aktiv.",
+        "full_until": "Lizenz aktiv, aktueller Zeitraum bis {until}.",
+        "trial": "Testphase: Alles ist bis {until} freigeschaltet.",
+        "payment_due": "Die letzte Zahlung ist nicht durchgegangen. Alles funktioniert weiter bis {until}: Bezahle über den Link in der E-Mail von Paddle.",
+        "provisional": "Deine Lizenz braucht eine Prüfung beim Lizenzserver. Verbinde Home Assistant bis {until} mit dem Internet.",
+        "renewal_due": "Deine Lizenz muss bis {until} verlängert werden.",
+        "kept_lts": "Dein Jahr mit Updates ist vorbei: Du behältst diese Version, mit den Sicherheitskorrekturen ihrer LTS-Linie.",
+        "uncovered": "Diese Version ist nach dem Ende deiner Updates erschienen. Kehre zu einer Version zurück, die deine Lizenz abdeckt, oder verlängere.",
+        "broken_environment": "Die Lizenz kann auf diesem Home Assistant nicht geprüft werden (das Protokoll sagt, warum), daher bleibt das Dashboard voll nutzbar.",
+        "no_token": "Noch keine Lizenz. Füge den Schlüssel aus deiner Kauf-E-Mail ein.",
+        "lost": "Die Lizenzdaten auf diesem Home Assistant sind verloren gegangen (eine beschädigte oder gelöschte Datei), deine Lizenz ist aber weiter an dieses Zuhause gebunden. Füge den Schlüssel aus deiner Kauf-E-Mail noch einmal ein: Das zählt nicht als Umzug.",
+        "invalid": "Die Lizenz konnte nicht geprüft werden. Gib deinen Schlüssel noch einmal ein.",
+        "moved": "Die Lizenz wurde auf ein anderes Home Assistant umgezogen. Gib den Schlüssel noch einmal ein, um sie hierher zurückzuholen.",
+        "trial_over": "Die 60-minütige Testphase ist vorbei. Kaufe eine Lizenz, um das Dashboard weiter zu nutzen.",
+        "subscription_expired": "Das Abo ist abgelaufen. Verlängere es, um das Dashboard wieder zu nutzen.",
+        "staging_unverified": "Diese Testinstanz konnte 7 Tage lang nicht beim Lizenzserver geprüft werden und ist deshalb gesperrt. Verbinde sie mit dem Internet und prüfe dann die Lizenz.",
+        "life_unverified": "Verbinde Home Assistant mit dem Internet, um deine Lizenz zu bestätigen. Eine einzige erfolgreiche Prüfung macht sie dauerhaft.",
+        "refunded": "Diese Lizenz wurde erstattet und ist damit beendet.",
+        "revoked": "Diese Lizenz wurde vom Support gesperrt. Schreib dem Support, wenn du das für einen Fehler hältst.",
+        "expired": "Diese Lizenz ist abgelaufen.",
+        "verify_security": "Deine Lizenz wurde seit mehr als 30 Tagen nicht beim Lizenzserver geprüft. Verbinde Home Assistant mit dem Internet, damit das Dashboard weiter seine Sicherheitskorrekturen bekommt.",
+        "cloned": "Dieselbe Lizenz läuft in zwei Haushalten. Zieh einen davon um: Entferne die Lizenz dort oder gib ihm einen eigenen Schlüssel.",
+        "checked": "Zuletzt beim Lizenzserver geprüft: {when}."
+      }
+    },
+    "licence_link": {
+      "options": {
+        "buy": "Lizenz kaufen: {link}",
+        "renew": "Verlängern: {link}",
+        "payment": "Dein Konto: {link}"
+      }
+    }
+  }
+}

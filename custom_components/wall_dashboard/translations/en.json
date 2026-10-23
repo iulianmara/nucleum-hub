@@ -1,0 +1,140 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub is a wall dashboard for Home Assistant. Select Submit and it appears in the sidebar as \"Nucleum Hub\", for every user and on every screen. It also converts music artwork that a tablet cannot show (for example an Apple TV's HEIC covers) into JPEG inside your home, without asking the internet. There is nothing to set."
+      },
+      "trial": {
+        "title": "Nucleum Hub",
+        "description": "Nucleum Hub is a wall dashboard for Home Assistant. Select Submit and it appears in the sidebar as \"Nucleum Hub\", for every user and on every screen. It also converts music artwork that a tablet cannot show (for example an Apple TV's HEIC covers) into JPEG inside your home, without asking the internet. There is nothing to set.\n\n**The 60-minute free trial starts when you select Submit.** The integration then contacts our licence server, to start it and, later, to check your licence. By selecting Submit you accept the [licence agreement (EULA)](https://nucleumhub.com/legal/eula) for the trial. How we handle data: [Privacy and cookies](https://nucleumhub.com/legal/privacy)."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Nucleum Hub is already set up. One is enough for each Home Assistant."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nucleum Hub licence",
+        "description": "{status}",
+        "menu_options": {
+          "activate": "Enter a licence key",
+          "check": "Check the licence now",
+          "release": "Remove the licence from this Home Assistant"
+        }
+      },
+      "activate": {
+        "title": "Activate your licence",
+        "description": "{status}\n\nPaste the licence key from the e-mail you got after your purchase. Nucleum Hub activates it online once, then checks it with the licence server by itself. The key is not kept here: keep the e-mail.",
+        "data": {
+          "key": "Licence key",
+          "role": "This Home Assistant is"
+        },
+        "data_description": {
+          "key": "As in the e-mail: WD-XXXXX-XXXXX-XXXXX-XXXXX. Upper or lower case and spaces do not matter.",
+          "role": "One licence covers one home plus one test instance. The dashboard shows it as the test instance in Settings › About; it stops if it cannot reach the licence server for 7 days."
+        }
+      },
+      "move": {
+        "title": "Move the licence here?",
+        "description": "This licence is active in another home, last seen on {last_seen}. Confirm to move it to this Home Assistant: the other home shows the activation screen at its next check. You can move the licence yourself 3 times in 12 months; moves left: {moves_left}."
+      },
+      "move_staging": {
+        "title": "Move the test instance here?",
+        "description": "This licence's test instance is another Home Assistant, last seen on {last_seen}. Confirm to make this one the test instance instead: the other one shows the activation screen at its next check. Moving the test instance does not count as a move."
+      },
+      "release": {
+        "title": "Remove the licence from this Home Assistant?",
+        "description": "Confirm to free the licence, so you can activate it on another installation with the same key. The dashboard here then shows the activation screen. This counts as one of the 3 moves you can make yourself in 12 months; moves left: {moves_left}."
+      },
+      "release_staging": {
+        "title": "Remove the licence from this test instance?",
+        "description": "Confirm to free the licence from this test instance, which then shows the activation screen. This does not count as a move."
+      }
+    },
+    "error": {
+      "invalid_key": "This key is mistyped: one of its characters is wrong. Copy it again from the e-mail.",
+      "unknown_key": "No licence has this key. Check that you copied the whole key from the e-mail.",
+      "licence_inactive": "The licence of this key was refunded or stopped. Write to support if you think this is a mistake.",
+      "subscription_ended": "The subscription of this key has ended. You can start a new one on the website.",
+      "plan_unsupported": "This key belongs to an older plan. Write to support and we will sort it out.",
+      "active_elsewhere": "This licence is active in another home.",
+      "move_limit": "You have used the 3 moves of the last 12 months. Write to support to move the licence.",
+      "home_has_licence": "This Home Assistant already holds another licence. Remove that one first (Remove the licence from this Home Assistant), then enter the new key.",
+      "role_conflict": "This Home Assistant already holds this licence in the other role. Remove the licence first, then activate it again with the role you want.",
+      "conflict": "The licence changed somewhere else at the same moment. Try again.",
+      "rate_limited": "Too many attempts in a short time. Try again in {minutes} minutes.",
+      "not_configured": "This build of Nucleum Hub does not know the licence server's address yet, so nothing was sent. Install a released version.",
+      "cannot_connect": "The licence server could not be reached. Check that Home Assistant is connected to the internet, then try again.",
+      "identity": "Home Assistant has not given its installation details yet. Restart Home Assistant and try again.",
+      "invalid_token": "The licence server's answer could not be verified on this Home Assistant. Check Home Assistant's date, time and time zone, then update Nucleum Hub if it stays.",
+      "not_bound": "This Home Assistant no longer holds the licence. Enter the key again.",
+      "unavailable": "The licence cannot work on this Home Assistant right now (Home Assistant's log says why). The dashboard stays fully usable.",
+      "unknown": "Something unexpected went wrong. Try again; if it stays, look for wall_dashboard in Home Assistant's log."
+    },
+    "abort": {
+      "licence_not_running": "The licence is not running: Nucleum Hub is not loaded, or its licence could not start (look for wall_dashboard in Home Assistant's log). The dashboard stays fully usable.",
+      "activated": "Your licence is active on this Home Assistant.\n\n{status}",
+      "checked": "{status}",
+      "check_failed": "The licence server could not be reached. The licence carries on as it was and is checked again later.\n\n{status}",
+      "check_later": "The licence was checked a moment ago. You can check it again in {minutes} minutes.\n\n{status}",
+      "not_configured": "This build of Nucleum Hub does not know the licence server's address yet, so nothing was sent.\n\n{status}",
+      "not_licensed": "No licence is active on this Home Assistant.\n\n{status}",
+      "released": "The licence was removed from this Home Assistant. You can activate it on another installation with the same key. Moves left: {moves_left}.\n\n{status}",
+      "released_staging": "The licence was removed from this test instance.\n\n{status}"
+    }
+  },
+  "selector": {
+    "role": {
+      "options": {
+        "prod": "My home",
+        "staging": "A test instance"
+      }
+    },
+    "licence_plan": {
+      "options": {
+        "sub": "Monthly subscription",
+        "life": "One-time licence",
+        "trial": "Trial",
+        "other": "Licence"
+      }
+    },
+    "licence_status": {
+      "options": {
+        "trial_pending": "Starting your 60-minute trial…",
+        "full": "Licence active.",
+        "full_until": "Licence active, current period until {until}.",
+        "trial": "Trial: everything is open until {until}.",
+        "payment_due": "The last payment did not go through. Everything keeps working until {until}: pay with the link in the e-mail from Paddle.",
+        "provisional": "Your licence needs one check with the licence server. Connect Home Assistant to the internet before {until}.",
+        "renewal_due": "Your licence needs renewing before {until}.",
+        "kept_lts": "Your year of updates has ended: you keep this version, with the security fixes of its LTS line.",
+        "uncovered": "This version came out after your updates ended. Go back to a version your licence covers, or renew.",
+        "broken_environment": "The licence cannot be checked on this Home Assistant (its log says why), so the dashboard stays fully usable.",
+        "no_token": "No licence yet. Paste the key from your purchase e-mail.",
+        "lost": "The licence data on this Home Assistant was lost (a damaged or removed file), but your licence is still bound to this home. Paste the key from your purchase e-mail again: it does not count as a move.",
+        "invalid": "The licence could not be verified. Enter your key again.",
+        "moved": "The licence was moved to another Home Assistant. Enter the key again to bring it back here.",
+        "trial_over": "The 60-minute trial has ended. Buy a licence to keep using the dashboard.",
+        "subscription_expired": "The subscription has expired. Renew it to use the dashboard again.",
+        "staging_unverified": "This test instance could not be checked with the licence server for 7 days, so it is stopped. Connect it to the internet, then check the licence.",
+        "life_unverified": "Connect Home Assistant to the internet to confirm your licence. One successful check makes it permanent.",
+        "refunded": "This licence was refunded, so it has ended.",
+        "revoked": "This licence was stopped by support. Write to support if you think this is a mistake.",
+        "expired": "This licence has expired.",
+        "verify_security": "Your licence has not been checked with the licence server for more than 30 days. Connect Home Assistant to the internet so the dashboard keeps getting its security fixes.",
+        "cloned": "The same licence runs in two homes. Move one of them: remove the licence there, or give it its own key.",
+        "checked": "Last checked with the licence server: {when}."
+      }
+    },
+    "licence_link": {
+      "options": {
+        "buy": "Buy a licence: {link}",
+        "renew": "Renew: {link}",
+        "payment": "Your account: {link}"
+      }
+    }
+  }
+}
