@@ -386,12 +386,43 @@ export class NucleumHubPanel extends Base {
   set narrow(v) { this._narrow = !!v; this._menuSync(); }
   connectedCallback() {
     UP.els.add(this);
+    this._fit();
+    if (!this._onResize && typeof window !== 'undefined') { this._onResize = () => this._fit(); window.addEventListener('resize', this._onResize); }
     this._go();
     this._updated();
     /* back on screen after the period: ask once now rather than wait for the timer */
     if (UP.base && UP.last && Date.now() - UP.last > UP.every) checkNow('shown');
   }
-  disconnectedCallback() { clearTimeout(this._timer); UP.els.delete(this); }
+  disconnectedCallback() {
+    clearTimeout(this._timer); UP.els.delete(this);
+    if (this._onResize) { window.removeEventListener('resize', this._onResize); this._onResize = null; }
+    if (this._ro) { this._ro.disconnect(); this._ro = null; this._roBox = null; }
+  }
+  /* Home Assistant 2026.10 puts the panel in an inline partial-panel-resolver and a ha-panel-custom of auto height, so
+     height:100% was 0 and the dashboard sat in a frame 0 px high: a black page. Without a height from its container the
+     panel reaches from its top to the bottom of the first box above it that has one (Home Assistant's drawer: the
+     screen beside the sidebar), measured again when the window or that box changes size (its own height cleared first,
+     or the boxes it fills would measure themselves). A container with a height of its own keeps height:100%. */
+  _fit() {
+    if (!this.isConnected || typeof ShadowRoot === 'undefined') return;
+    if (this._fitted) { this.style.height = ''; this._fitted = false; }
+    if (this.offsetHeight > 0) return;
+    let box = null;
+    for (let n = this.parentNode; n && !box;) {
+      const el = n instanceof ShadowRoot ? n.host : n;
+      if (el.nodeType === 1 && el.clientHeight > 0) box = el;
+      else n = el.parentNode;
+    }
+    if (!box) return;
+    const h = Math.round(box.getBoundingClientRect().bottom - this.getBoundingClientRect().top);
+    if (h > 0) { this.style.height = h + 'px'; this._fitted = true; }
+    if (box !== this._roBox && typeof ResizeObserver !== 'undefined') {
+      if (this._ro) this._ro.disconnect();
+      this._roBox = box;
+      this._ro = new ResizeObserver(() => this._fit());
+      this._ro.observe(box);
+    }
+  }
   /* re-attached with its iframe: the iframe draws its srcdoc again by itself, nothing is asked */
   _go() {
     if (!this.isConnected || !this._hass || this._state !== 'idle') return;

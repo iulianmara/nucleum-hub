@@ -243,12 +243,22 @@ async def async_register_static_paths(hass: HomeAssistant, folder: Path = FRONTE
     )
 
 
+def loader_tag(folder: Path = FRONTEND) -> str:
+    """The first 10 hex of the loader's sha256, or "" without it (blocking). Its address carries it beside the version,
+    so a loader changed under the same version is never served from a browser's cache (the static path is cached)."""
+    try:
+        return hashlib.sha256((folder / FRONTEND_PANEL_JS).read_bytes()).hexdigest()[:10]
+    except OSError:
+        return ""
+
+
 async def async_register_panel(hass: HomeAssistant, version: str, title: str = PANEL_TITLE) -> bool:
     """The sidebar's entry, under the config entry's title ("Nucleum Hub" until its owner renames it), for
     every user. False when the address is already taken (a dashboard of the same address, say): the rest of the
     integration still works."""
     try:
-        await panel_custom.async_register_panel(hass, **panel_config(version, title))
+        tag = await hass.async_add_executor_job(loader_tag)
+        await panel_custom.async_register_panel(hass, **panel_config(version, title, tag))
     except ValueError:
         _LOGGER.warning(
             "The sidebar already has a panel at /%s, so Nucleum Hub's panel was not added; "
@@ -265,15 +275,16 @@ def async_remove_panel(hass: HomeAssistant) -> None:
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
 
 
-def panel_config(version: str, title: str = PANEL_TITLE) -> dict[str, Any]:
+def panel_config(version: str, title: str = PANEL_TITLE, tag: str = "") -> dict[str, Any]:
     """The panel's registration, as the contract fixes it (docs/PACHET.md): the loader's module carries
-    the version in its address, and gets the version in its config too; the sidebar shows ``title``."""
+    the version in its address (``v``, which the loader reads as its own) and the fingerprint of its file (``h``, for the
+    browser's cache only), and gets the version in its config too; the sidebar shows ``title``."""
     return {
         "frontend_url_path": PANEL_URL_PATH,
         "webcomponent_name": PANEL_COMPONENT,
         "sidebar_title": title,
         "sidebar_icon": PANEL_ICON,
-        "module_url": f"{URL_PANEL_JS}?v={version}",
+        "module_url": f"{URL_PANEL_JS}?v={version}" + (f"&h={tag}" if tag else ""),
         "embed_iframe": False,
         "require_admin": False,
         "config": {"version": version},
