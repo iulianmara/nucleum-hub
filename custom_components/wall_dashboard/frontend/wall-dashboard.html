@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.WD_VERSION = '1.0';
-window.WD_BUILD = '2026-10-23.f863769';
+window.WD_BUILD = '2026-10-23.a977c45';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -4262,6 +4262,55 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
     return ready;
   }
   return { connect: connect, DELAYS: DELAYS };
+})();
+</script>
+<script>window.WD_HASTART = (function () {
+  'use strict';
+  var EVERY = 2000, MAX = 10 * 60 * 1000;
+
+  function running(cfg) { return !!cfg && typeof cfg === 'object' && (cfg.state === undefined || cfg.state === 'RUNNING'); }
+
+  function watch(conn, o) {
+    o = o || {};
+    var later = o.setTimeout || function (fn, ms) { return setTimeout(fn, ms); };
+    var cancel = o.clearTimeout || function (t) { clearTimeout(t); };
+    var now = o.now || function () { return Date.now(); };
+    var every = o.every || EVERY, max = o.max || MAX;
+    var timer = null, gen = 0, stopped = false;
+
+    function call() { try { if (typeof o.back === 'function') o.back(); } catch (e) {} }
+    function wait(quiet) {
+      var g = ++gen, since = now(), first = true;
+      cancel(timer); timer = null;
+      (function ask() {
+        if (stopped || g !== gen) return;
+        Promise.resolve().then(function () { return conn.sendMessagePromise({ type: 'get_config' }); }).then(function (cfg) {
+          if (stopped || g !== gen) return;
+          var was = first; first = false;
+          if (running(cfg)) { if (!(quiet && was)) call(); return; }
+          if (now() - since >= max) { call(); return; }
+          timer = later(ask, every);
+        }, function () {
+          if (stopped || g !== gen) return;
+          first = false;
+          if (now() - since >= max) { call(); return; }
+          timer = later(ask, every);
+        });
+      })();
+    }
+    function onReady() { if (!stopped) wait(false); }
+
+    try { if (conn && typeof conn.addEventListener === 'function') conn.addEventListener('ready', onReady); } catch (e) {}
+    wait(true);
+    return {
+      stop: function () {
+        stopped = true; gen++; cancel(timer); timer = null;
+        try { if (conn && typeof conn.removeEventListener === 'function') conn.removeEventListener('ready', onReady); } catch (e) {}
+      },
+    };
+  }
+
+  return { watch: watch, running: running, EVERY: EVERY, MAX: MAX };
 })();
 </script>
 <script>window.WD_HASS = (function () {
@@ -42317,6 +42366,23 @@ const unsub = HA.conn.sub(ev=>{ const ns=ev.data&&ev.data.new_state; if(!ns||!E[
 if(window.wdOnLeave) wdOnLeave(()=>Promise.resolve(unsub).then(u=>{ if(typeof u==='function') return u(); }).catch(()=>{}));
 setInterval(haFlush, 1500);
 if(window.WD_LICENSE) WD_LICENSE.start();
+if(!HA.standalone && !WDHS.w && window.WD_HASTART && !(typeof WD_DEMO!=='undefined' && WD_DEMO.active)){ try{
+  const ph = window.parent.document.querySelector('home-assistant').hass;
+  if(ph && ph.connection){ WDHS.w = WD_HASTART.watch(ph.connection, {back: wdHaBack}); if(window.wdOnLeave) wdOnLeave(()=>{ WDHS.w.stop(); }); }
+}catch(e){} }
+}
+const WDHS = {w: null};
+async function wdHaBack(){
+if(document.body.classList.contains('edit') || (typeof dragging!=='undefined' && dragging) || document.getElementById('sheet').classList.contains('on')){ setTimeout(wdHaBack, 3000); return; }
+if(window.WD_ART) WD_ART.reconnected();
+let states; try{ states = await HA.conn.send({type:'get_states'}); }catch(e){ return; }
+if((states||[]).some(st=>st && !E[st.entity_id])){
+  try{ await haInit(); }catch(e){ return; }
+  initState(); loadLayout(); loadHdr();
+  try{ renderPage(false); renderHeader(); renderBadges(); renderNav(); renderScenebar(); }catch(e){}
+  return;
+}
+(states||[]).forEach(st=>{ HA.st[st.entity_id]=st; haApply(st); DIRTY.add(st.entity_id); });
 }
 function haFlush(){
 if(!DIRTY.size || haBusy || document.hidden) return;
