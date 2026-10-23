@@ -15,8 +15,9 @@
      the harness: the source file's modules asked for twice, once at the wrong place). The dashboard finds Home Assistant around it as it always has
      (window.parent.document.querySelector('home-assistant').hass): the frontend's own connection, never a socket of
      its own; the same origin, so the same storage and the same synced dashboards as a copy in /config/www.
-   - Later .hass updates ask nothing again: the dashboard has its own live layer. narrow tells the dashboard whether
-     Home Assistant's menu needs a way in (D-054); route is not used.
+   - Later .hass updates ask nothing again: the dashboard has its own live layer. The panel is the whole screen (D-088,
+     "the whole screen" below): Home Assistant's sidebar a drawer, opened from the dashboard's menu (D-054); narrow and
+     route are not used.
    - A failure is a short message in the panel, never a blank page: "Nucleum Hub could not load: <reason>", in
      English and in the Home Assistant user's language when it is one of the dashboard's 12, with a Retry button.
 
@@ -31,7 +32,7 @@
    (WD_HOST.reload(): the demo, a restore) uses it without asking again. The iframe element carries
    wdHost, which the dashboard reads as WD_HOST (src/modules/boot.js; its side of D-054: src/modules/hostui.js):
      {kind: 'panel', version, files: '/nucleum_hub/', reload(),
-      menu(), toggleMenu(),              Home Assistant's menu on a narrow screen (D-054, menuShown)
+      menu(), toggleMenu(),              Home Assistant's menu, on every screen (D-054, D-088: the whole screen)
       update(), applyUpdate(),           a new version installed, and the reload it needs (D-054, "a new version" below)
       on('menu' | 'update', fn) -> off}  told when either changes, until the frame is replaced
 
@@ -163,18 +164,42 @@ export function changeOf(base, now) {
   if (base.sha256 && now.sha256 && base.sha256 !== now.sha256) return 'file';
   return '';
 }
-/* whether Home Assistant's own menu button would show on this screen (its ha-menu-button, read 10.10.2026): only when
-   the screen is narrow (870 px or less, the sidebar hidden in a drawer), not in kiosk mode and not in a companion
-   app that has a sidebar of its own. Home Assistant also shows it on a wide screen whose sidebar is set to
-   "Always hide"; D-054 keeps the dashboard's row to narrow screens (a wall tablet set that way stays clean). */
-export function menuShown(hass, narrow) {
-  if (!narrow) return false;
+/* The whole screen (D-087 for the card, D-088 for the sidebar's panel, the owner's choice of 24.10.2026): while a
+   panel of ours is on screen, Home Assistant's kiosk mode ("hass-kiosk-mode" on window, which its sidebar mixin turns
+   into hass.kioskMode, never stored), so home-assistant-main keeps its sidebar in a drawer over the page, whatever the
+   screen's width or the user's choice to dock it, and opens it only on "hass-toggle-menu": the dashboard's own menu
+   button (D-054's row and tile) on every screen. Turned off again when the last panel leaves, and only when ours had
+   turned it on (a kiosk app's own kiosk mode is left as it was). */
+export const KIOSK_EVENT = 'hass-kiosk-mode';
+const KIOSK = { owners: new Set(), mine: false };
+function kioskMode(on) {
+  try { window.dispatchEvent(new CustomEvent(KIOSK_EVENT, { detail: { enable: on } })); } catch (e) {}
+}
+function kioskHold(owner, hass) {
+  if (KIOSK.owners.has(owner)) return;
+  KIOSK.owners.add(owner);
+  if (!hass) { try { hass = document.querySelector('home-assistant').hass; } catch (e) {} }
+  if (!KIOSK.mine && !(hass && hass.kioskMode === true)) { KIOSK.mine = true; kioskMode(true); }
+}
+function kioskRelease(owner) {
+  if (!KIOSK.owners.delete(owner)) return;
+  if (!KIOSK.owners.size && KIOSK.mine) { KIOSK.mine = false; kioskMode(false); }
+}
+export function kioskState() { return { owners: KIOSK.owners.size, mine: KIOSK.mine }; }
+/* whether someone else has put Home Assistant's sidebar out of reach: a kiosk app's style in home-assistant-main
+   (Kiosk Satellite's "Hide the sidebar", read on the owner's tablet 24.10.2026: ha-sidebar display:none and a drawer
+   0 px wide). The menu button then is not offered: it could open nothing. */
+export function sidebarBlocked(doc) {
   try {
-    if (hass && hass.kioskMode === true) return false;
-    const ext = hass && hass.auth && hass.auth.external;
-    if (ext && ext.config && ext.config.hasSidebar === true) return false;
-  } catch (e) {}
-  return true;
+    const ha = doc && doc.querySelector('home-assistant');
+    const main = ha && ha.shadowRoot && ha.shadowRoot.querySelector('home-assistant-main');
+    const sb = main && main.shadowRoot && main.shadowRoot.querySelector('ha-sidebar');
+    if (!sb) return false;
+    const view = doc.defaultView || window;
+    if (view.getComputedStyle(sb).display === 'none') return true;
+    const dr = main.shadowRoot.querySelector('ha-drawer');
+    return !!dr && /^0(px)?$/.test(view.getComputedStyle(dr).getPropertyValue('--mdc-drawer-width').trim());
+  } catch (e) { return false; }
 }
 
 /* ------------------------------------------------------------------ Home Assistant */
@@ -365,8 +390,8 @@ export class NucleumHubPanel extends Base {
     this._timer = null;
     this._ls = null;                 /* the listeners the dashboard in the current frame gave WD_HOST.on: {menu, update} */
     this._narrow = false;
-    this._menu = false;              /* Home Assistant's menu button would show (menuShown) */
-    this._menuAlways = false;        /* the card's: the menu on every screen (D-087) */
+    this._menu = false;              /* the dashboard's menu button opens Home Assistant's sidebar (sidebarBlocked) */
+    this._blockedAt = 0; this._blocked = false;
     this.loads = 0;                  /* documents the iframe has loaded (the probe reads it) */
     this.route = null; this.panel = null;   /* set by Home Assistant, not used */
     const root = this.attachShadow({ mode: 'open', delegatesFocus: true });
@@ -386,11 +411,9 @@ export class NucleumHubPanel extends Base {
   /* set by Home Assistant: true at 870 px or less, its sidebar hidden in a drawer */
   get narrow() { return this._narrow; }
   set narrow(v) { this._narrow = !!v; this._menuSync(); }
-  /* set by the card (D-087): Home Assistant's sidebar is a drawer on every screen there, opened only from the dashboard */
-  get menuAlways() { return this._menuAlways; }
-  set menuAlways(v) { this._menuAlways = !!v; this._menuSync(); }
   connectedCallback() {
     UP.els.add(this);
+    kioskHold(this, this._hass);
     this._fit();
     if (!this._onResize && typeof window !== 'undefined') { this._onResize = () => this._fit(); window.addEventListener('resize', this._onResize); }
     this._go();
@@ -400,6 +423,7 @@ export class NucleumHubPanel extends Base {
   }
   disconnectedCallback() {
     clearTimeout(this._timer); UP.els.delete(this);
+    kioskRelease(this);
     if (this._onResize) { window.removeEventListener('resize', this._onResize); this._onResize = null; }
     if (this._ro) { this._ro.disconnect(); this._ro = null; this._roBox = null; }
   }
@@ -514,7 +538,13 @@ export class NucleumHubPanel extends Base {
   }
   /* what the dashboard in the frame listens to; a call into a document that is gone is skipped */
   _emit(type, v) { const ls = this._ls; if (ls) ls[type].forEach(fn => { try { fn(v); } catch (e) {} }); }
-  _menuSync() { const m = this._menuAlways || menuShown(this._hass, this._narrow); if (m !== this._menu) { this._menu = m; this._emit('menu', m); } }
+  /* the menu on every screen, unless the sidebar is out of reach (read again at most every 2 s: .hass comes often) */
+  _menuSync() {
+    const now = Date.now();
+    if (now - this._blockedAt > 2000) { this._blockedAt = now; this._blocked = typeof document !== 'undefined' && sidebarBlocked(document); }
+    const m = !this._blocked;
+    if (m !== this._menu) { this._menu = m; this._emit('menu', m); }
+  }
   /* Home Assistant's sidebar, opened or closed as its own menu button does it (ha-menu-button: fireEvent(this,
      'hass-toggle-menu'), an Event that bubbles and is composed, with detail {}): fired on this element, in Home
      Assistant's document, so it leaves the shadow roots and reaches home-assistant-main, which listens on itself */
@@ -565,17 +595,11 @@ export class NucleumHubPanel extends Base {
      when the card leaves, hui-root being the dashboard's and not only this view's. The panel element then takes its
      height from the view, as it does in the sidebar (_fit). A toolbar that another Home Assistant's selectors miss
      stays on screen, its menu button working: never a dashboard cut off or a blank page.
-   - Home Assistant's sidebar: its kiosk mode while the card is on screen ("hass-kiosk-mode" on window, which
-     Home Assistant's sidebar mixin turns into hass.kioskMode, never stored): home-assistant-main then keeps the sidebar
-     in a drawer over the page, whatever the screen's width or the user's choice to dock it, and opens it only on
-     "hass-toggle-menu". Turned off again when the last card leaves, and only when the card had turned it on (a kiosk
-     app's own kiosk mode is left as it was).
-   - The menu button: the dashboard's own (D-054: the app's tile, or the row at the end of the phone's More sheet) on
-     every screen (menuAlways), since Home Assistant shows none in kiosk mode. */
+   - Home Assistant's sidebar and the menu button: the panel element inside does it, as in the sidebar (kioskHold,
+     sidebarBlocked above). */
 export const CARD_TAG = 'nucleum-hub-card';
 export const ROOT_CSS = '.header{display:none!important}hui-view-container{padding-top:0!important;padding-bottom:0!important}';
 export const ROOT_MARK = 'data-nucleum-hub';
-export const KIOSK_EVENT = 'hass-kiosk-mode';
 /* the hui-root a node sits in, across shadow roots, or null */
 export function rootOf(node) {
   for (let n = node; n;) {
@@ -585,12 +609,8 @@ export function rootOf(node) {
   return null;
 }
 /* the cards on screen in each hui-root (its style goes when the last one leaves: Lovelace may add a new card before it
-   takes the old one out), and whether the kiosk mode is the cards' */
+   takes the old one out) */
 const ROOTS = new WeakMap();
-const KIOSK = { cards: new Set(), mine: false };
-function kioskMode(on) {
-  try { window.dispatchEvent(new CustomEvent(KIOSK_EVENT, { detail: { enable: on } })); } catch (e) {}
-}
 
 export class NucleumHubCard extends Base {
   constructor() {
@@ -599,7 +619,6 @@ export class NucleumHubCard extends Base {
     const root = this.attachShadow({ mode: 'open', delegatesFocus: true });
     root.innerHTML = '<style>:host{display:block;position:relative}</style>';
     this._panel = document.createElement(TAG);
-    this._panel.menuAlways = true;
     root.appendChild(this._panel);
   }
   setConfig(config) { this._config = config || {}; }
@@ -612,13 +631,9 @@ export class NucleumHubCard extends Base {
   }
   connectedCallback() { this._full(true); }
   disconnectedCallback() { this._full(false); }
-  /* the whole screen while this card is on screen, Home Assistant's own again when no card of ours is left */
+  /* Lovelace's toolbar hidden while this card is on screen, back when no card of ours is left in that hui-root */
   _full(on) {
     if (on) {
-      if (!KIOSK.cards.has(this)) {
-        KIOSK.cards.add(this);
-        if (!KIOSK.mine && !(this._hass && this._hass.kioskMode === true)) { KIOSK.mine = true; kioskMode(true); }
-      }
       const root = rootOf(this);
       if (!root || !root.shadowRoot || root === this._root) return;
       this._root = root;
@@ -629,8 +644,6 @@ export class NucleumHubCard extends Base {
       }
       return;
     }
-    KIOSK.cards.delete(this);
-    if (!KIOSK.cards.size && KIOSK.mine) { KIOSK.mine = false; kioskMode(false); }
     const root = this._root; this._root = null;
     if (!root) return;
     const cards = ROOTS.get(root);
@@ -638,9 +651,8 @@ export class NucleumHubCard extends Base {
     const s = root.shadowRoot && root.shadowRoot.querySelector('style[' + ROOT_MARK + ']');
     if (s) s.remove();
   }
-  /* the panel element inside, and whether the kiosk mode is the cards' (the probe) */
+  /* the panel element inside (the probe) */
   get panelEl() { return this._panel; }
-  static get kiosk() { return { cards: KIOSK.cards.size, mine: KIOSK.mine }; }
 }
 
 /* Both elements, defined in the registry of the moment. A scoped custom element registry polyfill that a Lovelace

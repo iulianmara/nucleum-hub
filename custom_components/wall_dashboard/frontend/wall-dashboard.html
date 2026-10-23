@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.WD_VERSION = '1.0';
-window.WD_BUILD = '2026-10-23.a977c45';
+window.WD_BUILD = '2026-10-23.a801ad2';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -42647,6 +42647,7 @@ if(done.has(cid)) return;
 const c = findCard(cid);
 if(c){ host.outerHTML = renderCard(c); done.add(cid); return; }
 }
+const nx = el.nextElementSibling; if(nx && nx.classList.contains('lstrip')) nx.remove();
 el.outerHTML = window.WD_NAMES ? WD_NAMES.tileAgain(el, id) : tileHTML(id, el.dataset.ctx);
 });
 if(PAGES[cur] && PAGES[cur].onstate) PAGES[cur].onstate(id);
