@@ -643,5 +643,23 @@ export class NucleumHubCard extends Base {
   static get kiosk() { return { cards: KIOSK.cards.size, mine: KIOSK.mine }; }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(TAG)) customElements.define(TAG, NucleumHubPanel);
-if (typeof customElements !== 'undefined' && !customElements.get(CARD_TAG)) customElements.define(CARD_TAG, NucleumHubCard);
+/* Both elements, defined in the registry of the moment. A scoped custom element registry polyfill that a Lovelace
+   resource installs after this module (seen on the owner's tablet, Android WebView 155, 24.10.2026) replaces
+   window.customElements with a registry of its own that knows nothing defined before it, so Lovelace found no card
+   ("Configuration error") and panel_custom's whenDefined would wait for ever. Defined again there (the polyfill takes
+   the element the browser already has for the tag), at once, every 250 ms for the first 30 s and at every navigation
+   of Home Assistant's (location-changed); Lovelace then draws the card again by itself (its whenDefined). */
+export function ensureDefined() {
+  if (typeof customElements === 'undefined') return false;
+  let ok = true;
+  [[TAG, NucleumHubPanel], [CARD_TAG, NucleumHubCard]].forEach(([tag, cls]) => {
+    try { if (!customElements.get(tag)) customElements.define(tag, cls); } catch (e) { ok = false; }
+  });
+  return ok;
+}
+ensureDefined();
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  let n = 0;
+  const every = setInterval(() => { ensureDefined(); if (++n >= 120) clearInterval(every); }, 250);
+  window.addEventListener('location-changed', () => ensureDefined());
+}
