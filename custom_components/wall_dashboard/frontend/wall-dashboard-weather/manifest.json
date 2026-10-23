@@ -1,0 +1,89 @@
+{
+ "v": 1,
+ "sets": {
+  "mountain": {
+   "clear-day": "mountain/clear-day.jpg",
+   "clear-night": "mountain/clear-night.jpg",
+   "cloudy-day": "mountain/cloudy-day.jpg",
+   "cloudy-night": "mountain/cloudy-night.jpg",
+   "rain-day": "mountain/rain-day.jpg",
+   "rain-night": "mountain/rain-night.jpg",
+   "snow-day": "mountain/snow-day.jpg",
+   "snow-night": "mountain/snow-night.jpg",
+   "fog-day": "mountain/fog-day.jpg",
+   "fog-night": "mountain/fog-night.jpg"
+  },
+  "hills": {
+   "clear-day": "hills/clear-day.jpg",
+   "clear-night": "hills/clear-night.jpg",
+   "cloudy-day": "hills/cloudy-day.jpg",
+   "cloudy-night": "hills/cloudy-night.jpg",
+   "rain-day": "hills/rain-day.jpg",
+   "rain-night": "hills/rain-night.jpg",
+   "snow-day": "hills/snow-day.jpg",
+   "snow-night": "hills/snow-night.jpg",
+   "fog-day": "hills/fog-day.jpg",
+   "fog-night": "hills/fog-night.jpg"
+  },
+  "plains": {
+   "clear-day": "plains/clear-day.jpg",
+   "clear-night": "plains/clear-night.jpg",
+   "cloudy-day": "plains/cloudy-day.jpg",
+   "cloudy-night": "plains/cloudy-night.jpg",
+   "rain-day": "plains/rain-day.jpg",
+   "rain-night": "plains/rain-night.jpg",
+   "snow-day": "plains/snow-day.jpg",
+   "snow-night": "plains/snow-night.jpg",
+   "fog-day": "plains/fog-day.jpg",
+   "fog-night": "plains/fog-night.jpg"
+  },
+  "sea": {
+   "clear-day": "sea/clear-day.jpg",
+   "clear-night": "sea/clear-night.jpg",
+   "cloudy-day": "sea/cloudy-day.jpg",
+   "cloudy-night": "sea/cloudy-night.jpg",
+   "rain-day": "sea/rain-day.jpg",
+   "rain-night": "sea/rain-night.jpg",
+   "snow-day": "sea/snow-day.jpg",
+   "snow-night": "sea/snow-night.jpg",
+   "fog-day": "sea/fog-day.jpg",
+   "fog-night": "sea/fog-night.jpg"
+  },
+  "city": {
+   "clear-day": "city/clear-day.jpg",
+   "clear-night": "city/clear-night.jpg",
+   "cloudy-day": "city/cloudy-day.jpg",
+   "cloudy-night": "city/cloudy-night.jpg",
+   "rain-day": "city/rain-day.jpg",
+   "rain-night": "city/rain-night.jpg",
+   "snow-day": "city/snow-day.jpg",
+   "snow-night": "city/snow-night.jpg",
+   "fog-day": "city/fog-day.jpg",
+   "fog-night": "city/fog-night.jpg"
+  },
+  "house": {
+   "clear-day": "house/clear-day.jpg",
+   "clear-night": "house/clear-night.jpg",
+   "cloudy-day": "house/cloudy-day.jpg",
+   "cloudy-night": "house/cloudy-night.jpg",
+   "rain-day": "house/rain-day.jpg",
+   "rain-night": "house/rain-night.jpg",
+   "snow-day": "house/snow-day.jpg",
+   "snow-night": "house/snow-night.jpg",
+   "fog-day": "house/fog-day.jpg",
+   "fog-night": "house/fog-night.jpg"
+  },
+  "yacht": {
+   "clear-day": "yacht/clear-day.jpg",
+   "clear-night": "yacht/clear-night.jpg",
+   "cloudy-day": "yacht/cloudy-day.jpg",
+   "cloudy-night": "yacht/cloudy-night.jpg",
+   "rain-day": "yacht/rain-day.jpg",
+   "rain-night": "yacht/rain-night.jpg",
+   "snow-day": "yacht/snow-day.jpg",
+   "snow-night": "yacht/snow-night.jpg",
+   "fog-day": "yacht/fog-day.jpg",
+   "fog-night": "yacht/fog-night.jpg"
+  }
+ }
+}

@@ -1,7 +1,5 @@
 {
   "name": "Nucleum Hub Dashboard",
   "homeassistant": "2026.3.0",
-  "render_readme": true,
-  "zip_release": true,
-  "filename": "nucleum-hub.zip"
+  "render_readme": true
 }
