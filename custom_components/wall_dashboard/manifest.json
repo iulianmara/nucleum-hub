@@ -3,7 +3,7 @@
   "name": "Nucleum Hub",
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["frontend", "http", "panel_custom"],
+  "dependencies": ["frontend", "http", "lovelace", "panel_custom"],
   "documentation": "https://nucleumhub.com/docs/",
   "integration_type": "service",
   "iot_class": "calculated",

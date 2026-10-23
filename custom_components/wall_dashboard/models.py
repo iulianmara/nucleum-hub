@@ -29,6 +29,8 @@ class WallDashboardData:
     dashboard: DashboardFile  # the dashboard's file of the package (D-051)
     panel: bool = False  # True once the sidebar panel is registered (removed again on unload)
     title: str = ""  # the title the sidebar's entry shows (the config entry's; __init__.py _async_entry_updated)
+    module_url: str = ""  # the loader's address, the panel's module and the extra module of every page (dashboard.py)
+    lovelace: bool = False  # True once the Lovelace dashboard is registered (dashboard.py; removed again on unload)
     edition: str | None = None  # the packaged dashboard's edition (frontend/build-info.json), None without one
     # The licence (sale edition only, D-037): its manager (licence/manager.py) and the options flow's class
     # (licence/flow.py), both None when the edition has none or it could not start. Typed loosely so that nothing

@@ -49,6 +49,10 @@ PANEL_URL_PATH: Final = "nucleum-hub"
 PANEL_COMPONENT: Final = "nucleum-hub-panel"  # the custom element of frontend/panel.js
 PANEL_TITLE: Final = NAME  # the sidebar's title until the entry has its own
 PANEL_ICON: Final = "mdi:tablet-dashboard"  # neutral: no Home Assistant or third-party mark
+# The same dashboard as a Lovelace dashboard too (D-087, dashboard.py): the kiosk apps list only those. Hidden from the
+# sidebar; its one card is frontend/panel.js's.
+DASHBOARD_URL_PATH: Final = "nucleum-hub-dashboard"
+CARD_TYPE: Final = "custom:nucleum-hub-card"
 
 # What the package carries next to the code (integration/custom_components/wall_dashboard/frontend).
 # panel.js is committed; the other three are put there by tools/package.mjs (frontend/README.txt).

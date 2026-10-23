@@ -5,7 +5,8 @@ sidebar as the panel "Nucleum Hub", for every user, served only to signed-in use
 card's pictures (``panel.py``, docs/PACHET.md); and it converts music artwork inside the home, so a
 cover that a tablet's browser cannot show (Apple TV's HEIC, for one) reaches it as a JPEG through Home
 Assistant instead of from the internet (D-050: ``artwork.py``, ``websocket.py``,
-docs/ARTWORK-INTEGRARE.md).
+docs/ARTWORK-INTEGRARE.md). The same dashboard is a Lovelace dashboard too, hidden from the sidebar, so the kiosk
+apps that list only those offer it (D-087, ``dashboard.py``).
 
 In the sale edition, the licence (D-064 to D-068, ``licence/``): started after the panel, imported lazily in the
 executor and inside ``try`` (docs/LANSARE-PLAN.md §4.2), so a licence that fails, or a package without the folder
@@ -29,7 +30,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
 
-from . import convert, panel, websocket
+from . import convert, dashboard, panel, websocket
 from .artwork import ArtworkService, async_register_views
 from .const import (
     DATA_LICENCE_ENTRY,
@@ -105,8 +106,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallDashboardConfigEntry
 
     # The sidebar's panel, on every setup, under the entry's title; it leaves with the entry (async_unload_entry).
     # Renamed in Settings › Devices & services, the sidebar follows at once (_async_entry_updated).
-    entry.runtime_data.panel = await panel.async_register_panel(hass, version, _title(entry))
+    tag = await hass.async_add_executor_job(panel.loader_tag)
+    entry.runtime_data.module_url = panel.module_url(version, tag)
+    entry.runtime_data.panel = await panel.async_register_panel(hass, version, _title(entry), tag)
     entry.runtime_data.title = _title(entry)
+    # The same dashboard in the lists of Lovelace dashboards, for the kiosk apps (D-087); it leaves with the entry too.
+    entry.runtime_data.lovelace = dashboard.async_register(hass, _title(entry), entry.runtime_data.module_url)
     entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
 
     async def _async_close(_event: Event) -> None:
@@ -128,12 +133,15 @@ def _title(entry: WallDashboardConfigEntry) -> str:
 
 
 async def _async_entry_updated(hass: HomeAssistant, entry: WallDashboardConfigEntry) -> None:
-    """The entry renamed (or its options changed): a new title is put on the sidebar's entry, nothing else moves."""
+    """The entry renamed (or its options changed): a new title is put on the sidebar's entry and on the Lovelace
+    dashboard's, nothing else moves."""
     data = entry.runtime_data
     if data is None or not data.panel or _title(entry) == data.title:
         return
     panel.async_remove_panel(hass)
     data.panel = await panel.async_register_panel(hass, data.version, _title(entry))
+    if data.lovelace:
+        data.lovelace = dashboard.async_register(hass, _title(entry), data.module_url, update=True)
     data.title = _title(entry)
 
 
@@ -172,6 +180,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: WallDashboardConfigEntr
     if data.panel:
         panel.async_remove_panel(hass)
         data.panel = False
+    if data.lovelace:
+        dashboard.async_remove(hass, data.module_url)
+        data.lovelace = False
     data.dashboard.clear()
     await data.artwork.async_close()
     return True

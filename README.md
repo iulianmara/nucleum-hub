@@ -40,6 +40,9 @@ The first time, Home Assistant installs the `pillow-heif` library from PyPI by i
   Assistant: the tablet never asks the internet for it.
 - **Home Assistant's menu on a phone.** In the panel, Home Assistant's header is not shown; on a phone (and in the
   Home Assistant app) the dashboard's **More** menu ends with a **Home Assistant menu** row that opens the sidebar.
+- **In the kiosk apps' dashboard lists.** Apps such as Kiosk Satellite list only Lovelace dashboards, so Nucleum Hub
+  is a Lovelace dashboard too (hidden from the sidebar, which keeps one Nucleum Hub): pick **Nucleum Hub** as the
+  kiosk's dashboard. It fills the whole screen; Home Assistant's menu opens from the dashboard's own menu button.
 - **The weather card's pictures**, from the same package.
 - **Music artwork converted at home.** A cover that a tablet's browser cannot show (an Apple TV's HEIC covers on
   Android, for example) is converted to JPEG inside Home Assistant, so the dashboard does not need to fetch it from the

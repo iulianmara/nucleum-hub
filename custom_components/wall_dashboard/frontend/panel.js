@@ -1,6 +1,7 @@
 /* Nucleum Hub: the panel loader (D-051). The integration registers it as the custom panel "Nucleum Hub" in Home
    Assistant's sidebar (frontend_url_path "nucleum-hub", module_url "/nucleum_hub/panel.js?v=<integration version>",
-   embed_iframe False), so it is on every screen, for every user, with no file to copy.
+   embed_iframe False), so it is on every screen, for every user, with no file to copy. The same module defines the card
+   of the Lovelace dashboard /nucleum-hub-dashboard, which the kiosk apps list (D-087, "the card" below).
    Plain ES module, no build step, no framework, no request outside Home Assistant.
 
    What it does, once per page of Home Assistant's frontend:
@@ -365,6 +366,7 @@ export class NucleumHubPanel extends Base {
     this._ls = null;                 /* the listeners the dashboard in the current frame gave WD_HOST.on: {menu, update} */
     this._narrow = false;
     this._menu = false;              /* Home Assistant's menu button would show (menuShown) */
+    this._menuAlways = false;        /* the card's: the menu on every screen (D-087) */
     this.loads = 0;                  /* documents the iframe has loaded (the probe reads it) */
     this.route = null; this.panel = null;   /* set by Home Assistant, not used */
     const root = this.attachShadow({ mode: 'open', delegatesFocus: true });
@@ -384,6 +386,9 @@ export class NucleumHubPanel extends Base {
   /* set by Home Assistant: true at 870 px or less, its sidebar hidden in a drawer */
   get narrow() { return this._narrow; }
   set narrow(v) { this._narrow = !!v; this._menuSync(); }
+  /* set by the card (D-087): Home Assistant's sidebar is a drawer on every screen there, opened only from the dashboard */
+  get menuAlways() { return this._menuAlways; }
+  set menuAlways(v) { this._menuAlways = !!v; this._menuSync(); }
   connectedCallback() {
     UP.els.add(this);
     this._fit();
@@ -509,7 +514,7 @@ export class NucleumHubPanel extends Base {
   }
   /* what the dashboard in the frame listens to; a call into a document that is gone is skipped */
   _emit(type, v) { const ls = this._ls; if (ls) ls[type].forEach(fn => { try { fn(v); } catch (e) {} }); }
-  _menuSync() { const m = menuShown(this._hass, this._narrow); if (m !== this._menu) { this._menu = m; this._emit('menu', m); } }
+  _menuSync() { const m = this._menuAlways || menuShown(this._hass, this._narrow); if (m !== this._menu) { this._menu = m; this._emit('menu', m); } }
   /* Home Assistant's sidebar, opened or closed as its own menu button does it (ha-menu-button: fireEvent(this,
      'hass-toggle-menu'), an Event that bubbles and is composed, with detail {}): fired on this element, in Home
      Assistant's document, so it leaves the shadow roots and reaches home-assistant-main, which listens on itself */
@@ -548,4 +553,95 @@ export class NucleumHubPanel extends Base {
   static forget() { forget(); }
 }
 
+/* ------------------------------------------------------------------ the card (D-087) */
+/* The same dashboard as a Lovelace dashboard too: the kiosk apps list only those, so the integration also registers
+   /nucleum-hub-dashboard (hidden from the sidebar, read-only: one panel view with this card; dashboard.py), and loads
+   this module on every page of Home Assistant's frontend, at the panel's own address (one module, one CACHE). The card
+   holds a panel element (the file, the frame, WD_HOST, a new version: all of the above) and makes it the whole screen,
+   the owner's choice (24.10.2026): nothing of Home Assistant's around it, its sidebar only when the dashboard's menu
+   button is tapped.
+   - Lovelace's toolbar: while the card is on screen, a style in hui-root's shadow root hides it and the room it keeps
+     (ROOT_CSS, hui-root's own selectors, read in the frontend of Home Assistant 2026.10, 20260930), taken out again
+     when the card leaves, hui-root being the dashboard's and not only this view's. The panel element then takes its
+     height from the view, as it does in the sidebar (_fit). A toolbar that another Home Assistant's selectors miss
+     stays on screen, its menu button working: never a dashboard cut off or a blank page.
+   - Home Assistant's sidebar: its kiosk mode while the card is on screen ("hass-kiosk-mode" on window, which
+     Home Assistant's sidebar mixin turns into hass.kioskMode, never stored): home-assistant-main then keeps the sidebar
+     in a drawer over the page, whatever the screen's width or the user's choice to dock it, and opens it only on
+     "hass-toggle-menu". Turned off again when the last card leaves, and only when the card had turned it on (a kiosk
+     app's own kiosk mode is left as it was).
+   - The menu button: the dashboard's own (D-054: the app's tile, or the row at the end of the phone's More sheet) on
+     every screen (menuAlways), since Home Assistant shows none in kiosk mode. */
+export const CARD_TAG = 'nucleum-hub-card';
+export const ROOT_CSS = '.header{display:none!important}hui-view-container{padding-top:0!important;padding-bottom:0!important}';
+export const ROOT_MARK = 'data-nucleum-hub';
+export const KIOSK_EVENT = 'hass-kiosk-mode';
+/* the hui-root a node sits in, across shadow roots, or null */
+export function rootOf(node) {
+  for (let n = node; n;) {
+    if (n.localName === 'hui-root') return n;
+    n = n.parentNode || (n.host && n.nodeType === 11 ? n.host : null);
+  }
+  return null;
+}
+/* the cards on screen in each hui-root (its style goes when the last one leaves: Lovelace may add a new card before it
+   takes the old one out), and whether the kiosk mode is the cards' */
+const ROOTS = new WeakMap();
+const KIOSK = { cards: new Set(), mine: false };
+function kioskMode(on) {
+  try { window.dispatchEvent(new CustomEvent(KIOSK_EVENT, { detail: { enable: on } })); } catch (e) {}
+}
+
+export class NucleumHubCard extends Base {
+  constructor() {
+    super();
+    this._hass = null; this._config = {}; this._root = null;
+    const root = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    root.innerHTML = '<style>:host{display:block;position:relative}</style>';
+    this._panel = document.createElement(TAG);
+    this._panel.menuAlways = true;
+    root.appendChild(this._panel);
+  }
+  setConfig(config) { this._config = config || {}; }
+  getCardSize() { return 12; }
+  get hass() { return this._hass; }
+  set hass(h) {
+    this._hass = h;
+    if (this.isConnected) this._full(true);
+    this._panel.hass = h;
+  }
+  connectedCallback() { this._full(true); }
+  disconnectedCallback() { this._full(false); }
+  /* the whole screen while this card is on screen, Home Assistant's own again when no card of ours is left */
+  _full(on) {
+    if (on) {
+      if (!KIOSK.cards.has(this)) {
+        KIOSK.cards.add(this);
+        if (!KIOSK.mine && !(this._hass && this._hass.kioskMode === true)) { KIOSK.mine = true; kioskMode(true); }
+      }
+      const root = rootOf(this);
+      if (!root || !root.shadowRoot || root === this._root) return;
+      this._root = root;
+      const cards = ROOTS.get(root) || new Set(); cards.add(this); ROOTS.set(root, cards);
+      if (!root.shadowRoot.querySelector('style[' + ROOT_MARK + ']')) {
+        const s = document.createElement('style'); s.setAttribute(ROOT_MARK, ''); s.textContent = ROOT_CSS;
+        root.shadowRoot.appendChild(s);
+      }
+      return;
+    }
+    KIOSK.cards.delete(this);
+    if (!KIOSK.cards.size && KIOSK.mine) { KIOSK.mine = false; kioskMode(false); }
+    const root = this._root; this._root = null;
+    if (!root) return;
+    const cards = ROOTS.get(root);
+    if (cards) { cards.delete(this); if (cards.size) return; ROOTS.delete(root); }
+    const s = root.shadowRoot && root.shadowRoot.querySelector('style[' + ROOT_MARK + ']');
+    if (s) s.remove();
+  }
+  /* the panel element inside, and whether the kiosk mode is the cards' (the probe) */
+  get panelEl() { return this._panel; }
+  static get kiosk() { return { cards: KIOSK.cards.size, mine: KIOSK.mine }; }
+}
+
 if (typeof customElements !== 'undefined' && !customElements.get(TAG)) customElements.define(TAG, NucleumHubPanel);
+if (typeof customElements !== 'undefined' && !customElements.get(CARD_TAG)) customElements.define(CARD_TAG, NucleumHubCard);

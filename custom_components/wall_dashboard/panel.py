@@ -252,12 +252,13 @@ def loader_tag(folder: Path = FRONTEND) -> str:
         return ""
 
 
-async def async_register_panel(hass: HomeAssistant, version: str, title: str = PANEL_TITLE) -> bool:
+async def async_register_panel(hass: HomeAssistant, version: str, title: str = PANEL_TITLE, tag: str | None = None) -> bool:
     """The sidebar's entry, under the config entry's title ("Nucleum Hub" until its owner renames it), for
     every user. False when the address is already taken (a dashboard of the same address, say): the rest of the
     integration still works."""
     try:
-        tag = await hass.async_add_executor_job(loader_tag)
+        if tag is None:
+            tag = await hass.async_add_executor_job(loader_tag)
         await panel_custom.async_register_panel(hass, **panel_config(version, title, tag))
     except ValueError:
         _LOGGER.warning(
@@ -275,6 +276,11 @@ def async_remove_panel(hass: HomeAssistant) -> None:
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
 
 
+def module_url(version: str, tag: str = "") -> str:
+    """The loader's address: the version (``v``, which the loader reads as its own) and its file's fingerprint (``h``)."""
+    return f"{URL_PANEL_JS}?v={version}" + (f"&h={tag}" if tag else "")
+
+
 def panel_config(version: str, title: str = PANEL_TITLE, tag: str = "") -> dict[str, Any]:
     """The panel's registration, as the contract fixes it (docs/PACHET.md): the loader's module carries
     the version in its address (``v``, which the loader reads as its own) and the fingerprint of its file (``h``, for the
@@ -284,7 +290,7 @@ def panel_config(version: str, title: str = PANEL_TITLE, tag: str = "") -> dict[
         "webcomponent_name": PANEL_COMPONENT,
         "sidebar_title": title,
         "sidebar_icon": PANEL_ICON,
-        "module_url": f"{URL_PANEL_JS}?v={version}" + (f"&h={tag}" if tag else ""),
+        "module_url": module_url(version, tag),
         "embed_iframe": False,
         "require_admin": False,
         "config": {"version": version},
