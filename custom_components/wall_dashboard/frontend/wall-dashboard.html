@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.WD_VERSION = '1.0';
-window.WD_BUILD = '2026-10-24.a20f610';
+window.WD_BUILD = '2026-10-24.1b62eee';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -44482,7 +44482,7 @@ const card=findCard(el.dataset.cid); if(card && roomDeps(card).some(id=>set.has(
 if(set.has(NOTIF_SRC) || ids.some(id=>/battery|co2|carbon|soil|fuel|tyre|energy_production/.test(id))){
 const fc=(LAYOUT.home.cards||[]).find(c=>c.type==='feed'); const el=fc&&document.querySelector('.card[data-cid="'+fc.id+'"]');
 if(el){ const prevS=FEED.sug.n, prevN=FEED.notif.n; const tmp=document.createElement('div'); tmp.innerHTML=feedHTML();
-if(set.has(NOTIF_SRC) || FEED.sug.n!==prevS || FEED.notif.n!==prevN){ el.outerHTML=renderCard(fc); feedLayout(); } }
+if(set.has(NOTIF_SRC) || FEED.sug.n!==prevS || FEED.notif.n!==prevN){ el.outerHTML=renderCard(fc); feedLayout(); wdFeedRepack(); } }
 }
 if(ROOMPOP){ const p=document.querySelector('#roompop .rclim'); const card=findCard(ROOMPOP); if(p&&card) p.innerHTML=roomClimHTML(card,false); }
 };
@@ -44560,12 +44560,16 @@ out.push('<div class="fitem '+lvl+'"><div class="iic">'+ic(catIc[r.categorie]||'
 });
 return out.slice(0,20);
 }
+function wdFeedRepack(){
+(function go(){ if(typeof packBusy!=='undefined' && packBusy){ setTimeout(go, 120); return; } try{ packGrid(); }catch(e){} })();
+}
 function refreshFeed(){
 if(cur!=='home') return;
 const fc=(LAYOUT.home.cards||[]).find(c=>c.type==='feed'); const el=fc&&document.querySelector('.card[data-cid="'+fc.id+'"]'); if(!el) return;
 el.outerHTML=renderCard(fc);
 ['sug','notif'].forEach(k=>{ if(FEED[k].i>=FEED[k].n) FEED[k].i=Math.max(0,FEED[k].n-1); FEED[k].next=0; });
 feedLayout();
+wdFeedRepack();
 }
 document.addEventListener('click', ev=>{
 const b=ev.target.closest('[data-fclr]'); if(!b) return;
@@ -50196,7 +50200,7 @@ function apply(ids){
     if(cur === 'home' && (ids.indexOf(nf) > -1 || ids.some(id=>/battery|co2|carbon|soil|fuel|tyre|energy_production/.test(id)))){
       const fc = (LAYOUT.home.cards||[]).find(c=>c.type==='feed'), el = fc && document.querySelector('#grid .card[data-cid="'+fc.id+'"]');
       if(el){ const ps = FEED.sug.n, pn = FEED.notif.n; feedHTML();
-        if(ids.indexOf(nf) > -1 || FEED.sug.n !== ps || FEED.notif.n !== pn){ el.outerHTML = renderCard(fc); feedLayout(); } }
+        if(ids.indexOf(nf) > -1 || FEED.sug.n !== ps || FEED.notif.n !== pn){ el.outerHTML = renderCard(fc); feedLayout(); wdFeedRepack(); } }
     }
   }catch(e){}
   try{ if(cur === 'media' && typeof MP_DEVS !== 'undefined' && ids.some(id=>MP_DEVS.includes(id)) && !MP.lib && document.getElementById('mp')) renderMP(); }catch(e){}
