@@ -13,10 +13,11 @@ The rhythm, from what the stored token says:
 - when the token's full time ends (a subscription's paid period, a staging token, the one-time licence's 14 days):
   5 minutes after that moment, when the renewal Paddle charged has reached the server, then every hour for a day,
   then daily for as long as the grace lasts. A renewal paid on time thus replaces the token within the hour, and one
-  paid during the 7 days of grace within the day (or at once, when the admin opens the settings). The randomness of
+  paid during the 5 days of grace within the day (or at once, when the admin opens the settings). The randomness of
   the regular rhythm never carries a request past that moment;
-- a token whose grace ended more than a day ago (a subscription that stopped, a staging instance that could not be
-  checked): once a week. Only support can bring such a licence back, and the admin can still ask at once;
+- a token whose grace ended more than a day ago: a subscription that stopped, once a day, so a payment made later (the
+  paused subscription paid, or a new one, which keeps the key: D-089) brings the licence back within the day; a staging
+  instance that could not be checked, once a week. The admin can still ask at once;
 - a home the server says no longer holds the licence (not_bound): once a week, in case that answer was a mistake;
 - after a failure that may pass (no connection, the server busy): 5 minutes, then twice as long each time, up to 6
   hours; after a 429, never before its Retry-After.
@@ -89,7 +90,8 @@ def planned(claims: Mapping[str, Any] | None, role: str | None, *, checked: floa
     if now < end + HOURLY_FOR:
         return min(when, base + HOUR), NEAR_SPREAD
     if window.grace_until is not None and now >= window.grace_until + HOURLY_FOR:
-        return base + WEEK, spread
+        # a subscription that stopped: daily, so a payment made later brings it back within the day (D-089)
+        return base + (DAY if claims.get("plan") == "sub" and claims.get("role") != "staging" else WEEK), spread
     return min(when, base + DAY), spread
 
 

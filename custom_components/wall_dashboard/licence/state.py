@@ -75,11 +75,11 @@ class Grace(NamedTuple):
 
 
 GRACE: Final = MappingProxyType({
-    "sub": Grace(7, "before", "payment_due"),
+    "sub": Grace(5, "before", "payment_due"),
     "life": Grace(90, "after", "provisional"),
     "founder": Grace(90, "after", "provisional"),
     "pro": Grace(30, "after", "renewal_due"),
-    "nfr": Grace(30, "after", "renewal_due"),
+    "nfr": Grace(0, "after", "renewal_due"),  # D-089: ends on the day the owner chose
     "beta": Grace(0, "after", "renewal_due"),
     "trial": Grace(0, "after", "renewal_due"),
 })
