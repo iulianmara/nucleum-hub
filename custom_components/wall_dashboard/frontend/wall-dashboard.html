@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.WD_VERSION = '1.0';
-window.WD_BUILD = '2026-10-24.1b62eee';
+window.WD_BUILD = '2026-10-26.543a30b';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -30,12 +30,14 @@ window.wdReload = function(){
 </script>
 <script>window.WD_LICENSE = (function () {
   'use strict';
-  var CMD = 'wall_dashboard/licence', CMD_SUB = 'wall_dashboard/licence/subscribe';
+  var CMD = 'wall_dashboard/licence', CMD_SUB = 'wall_dashboard/licence/subscribe', CMD_TRIAL = 'wall_dashboard/licence/trial';
   var STATES = ['FULL', 'TRIAL', 'GRACE', 'FALLBACK', 'UNCOVERED', 'ACTIVATE'];
   var BLOCKS = ['ACTIVATE', 'UNCOVERED'];
   var KINDS = ['buy', 'renew', 'payment'];
-  var MIN = 60000, DAY = 86400000;
-  var TRIAL_CHIP = 15 * MIN, TRIAL_CARD = 5 * MIN;
+  var MIN = 60000, HOUR = 3600000, DAY = 86400000;
+  var TRIAL_CARD = DAY, TRIAL_LAST = HOUR;
+  var TRIAL_MS = 30000;
+  var TRIAL_ERRORS = ['trial_used', 'licensed', 'rate_limited', 'unavailable', 'invalid_token', 'not_available'];
   var TABLET_SIDE = 500;
   var ANSWER_MS = 10000, RETRY = [5000, 15000, 30000, 60000], ABSENT_MS = 300000, NEXT_MAX = 3600000;
   var SETTINGS_PATH = '/config/integrations/integration/wall_dashboard';
@@ -47,8 +49,9 @@ window.wdReload = function(){
   };
   var MSG = {
     pending:         { tone: 'ok',   icon: 'spark',  actions: [], path: false, wait: true },
+    welcome:         { tone: 'buy',  icon: 'spark',  actions: ['trial', 'settings', 'link'], path: false, bare: true, cards: true },
     key:             { tone: 'key',  icon: 'key',    actions: ['link', 'settings'], path: true },
-    trial_over:      { tone: 'buy',  icon: 'clock',  actions: ['link', 'settings'], path: true },
+    trial_over:      { tone: 'buy',  icon: 'clock',  actions: ['settings', 'link'], path: true, bare: true },
     sub_expired:     { tone: 'warn', icon: 'card',   actions: ['link', 'retry', 'settings'], path: false },
     expired:         { tone: 'warn', icon: 'clock',  actions: ['link', 'settings'], path: true },
     life_unverified: { tone: 'net',  icon: 'wifi',   actions: ['retry', 'settings'], path: false },
@@ -93,7 +96,8 @@ window.wdReload = function(){
       state: p.state, reason: str(p.reason), until: moment(p.until), plan: str(p.plan), role: str(p.role),
       grace: num(p.grace) && p.grace > 0 ? Math.floor(p.grace) : 0, notice: str(p.notice), now: moment(p.now),
       link: l, link_kind: l && has(KINDS, p.link_kind) ? p.link_kind : null,
-      cloned: p.cloned === true, lost: p.lost === true, trial_pending: p.trial_pending === true
+      cloned: p.cloned === true, lost: p.lost === true, trial_available: p.trial_available === true,
+      trial_used: p.trial_used === true, trial_pending: p.trial_pending === true
     };
   }
   function skewOf(c, at) { return c && c.now !== null && num(at) ? c.now * 1000 - at : 0; }
@@ -106,12 +110,13 @@ window.wdReload = function(){
     if (c.state === 'UNCOVERED') return c.plan === 'sub' ? 'sub_expired' : 'uncovered';
     if (c.lost) return 'lost';
     if (c.reason === 'no_token' && c.trial_pending) return 'pending';
+    if (c.reason === 'no_token' && c.trial_available) return 'welcome';
     return c.reason !== null && own(REASON_MSG, c.reason) ? REASON_MSG[c.reason] : 'blocked';
   }
   function acts(list, o) {
     return list.filter(function (a) {
       if (a === 'link') return !!o.link;
-      if (a === 'retry' || a === 'settings') return o.admin !== false;
+      if (a === 'retry' || a === 'settings' || a === 'trial') return o.admin !== false;
       return true;
     });
   }
@@ -127,12 +132,21 @@ window.wdReload = function(){
     if (c.cloned) out.push('cloned');
     return out;
   }
-  function trialOf(c, ha, local) {
+  function leftUnit(left) {
+    if (left === null) return null;
+    if (left >= DAY) return { unit: 'd', n: Math.ceil(left / DAY) };
+    if (left >= HOUR) return { unit: 'h', n: Math.ceil(left / HOUR) };
+    return { unit: 'm', n: Math.max(1, Math.ceil(left / MIN)) };
+  }
+  function trialOf(c, ha, local, admin) {
     if (!c || c.state !== 'TRIAL') return null;
     var left = leftOf(c, ha);
-    if (left === null) return { until: null, untilLocal: null, left: null, minutes: null, chip: false, card: false };
-    return { until: c.until, untilLocal: local(c.until), left: left, minutes: Math.max(1, Math.ceil(left / MIN)),
-      chip: left <= TRIAL_CHIP, card: left <= TRIAL_CARD };
+    if (left === null) return { until: null, untilLocal: null, left: null, unit: null, n: null, chip: false, card: false, phase: null, hideUntil: null, link: null, actions: [] };
+    var u = leftUnit(left), end = local(c.until);
+    var phase = left < TRIAL_LAST ? 'hour' : left < TRIAL_CARD ? 'day' : 'early';
+    return { until: c.until, untilLocal: end, left: left, unit: u.unit, n: u.n, chip: true, card: phase !== 'early', phase: phase,
+      hideUntil: phase === 'hour' ? end + MIN : phase === 'day' ? end - TRIAL_LAST : end - TRIAL_CARD,
+      link: c.link, actions: acts(['link', 'settings'], { link: c.link, admin: admin }) };
   }
   function aboutIdOf(c, absent) {
     if (!c) return absent ? 'no_integration' : 'waiting';
@@ -153,11 +167,10 @@ window.wdReload = function(){
     if (left === null || left <= 0) return null;
     var out = [left];
     if (c.state === 'TRIAL') {
-      if (left > TRIAL_CHIP) out.push(left - TRIAL_CHIP);
-      else {
-        if (left > TRIAL_CARD) out.push(left - TRIAL_CARD);
-        out.push(left - (Math.ceil(left / MIN) - 1) * MIN);
-      }
+      var u = leftUnit(left), size = u.unit === 'd' ? DAY : u.unit === 'h' ? HOUR : MIN;
+      out.push(left - (u.n - 1) * size);
+      if (left >= TRIAL_CARD) out.push(left - TRIAL_CARD + 1);
+      if (left >= TRIAL_LAST) out.push(left - TRIAL_LAST + 1);
     } else if (c.state === 'GRACE') out.push(left - Math.floor(left / DAY) * DAY || DAY);
     else return null;
     return Math.max(1, Math.min.apply(Math, out));
@@ -175,7 +188,8 @@ window.wdReload = function(){
     if (m) {
       var lk = c ? c.link : null;
       out.block = { msg: m, tone: MSG[m].tone, icon: MSG[m].icon, path: MSG[m].path, link: lk, kind: lk ? c.link_kind : null,
-        qr: !MSG[m].wait && qrOn(lk, o.w, o.h), actions: acts(MSG[m].actions, { link: lk, admin: admin }), code: c ? codeOf(c) : 'no_integration' };
+        qr: !MSG[m].wait && qrOn(lk, o.w, o.h), actions: acts(MSG[m].actions, { link: lk, admin: admin }), code: c ? codeOf(c) : 'no_integration',
+        foot: !MSG[m].wait && !MSG[m].bare, cards: !!MSG[m].cards, used: m === 'key' && !!c && c.trial_used };
     }
     var left = c ? leftOf(c, ha) : null;
     if (c && !out.block) {
@@ -188,13 +202,13 @@ window.wdReload = function(){
           key: id + ':' + (timed && c.until !== null ? c.until : '') };
       });
       out.band = out.bands[0] || null;
-      out.trial = trialOf(c, ha, local);
+      out.trial = trialOf(c, ha, local, admin);
       out.next = nextOf(c, ha);
     }
     var aid = aboutIdOf(c, !!o.absent);
     out.about = { id: aid, msg: out.block ? out.block.msg : null, plan: c ? c.plan : null, role: c ? c.role : null,
       until: c ? c.until : null, untilLocal: c ? local(c.until) : null, days: daysOf(left),
-      minutes: left === null ? null : Math.max(1, Math.ceil(left / MIN)), renews: !!c && c.grace > 0,
+      left: leftUnit(left), renews: !!c && c.grace > 0,
       notice: c && c.notice === 'verify_security' ? c.notice : null, cloned: !!c && c.cloned,
       link: c ? c.link : null, kind: c && c.link ? c.link_kind : null, code: out.block ? out.block.code : codeOf(c),
       actions: aid === 'blocked' ? out.block.actions : acts(ABOUT[aid], { link: c && c.link, admin: admin }) };
@@ -219,7 +233,8 @@ window.wdReload = function(){
   };
   function fresh() {
     return { conn: null, gen: 0, unsub: null, lang: null, pending: false, p: null, at: 0, missing: null, absent: false,
-      tries: 0, timer: null, tick: null, watched: null, leaveSet: false, left: false, asks: 0, subs: 0 };
+      tries: 0, timer: null, tick: null, watched: null, leaveSet: false, left: false, asks: 0, subs: 0,
+      trial: null, trials: 0 };
   }
   var R = fresh(), listeners = [];
   function off(un) { if (typeof un === 'function') { try { Promise.resolve(un()).catch(function () {}); } catch (e) {} } }
@@ -319,6 +334,35 @@ window.wdReload = function(){
     if (R.conn && !R.unsub && !R.pending && !R.left) { R.tries = 0; subscribe(); return Promise.resolve(view()); }
     return refresh();
   }
+  function trialAnswer(r, err) {
+    if (err !== undefined) {
+      var code = err && typeof err.code === 'string' ? err.code : '';
+      return { ok: false, error: code === 'unauthorized' ? code : 'failed', minutes: null };
+    }
+    if (r && typeof r === 'object' && r.ok === true) return { ok: true, error: null, minutes: null };
+    var e = r && typeof r === 'object' && has(TRIAL_ERRORS, r.error) ? r.error : 'failed';
+    return { ok: false, error: e, minutes: e === 'rate_limited' && num(r.minutes) && r.minutes > 0 ? Math.ceil(r.minutes) : null };
+  }
+  function startTrial() {
+    if (R.trial) return R.trial;
+    var c = R.conn || D.conn();
+    if (!c || D.demo() || R.left) return Promise.resolve(trialAnswer(null, { code: 'no_connection' }));
+    R.trials++;
+    var p = new Promise(function (ok) {
+      var done = false;
+      var tm = D.later(function () { if (!done) { done = true; ok(trialAnswer(null, { code: 'timeout' })); } }, TRIAL_MS);
+      Promise.resolve().then(function () { return c.send({ type: CMD_TRIAL }); }).then(function (r) {
+        if (done) return; done = true; D.cancel(tm); ok(trialAnswer(r));
+      }, function (err) {
+        if (done) return; done = true; D.cancel(tm); ok(trialAnswer(null, err || {}));
+      });
+    }).then(function (a) {
+      if (R.trial === p) R.trial = null;
+      return a;
+    });
+    R.trial = p;
+    return p;
+  }
   function leave() {
     R.left = true; drop();
     var pc = R.watched; R.watched = null;
@@ -350,14 +394,17 @@ window.wdReload = function(){
   }
 
   return {
-    edition: 'sale', CMD: CMD, CMD_SUB: CMD_SUB, STATES: STATES.slice(), KINDS: KINDS.slice(),
+    edition: 'sale', CMD: CMD, CMD_SUB: CMD_SUB, CMD_TRIAL: CMD_TRIAL, STATES: STATES.slice(), KINDS: KINDS.slice(),
     MESSAGES: MESSAGES, BANDS: BANDS, ABOUTS: ABOUTS, REASON_MSG: REASON_MSG, SETTINGS_PATH: SETTINGS_PATH,
-    TRIAL_CHIP: TRIAL_CHIP, TRIAL_CARD: TRIAL_CARD, TABLET_SIDE: TABLET_SIDE, RETRY: RETRY.slice(),
+    TRIAL_CARD: TRIAL_CARD, TRIAL_LAST: TRIAL_LAST, TRIAL_MS: TRIAL_MS, TRIAL_ERRORS: TRIAL_ERRORS.slice(),
+    TABLET_SIDE: TABLET_SIDE, RETRY: RETRY.slice(),
     clean: clean, model: model, msgOf: msgOf, bandsOf: bandsOf, isTablet: isTablet, qrOn: qrOn, link: link,
-    start: start, reconnected: reconnected, refresh: refresh, retry: retry, view: view, onChange: onChange, use: use,
+    leftUnit: leftUnit, trialAnswer: trialAnswer,
+    start: start, reconnected: reconnected, refresh: refresh, retry: retry, startTrial: startTrial, view: view, onChange: onChange, use: use,
     state: function () { return R.p ? R.p.state : null; },
     limits: function () { return { answerMs: ANSWER_MS, absentMs: ABSENT_MS }; },
-    stats: function () { return { subs: R.subs, asks: R.asks, live: !!R.unsub, pending: R.pending, absent: R.absent, lang: R.lang, retrying: !!R.timer }; }
+    stats: function () { return { subs: R.subs, asks: R.asks, live: !!R.unsub, pending: R.pending, absent: R.absent, lang: R.lang, retrying: !!R.timer,
+      trials: R.trials, starting: !!R.trial }; }
   };
 })();
 </script>
@@ -387,7 +434,9 @@ window.wdReload = function(){
   var ICON_OF = { key: 'key', clock: 'clock', card: 'liccard', wifi: 'licwifi', move: 'licmove', undo: 'licundo', stop: 'licstop',
     shield: 'licshield', flask: 'licflask', layers: 'liclayers', copy: 'liccopy', plug: 'plug', spark: 'licspark' };
 
-  var LINK_BY_MSG = { key: 'lic.btn_prices', trial_over: 'lic.btn_plan', expired: 'lic.btn_plan', sub_expired: 'lic.btn_renew_sub', uncovered: 'lic.btn_options' };
+  var LINK_BY_MSG = { key: 'lic.btn_prices', welcome: 'lic.btn_buy', trial_over: 'lic.btn_buy', expired: 'lic.btn_plan', sub_expired: 'lic.btn_renew_sub', uncovered: 'lic.btn_options' };
+  var SETTINGS_BY_MSG = { welcome: 'lic.btn_have_key', trial_over: 'lic.btn_have_key' };
+  var ERR_LINE = { unavailable: 'lic.e_unavailable', invalid_token: 'lic.e_invalid_token', trial_used: 'lic.used', licensed: 'lic.e_licensed' };
   var LINK_BY_KIND = { buy: 'lic.btn_prices', renew: 'lic.btn_renew', payment: 'lic.btn_pay' };
   function linkKey(msg, kind) { return LINK_BY_MSG[msg] || LINK_BY_KIND[kind] || 'lic.btn_prices'; }
   var BAND_RETRY = { provisional: 'lic.btn_try_now', verify_security: 'lic.btn_check' };
@@ -397,7 +446,7 @@ window.wdReload = function(){
     waiting:        { b: 'lic.eyebrow',          s: 'lic.a_waiting',     pill: null,                tone: 'ver' },
     no_integration: { b: 'lic.m_no_integration_t', s: 'lic.m_no_integration_p', pill: 'lic.pill_missing', tone: 'net' },
     blocked:        { b: null,                   s: null,                pill: 'lic.pill_inactive', tone: null },
-    trial:          { b: 'lic.a_trial_b',        s: 'lic.a_trial_s',     pill: 'min',               tone: 'buy', meta: 'lic.a_trial_note' },
+    trial:          { b: 'lic.a_trial_b',        s: 'lic.a_trial_s',     pill: 'left',              tone: 'buy', meta: 'lic.a_trial_note' },
     sub:            { b: 'lic.a_sub_b',          s: 'lic.a_sub_s',       pill: 'lic.pill_active_sub', tone: 'ok' },
     payment:        { b: 'lic.a_sub_b',          s: 'lic.a_payment_s',   pill: 'lic.pill_payment',  tone: 'warn' },
     life:           { b: 'lic.a_life_b',         s: 'lic.a_life_s',      pill: 'lic.pill_active',   tone: 'ok' },
@@ -415,39 +464,71 @@ window.wdReload = function(){
   var KEYS = ['lic.eyebrow', 'lic.foot', 'lic.settings', 'lic.retry', 'lic.write', 'lic.later', 'lic.checking',
     'lic.path_settings', 'lic.path_devices', 'lic.path_configure', 'lic.qr_buy', 'lic.qr_renew', 'lic.qr_payment',
     'lic.btn_prices', 'lic.btn_plan', 'lic.btn_renew_sub', 'lic.btn_options', 'lic.btn_renew', 'lic.btn_pay', 'lic.btn_try_now',
-    'lic.btn_check', 'lic.btn_open_settings', 'lic.band_aria', 'lic.card_p', 'lic.a_sub_end_s', 'lic.pill_min', 'aria.close']
+    'lic.btn_check', 'lic.btn_open_settings', 'lic.band_aria', 'lic.card_p', 'lic.a_sub_end_s', 'lic.pill_min', 'aria.close',
+    'lic.btn_buy', 'lic.btn_have_key', 'lic.btn_start_trial', 'lic.starting', 'lic.used', 'lic.chip_left', 'lic.card_left',
+    'lic.w_trial_t', 'lic.w_trial_p', 'lic.w_trial_server', 'lic.w_trial_admin', 'lic.w_key_t', 'lic.w_key_p', 'lic.w_key_admin',
+    'lic.e_rate_limited', 'lic.e_rate_limited0', 'lic.e_unavailable', 'lic.e_invalid_token', 'lic.e_licensed', 'lic.e_failed']
     .concat(MSGS.reduce(function (a, m) { return a.concat(['lic.m_' + m + '_t', 'lic.m_' + m + '_p']); }, []))
     .concat((L ? L.BANDS : []).reduce(function (a, b) { return a.concat(['lic.b_' + b + '_b', 'lic.b_' + b + '_s'], BAND_TIMED.indexOf(b) > -1 ? ['lic.b_' + b + '_s0'] : []); }, []))
     .concat(Object.keys(ABOUT).reduce(function (a, k) { var x = ABOUT[k]; return a.concat([x.b, x.s, x.meta, /^lic\./.test(x.pill || '') ? x.pill : null].filter(Boolean)); }, []))
-    .concat(['lic.days', 'lic.chip', 'lic.card_t'].reduce(function (a, k) { return a.concat(FORMS.map(function (f) { return k + '_' + f; })); }, []))
+    .concat(['lic.days', 'lic.hours'].reduce(function (a, k) { return a.concat(FORMS.map(function (f) { return k + '_' + f; })); }, []))
     .filter(function (k, i, a) { return a.indexOf(k) === i; });
 
   function has(list, v) { return list.indexOf(v) > -1; }
   function button(act, key, pri, href) {
-    var icon = act === 'link' ? 'licext' : act === 'settings' ? 'licgear' : act === 'retry' || act === 'again' ? 'licretry' : act === 'write' ? 'licchat' : null;
+    var icon = act === 'link' ? 'licext' : act === 'settings' ? (key === 'lic.btn_have_key' ? 'key' : 'licgear') : act === 'retry' || act === 'again' ? 'licretry' : act === 'write' ? 'licchat' : null;
     var o = { act: act, key: key, pri: !!pri, icon: icon };
     if (href) o.href = href;
     return o;
   }
-  function blockParts(b, way) {
+  function errLine(e) {
+    if (!e || !e.code || e.code === 'unauthorized') return null;
+    if (e.code === 'rate_limited') return typeof e.minutes === 'number' && e.minutes > 0 ? { key: 'lic.e_rate_limited', n: e.minutes } : { key: 'lic.e_rate_limited0' };
+    return { key: ERR_LINE[e.code] || 'lic.e_failed' };
+  }
+  function blockParts(b, way, st) {
     if (!b) return null;
-    var pending = b.msg === 'pending';
+    if (b.cards) return welcomeParts(b, way, st);
+    var pending = b.msg === 'pending', setKey = SETTINGS_BY_MSG[b.msg] || 'lic.settings';
     var btns = [], pri = false;
     b.actions.forEach(function (a) {
       if (a === 'settings' && !way) return;
       if (a === 'link') { btns.push(button('link', linkKey(b.msg, b.kind), true, b.link)); pri = true; return; }
       if (a === 'retry' || a === 'again') { btns.push(button(a, 'lic.retry', !pri)); pri = true; return; }
-      if (a === 'settings') { btns.push(button('settings', 'lic.settings', false)); return; }
+      if (a === 'settings') { btns.push(button('settings', setKey, false)); return; }
       if (a === 'write') btns.push(button('write', 'lic.write', false));
     });
     var settingsShown = btns.some(function (x) { return x.act === 'settings'; });
     return {
       msg: b.msg, tone: b.tone, icon: ICON_OF[b.icon] || 'key', pending: pending,
       title: 'lic.m_' + b.msg + '_t', text: 'lic.m_' + b.msg + '_p',
+      note: b.used ? 'lic.used' : null,
       path: !pending && (b.path || (has(b.actions, 'settings') && !settingsShown)),
-      buttons: pending ? [] : btns,
+      buttons: pending ? [] : btns, cards: null,
       qr: b.qr && b.link ? { url: b.link, caption: 'lic.qr_' + (b.kind || 'buy') } : null,
-      foot: !pending, code: pending ? null : b.code
+      foot: !pending && b.foot !== false, code: pending ? null : b.code
+    };
+  }
+  function welcomeParts(b, way, st) {
+    st = st || {};
+    var err = st.err || null, denied = !!err && err.code === 'unauthorized';
+    var canStart = has(b.actions, 'trial') && !denied, canKey = has(b.actions, 'settings') && !denied;
+    var start = canStart ? { act: 'trial', key: st.busy ? 'lic.starting' : 'lic.btn_start_trial', pri: true, icon: null, busy: !!st.busy } : null;
+    var keyBtn = canKey && way ? button('settings', 'lic.btn_have_key', false) : null;
+    var buy = has(b.actions, 'link') ? button('link', 'lic.btn_buy', false, b.link) : null;
+    if (buy) buy.ghost = true;
+    var cards = [
+      { id: 'trial', hl: true, title: 'lic.w_trial_t', text: 'lic.w_trial_p', admin: canStart ? null : 'lic.w_trial_admin', path: false,
+        buttons: start ? [start] : [], err: canStart ? errLine(err) : null, note: canStart ? 'lic.w_trial_server' : null },
+      { id: 'key', hl: false, title: 'lic.w_key_t', text: 'lic.w_key_p', admin: canKey ? null : 'lic.w_key_admin', path: canKey && !way,
+        buttons: [keyBtn, buy].filter(Boolean), err: null, note: null }
+    ];
+    return {
+      msg: b.msg, tone: b.tone, icon: ICON_OF[b.icon] || 'key', pending: false,
+      title: 'lic.m_' + b.msg + '_t', text: 'lic.m_' + b.msg + '_p', note: null, path: false,
+      buttons: cards[0].buttons.concat(cards[1].buttons), cards: cards,
+      qr: b.qr && b.link ? { url: b.link, caption: 'lic.qr_' + (b.kind || 'buy') } : null,
+      foot: false, code: b.code
     };
   }
   function bandParts(band, way) {
@@ -466,10 +547,16 @@ window.wdReload = function(){
     return { id: band.id, key: band.key, tone: band.tone, icon: ICON_OF[band.icon] || 'key', bold: 'lic.b_' + band.id + '_b',
       text: 'lic.b_' + band.id + '_s' + (zero ? '0' : ''), days: timed && !zero && band.days !== null ? band.days : null, buttons: btns };
   }
-  function trialParts(trial, link) {
-    if (!trial || trial.minutes === null) return null;
-    return { chip: !!trial.chip, card: !!trial.card, minutes: trial.minutes, key: 'trial:' + trial.until,
-      buttons: (link ? [button('link', 'lic.btn_plan', true, link)] : []).concat([{ act: 'later', key: 'lic.later', pri: false, icon: null }]) };
+  function trialParts(trial, way) {
+    if (!trial || trial.n === null || trial.n === undefined) return null;
+    var btns = [];
+    (trial.actions || []).forEach(function (a) {
+      if (a === 'link') btns.push(button('link', 'lic.btn_buy', true, trial.link));
+      else if (a === 'settings' && way) btns.push(button('settings', 'lic.btn_have_key', false));
+    });
+    btns.push({ act: 'later', key: 'lic.later', pri: false, icon: null });
+    return { chip: !!trial.chip, card: !!trial.card, soon: trial.phase === 'day' || trial.phase === 'hour', unit: trial.unit, n: trial.n,
+      untilLocal: trial.untilLocal, hideUntil: trial.hideUntil, key: 'trial:' + trial.until + ':' + trial.phase, buttons: btns };
   }
   function aboutParts(a, way, tone) {
     if (!a) return null;
@@ -482,12 +569,12 @@ window.wdReload = function(){
     if (a.id === 'provisional' && a.days === 0) s = 'lic.b_provisional_s0';
     var btns = [], pri = true;
     (a.actions || []).forEach(function (act) {
-      if (act === 'link') { btns.push(button('link', a.id === 'trial' ? 'lic.btn_plan' : LINK_BY_KIND[a.kind] || 'lic.btn_prices', true, a.link)); pri = false; }
+      if (act === 'link') { btns.push(button('link', a.id === 'trial' ? 'lic.btn_buy' : LINK_BY_KIND[a.kind] || 'lic.btn_prices', true, a.link)); pri = false; }
       else if (act === 'retry' || act === 'again') { btns.push(button(act, act === 'again' ? 'lic.retry' : ABOUT_RETRY, false)); }
       else if (act === 'settings') { if (way) btns.push(button('settings', 'lic.settings', false)); }
       else if (act === 'write') btns.push(button('write', 'lic.write', false));
     });
-    var pill = x.pill === 'min' ? (a.minutes !== null ? { key: 'lic.pill_min', n: a.minutes } : null)
+    var pill = x.pill === 'left' ? (!a.left ? null : a.left.unit === 'm' ? { key: 'lic.pill_min', n: a.left.n } : { plural: a.left.unit === 'd' ? 'lic.days' : 'lic.hours', n: a.left.n })
       : x.pill === 'days' ? (a.days !== null ? { plural: 'lic.days', n: a.days } : null)
       : x.pill ? { key: x.pill } : null;
     return { id: a.id, tone: blocked ? tone || 'stop' : x.tone, msg: a.msg,
@@ -524,10 +611,11 @@ window.wdReload = function(){
   }
 
   function btnHTML(b, X, cls) {
-    var inner = (b.icon && b.act !== 'link' ? X.ic(b.icon) : '') + '<span>' + X.esc(X.t(b.key)) + '</span>' + (b.act === 'link' ? X.ic('licext') : '');
-    var c = 'wdlic-btn' + (b.pri ? ' pri' : '') + (b.act === 'later' || b.act === 'write' ? ' ghost' : '') + (cls ? ' ' + cls : '');
+    var inner = (b.busy ? '<i class="wdlic-bspin" aria-hidden="true"></i>' : '') + (b.icon && b.act !== 'link' ? X.ic(b.icon) : '')
+      + '<span>' + X.esc(X.t(b.key)) + '</span>' + (b.act === 'link' ? X.ic('licext') : '');
+    var c = 'wdlic-btn' + (b.pri ? ' pri' : '') + (b.act === 'later' || b.act === 'write' || b.ghost ? ' ghost' : '') + (cls ? ' ' + cls : '');
     if (b.act === 'link') return '<a class="' + c + '" href="' + X.esc(b.href) + '" target="_blank" rel="noopener noreferrer" data-wdlic="link">' + inner + '</a>';
-    return '<button type="button" class="' + c + '" data-wdlic="' + b.act + '">' + inner + '</button>';
+    return '<button type="button" class="' + c + '" data-wdlic="' + b.act + '"' + (b.busy ? ' aria-busy="true" aria-disabled="true"' : '') + '>' + inner + '</button>';
   }
   function pathHTML(X) {
     return '<div class="wdlic-path">' + [X.t('lic.path_settings'), X.t('lic.path_devices'), X.name, X.t('lic.path_configure')]
@@ -538,14 +626,28 @@ window.wdReload = function(){
     var c = X.clock();
     return '<div class="wdlic-time"><b data-wdlic-time>' + timeHTML(c, X) + '</b><span data-wdlic-date>' + X.esc(c.date) + '</span></div>';
   }
+  function optHTML(c, X) {
+    var err = c.err ? (c.err.n !== undefined ? X.fmt(c.err.key, { n: c.err.n }) : X.t(c.err.key)) : '';
+    return '<div class="wdlic-opt' + (c.hl ? ' hl' : '') + '" data-opt="' + c.id + '">'
+      + '<h3>' + X.esc(X.t(c.title)) + '</h3>'
+      + '<p class="wdlic-od">' + X.esc(X.t(c.text)) + '</p>'
+      + (c.admin ? '<p class="wdlic-oadm">' + X.esc(X.t(c.admin)) + '</p>' : '')
+      + (c.path ? pathHTML(X) : '')
+      + c.buttons.map(function (b) { return btnHTML(b, X); }).join('')
+      + (err ? '<p class="wdlic-oerr" role="status">' + X.esc(err) + '</p>' : '')
+      + (c.note ? '<p class="wdlic-onote">' + X.esc(X.t(c.note)) + '</p>' : '')
+      + '</div>';
+  }
   function blockHTML(p, X) {
     var msg = '<div class="wdlic-msg">'
       + (p.pending ? '<div class="wdlic-spin" aria-hidden="true"></div>'
         : '<div class="wdlic-top"><span class="wdlic-ic">' + X.ic(p.icon) + '</span><span class="wdlic-eyebrow">' + X.esc(X.name + ' · ' + X.t('lic.eyebrow')) + '</span></div>')
       + '<h2 id="wdlic-t">' + X.esc(X.t(p.title)) + '</h2>'
       + '<p id="wdlic-p">' + X.esc(X.t(p.text)) + '</p>'
+      + (p.note ? '<p class="wdlic-note">' + X.esc(X.t(p.note)) + '</p>' : '')
       + (p.path ? pathHTML(X) : '')
-      + (p.buttons.length ? '<div class="wdlic-acts">' + p.buttons.map(function (b) { return btnHTML(b, X); }).join('') + '</div>' : '')
+      + (p.cards ? '<div class="wdlic-opts">' + p.cards.map(function (c) { return optHTML(c, X); }).join('') + '</div>'
+        : p.buttons.length ? '<div class="wdlic-acts">' + p.buttons.map(function (b) { return btnHTML(b, X); }).join('') + '</div>' : '')
       + (p.foot ? '<div class="wdlic-foot">' + X.ic('home') + '<span>' + X.esc(X.t('lic.foot')) + '</span></div>' : '')
       + (p.code ? '<div class="wdlic-code">' + X.esc(p.code) + '</div>' : '')
       + '</div>';
@@ -561,13 +663,17 @@ window.wdReload = function(){
       + '<div class="wdlic-btx"><b>' + X.esc(X.t(p.bold)) + '</b> <span>' + X.esc(s) + '</span></div>'
       + '<div class="wdlic-bacts">' + p.buttons.map(function (b) { return btnHTML(b, X, 'sm'); }).join('') + '</div>';
   }
+  function leftText(p, X) { return p.unit === 'd' ? countText('lic.days', p.n, X) : p.unit === 'h' ? countText('lic.hours', p.n, X) : X.fmt('lic.pill_min', { n: p.n }); }
+  function chipText(p, X) { return X.fmt('lic.chip_left', { left: leftText(p, X) }); }
   function chipHTML(p, X) {
-    return X.ic('clock') + '<span class="l">' + X.esc(countText('lic.chip', p.minutes, X)) + '</span>'
-      + '<span class="s">' + X.esc(X.fmt('lic.pill_min', { n: p.minutes })) + '</span>';
+    return (p.soon ? X.ic('clock') : '<i class="wdlic-dot" aria-hidden="true"></i>') + '<span class="l">' + X.esc(chipText(p, X)) + '</span>'
+      + '<span class="s">' + X.esc(leftText(p, X)) + '</span>';
   }
   function cardHTML(p, X) {
-    return '<span class="wdlic-cic">' + X.ic('clock') + '</span><div class="wdlic-ctx"><b>' + X.esc(countText('lic.card_t', p.minutes, X)) + '</b>'
-      + '<p>' + X.esc(X.t('lic.card_p')) + '</p><div class="wdlic-cacts">' + p.buttons.map(function (b) { return btnHTML(b, X, 'sm'); }).join('') + '</div></div>'
+    var end = p.untilLocal;
+    return '<span class="wdlic-cic">' + X.ic('clock') + '</span><div class="wdlic-ctx"><b>' + X.esc(X.fmt('lic.card_left', { left: leftText(p, X) })) + '</b>'
+      + '<p>' + X.esc(X.fmt('lic.card_p', { date: end !== null ? X.day(end) : '', time: end !== null ? X.time(end) : '' })) + '</p>'
+      + '<div class="wdlic-cacts">' + p.buttons.map(function (b) { return btnHTML(b, X, 'sm'); }).join('') + '</div></div>'
       + '<button type="button" class="wdlic-x" data-wdlic="later" aria-label="' + X.esc(X.t('aria.close')) + '">' + X.ic('x') + '</button>';
   }
   function aboutHTML(p, X) {
@@ -637,6 +743,7 @@ window.wdReload = function(){
           date: g(function () { return d.toLocaleDateString(lc, { weekday: 'long', day: 'numeric', month: 'long' }); }, '') };
       },
       date: function (ms) { return g(function () { return new Date(ms).toLocaleDateString(lc, { day: '2-digit', month: '2-digit', year: 'numeric' }); }, ''); },
+      day: function (ms) { return g(function () { return new Date(ms).toLocaleDateString(lc, { weekday: 'long', day: 'numeric', month: 'long' }); }, ''); },
       time: function (ms) { return g(function () { return new Date(ms).toLocaleTimeString(lc, wdTimeOpts()); }, ''); },
       qr: function (url) { return g(function () { return WD_FEEDBACK.qrSVG(url); }, ''); }
     };
@@ -644,7 +751,8 @@ window.wdReload = function(){
 
   var S = { v: null, block: null, blockSig: '', band: null, bandSig: '', chip: null, card: null, cardSig: '', showCard: false,
     lang: null, inerted: [], obs: null, sheetObs: null, under: false, prevFocus: null, clockT: null, busy: false, ro: null, resizeT: null, asked: 0,
-    topObs: null, topMo: null, moving: false };
+    topObs: null, topMo: null, moving: false,
+    trial: { busy: false, err: null, at: 0, t: null } };
   var byId = function (id) { return typeof document !== 'undefined' ? document.getElementById(id) : null; };
   function blocked() { return !!(S.v && S.v.block && S.v.status !== 'demo'); }
 
@@ -679,7 +787,7 @@ window.wdReload = function(){
     S.clockT = setTimeout(tick, 60000 - D.now() % 60000 + 200);
   }
   function mountBlock(v) {
-    var way = settingsWay(D.env()), p = blockParts(v.block, way);
+    var way = settingsWay(D.env()), p = blockParts(v.block, way, S.trial);
     var sig = JSON.stringify([p, D.lang()]);
     var el = S.block;
     if (!el) {
@@ -700,7 +808,7 @@ window.wdReload = function(){
     inertAll();
     if (sig !== S.blockSig) {
       var hadFocus = el.contains(document.activeElement) ? (document.activeElement.getAttribute('data-wdlic') || '') : null;
-      el.className = 'wdlic tone-' + p.tone + (p.qr ? ' has-qr' : '') + (p.pending ? ' pending' : '') + (S.under ? ' under' : '');
+      el.className = 'wdlic tone-' + p.tone + (p.qr ? ' has-qr' : '') + (p.pending ? ' pending' : '') + (p.cards ? ' cards' : '') + (S.under ? ' under' : '');
       el.innerHTML = blockHTML(p, X());
       S.blockSig = sig;
       var back = hadFocus ? el.querySelector('[data-wdlic="' + hadFocus + '"]') : null;
@@ -786,12 +894,13 @@ window.wdReload = function(){
     watchTop();
     if (!el) {
       el = document.createElement('button');
-      el.type = 'button'; el.id = 'wdlicchip'; el.className = 'ctl wdlic-chip'; el.setAttribute('data-wdlic', 'chip');
+      el.type = 'button'; el.id = 'wdlicchip'; el.setAttribute('data-wdlic', 'chip');
     }
-    var changed = false;
+    var changed = false, cls = 'ctl wdlic-chip' + (p.soon ? ' soon' : '');
+    if (el.className !== cls) { el.className = cls; changed = true; }
     if (el.parentNode !== host || host.firstChild !== el) { S.moving = true; host.insertBefore(el, host.firstChild); S.moving = false; changed = true; }
     var x = X(), html = chipHTML(p, x);
-    if (el.innerHTML !== html) { el.innerHTML = html; el.setAttribute('aria-label', countText('lic.chip', p.minutes, x)); changed = true; }
+    if (el.innerHTML !== html) { el.innerHTML = html; el.setAttribute('aria-label', chipText(p, x)); changed = true; }
     S.chip = el;
     if (changed) refit();
   }
@@ -803,21 +912,21 @@ window.wdReload = function(){
     S.topMo.observe(tb, { childList: true, subtree: true });
   }
   function mountCard(v) {
-    var p = v && !v.block ? trialParts(v.trial, v.trial && trialLink(v)) : null;
+    var p = v && !v.block ? trialParts(v.trial, settingsWay(D.env())) : null;
     var store = D.store(), now = D.now();
-    if (!p || (!p.card && !S.showCard) || (hidden(store, p.key, now) && !S.showCard)) { unmountCard(); return; }
+    if (!p || !(S.showCard || (p.card && !hidden(store, p.key, now)))) { unmountCard(); return; }
     var sig = JSON.stringify([p, D.lang()]), el = S.card;
     if (!el) {
       el = document.createElement('div');
-      el.id = 'wdliccard'; el.className = 'wdlic-card tone-warn'; el.setAttribute('role', 'status');
+      el.id = 'wdliccard'; el.setAttribute('role', 'status');
       document.body.appendChild(el);
       S.card = el;
     }
+    el.className = 'wdlic-card tone-' + (p.soon ? 'warn' : 'buy');
     el.setAttribute('data-key', p.key);
     if (sig !== S.cardSig) { el.innerHTML = cardHTML(p, X()); S.cardSig = sig; }
   }
   function unmountCard() { if (S.card) { S.card.remove(); S.card = null; S.cardSig = ''; } }
-  function trialLink(v) { return v.about && v.about.link ? v.about.link : null; }
 
   function aboutPaint(v) {
     var el = byId('wdlicabout'); if (!el || !v || !v.about) return;
@@ -839,6 +948,10 @@ window.wdReload = function(){
   function render(v) {
     if (!v) return;
     S.v = v; S.lang = D.lang();
+    if (!v.block || v.block.msg !== 'welcome') S.trial.err = null;
+    if ((!v.block || (v.block.msg !== 'welcome' && v.block.msg !== 'pending')) && (S.trial.busy || S.trial.t)) {
+      clearTimeout(S.trial.t); S.trial = { busy: false, err: null, at: 0, t: null };
+    }
     if (v.status === 'demo') { unmountBlock(); unmountBand(); unmountCard(); chipSync(); return; }
     icons(); guard();
     if (v.block) { mountBlock(v); unmountBand(); unmountCard(); }
@@ -863,11 +976,29 @@ window.wdReload = function(){
       return;
     }
     if (name === 'write') { write(); return; }
+    if (name === 'trial') {
+      if (!L || S.trial.busy) return;
+      clearTimeout(S.trial.t);
+      var tr0 = S.trial = { busy: true, err: null, at: D.now(), t: null };
+      render(L.view());
+      L.startTrial().then(function (a) {
+        if (S.trial !== tr0) return;
+        if (a.ok) {
+          tr0.t = setTimeout(function () { if (S.trial !== tr0) return; tr0.busy = false; tr0.t = null; render(L.view()); },
+            Math.max(0, (L.TRIAL_MS || 30000) - (D.now() - tr0.at)));
+          return;
+        }
+        tr0.busy = false;
+        tr0.err = { code: a.error, minutes: a.minutes };
+        render(L.view());
+      });
+      return;
+    }
     if (name === 'later') {
       var host = el && el.closest('[data-key]'); if (!host) return;
       var had = host.contains(document.activeElement);
       var store = prune(D.store(), D.now()), key = host.getAttribute('data-key');
-      store[key] = host.id === 'wdliccard' ? (S.v && S.v.trial && S.v.trial.untilLocal ? S.v.trial.untilLocal + 60000 : laterUntil(D.now())) : laterUntil(D.now());
+      store[key] = host.id === 'wdliccard' ? (S.v && S.v.trial && S.v.trial.hideUntil ? S.v.trial.hideUntil : laterUntil(D.now())) : laterUntil(D.now());
       D.save(store);
       var next = null;
       if (host.id === 'wdliccard') { S.showCard = false; unmountCard(); next = byId('wdlicchip'); }
@@ -929,12 +1060,13 @@ window.wdReload = function(){
   return {
     KEYS: KEYS, ICONS: ICONS, LATER_KEY: LATER_KEY, SETTINGS_PATH: SETTINGS_PATH,
     blockParts: blockParts, bandParts: bandParts, trialParts: trialParts, aboutParts: aboutParts, settingsWay: settingsWay,
-    allowedWhileBlocked: allowedWhileBlocked, laterUntil: laterUntil, hidden: hidden, prune: prune, linkKey: linkKey,
+    allowedWhileBlocked: allowedWhileBlocked, laterUntil: laterUntil, hidden: hidden, prune: prune, linkKey: linkKey, errLine: errLine,
     blockHTML: blockHTML, bandHTML: bandHTML, chipHTML: chipHTML, cardHTML: cardHTML, aboutHTML: aboutHTML,
     render: render, header: header, aboutCard: aboutCard, act: act, guard: guard, blocked: blocked,
     use: function (deps) { Object.keys(deps || {}).forEach(function (k) { if (typeof deps[k] === 'function') D[k] = deps[k]; }); },
     state: function () { return { block: !!S.block, msg: S.v && S.v.block ? S.v.block.msg : null, band: S.band ? S.band.getAttribute('data-key') : null,
-      chip: !!byId('wdlicchip'), card: !!S.card, under: S.under, inert: S.inerted.length }; }
+      chip: !!byId('wdlicchip'), card: !!S.card, under: S.under, inert: S.inerted.length,
+      starting: S.trial.busy, trialError: S.trial.err ? S.trial.err.code : null }; }
   };
 })();
 </script>
@@ -958,6 +1090,10 @@ window.wdReload = function(){
 .wdlic-btn.ghost.sm{padding-left:10px; padding-right:10px;}
 .wdlic-btn:active{transform:scale(.97);}
 .wdlic-btn[aria-busy="true"]{opacity:.75; cursor:progress;}
+.wdlic-btn .wdlic-bspin{width:16px; height:16px; flex:0 0 auto; box-sizing:border-box; border-radius:50%; border:2px solid currentColor; border-right-color:transparent;
+  animation:wdlicspin .9s linear infinite;}
+@media (prefers-reduced-motion:reduce){ .wdlic-btn .wdlic-bspin{animation:none;} }
+:root[data-motion="off"] .wdlic-btn .wdlic-bspin{animation:none !important;}
 .wdlic-btn:focus-visible, .wdlic-x:focus-visible, #wdlic:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 #wdlic:focus{outline:none;}
 
@@ -992,6 +1128,22 @@ html.wdlic-on, html.wdlic-on body{overflow:hidden;}
   background:var(--surface2); border:1px solid var(--line); font-size:calc(13.5px * var(--fs,1)); font-weight:650; color:var(--ink);}
 #wdlic .wdlic-path svg{width:13px; height:13px; color:var(--ink3); flex:0 0 auto;}
 #wdlic .wdlic-acts{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
+#wdlic .wdlic-note{margin-top:12px; padding:9px 12px; border-radius:12px; background:var(--tone-soft); color:var(--ink); font-weight:650;
+  font-size:calc(14px * var(--fs,1)); line-height:1.45;}
+#wdlic .wdlic-opts{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; margin-top:20px;}
+#wdlic .wdlic-opt{display:flex; flex-direction:column; gap:8px; min-width:0; padding:18px; box-sizing:border-box; border-radius:18px;
+  border:1px solid var(--line); background:var(--surface);}
+#wdlic .wdlic-opt.hl{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent);
+  background:linear-gradient(var(--accent-soft), transparent 70%), var(--surface);}
+#wdlic .wdlic-opt h3{margin:0; font-family:var(--disp); font-weight:720; font-size:calc(18px * var(--fs,1)); line-height:1.25; color:var(--ink);
+  text-wrap:balance; overflow-wrap:break-word;}
+#wdlic .wdlic-opt p{margin:0; font-size:calc(14px * var(--fs,1)); line-height:1.45;}
+#wdlic .wdlic-opt .wdlic-od{flex:1 0 auto;}
+#wdlic .wdlic-opt .wdlic-oadm{font-weight:650; color:var(--ink);}
+#wdlic .wdlic-opt .wdlic-btn{width:100%;}
+#wdlic .wdlic-opt .wdlic-path{margin-top:0;}
+#wdlic .wdlic-opt .wdlic-oerr{padding:8px 10px; border-radius:10px; background:var(--rose-soft); color:var(--ink); font-size:calc(13px * var(--fs,1));}
+#wdlic .wdlic-opt .wdlic-onote{font-size:calc(12.5px * var(--fs,1)); color:var(--ink2);}
 #wdlic .wdlic-foot{display:flex; align-items:center; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line);
   font-size:calc(13px * var(--fs,1)); line-height:1.4; color:var(--ink3);}
 #wdlic .wdlic-foot svg{width:16px; height:16px; flex:0 0 auto; color:var(--green);}
@@ -1012,6 +1164,12 @@ html.wdlic-on, html.wdlic-on body{overflow:hidden;}
   #wdlic p{font-size:calc(14.5px * var(--fs,1));}
   #wdlic .wdlic-acts{margin-top:16px;}
   #wdlic .wdlic-foot{margin-top:14px; padding-top:10px;}
+  #wdlic .wdlic-opts{gap:10px; margin-top:14px;}
+  #wdlic .wdlic-opt{gap:6px; padding:14px;}
+  #wdlic .wdlic-opt h3{font-size:calc(16px * var(--fs,1));}
+  #wdlic .wdlic-opt p{font-size:calc(13.5px * var(--fs,1)); line-height:1.4;}
+  #wdlic .wdlic-opt .wdlic-onote{font-size:calc(12px * var(--fs,1));}
+  #wdlic .wdlic-note{margin-top:10px; padding:7px 10px;}
 }
 @media (max-width:700px), (orientation:portrait) and (max-width:900px){
   #wdlic{grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto; align-content:start;}
@@ -1025,6 +1183,8 @@ html.wdlic-on, html.wdlic-on body{overflow:hidden;}
   #wdlic .wdlic-time span{font-size:calc(17px * var(--fs,1));}
   #wdlic .wdlic-side{align-items:flex-start; padding:26px 22px calc(28px + env(safe-area-inset-bottom));}
   #wdlic h2{font-size:calc(25px * var(--fs,1));}
+  #wdlic .wdlic-opts{grid-template-columns:minmax(0, 1fr); gap:12px; margin-top:16px;}
+  #wdlic .wdlic-opt{padding:16px;}
 }
 
 #wdlicband{position:fixed; left:0; right:0; top:0; z-index:300; box-sizing:border-box; display:flex; align-items:center; gap:14px; min-height:48px;
@@ -1043,8 +1203,12 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
   #wdlicband .wdlic-bacts{width:100%; padding-left:42px; justify-content:flex-start;}
 }
 
-#topbar .ctl.wdlic-chip{gap:7px; white-space:nowrap; font-weight:700; color:var(--ink);
-  background:color-mix(in srgb, var(--warn) 14%, var(--surface)); border:1px solid color-mix(in srgb, var(--warn) 45%, transparent);}
+#topbar .ctl.wdlic-chip{gap:7px; white-space:nowrap; font-weight:700; color:var(--ink); background:var(--accent-soft); border:1px solid var(--line);}
+#topbar .ctl.wdlic-chip .wdlic-dot{width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--accent);}
+#topbar .ctl.wdlic-chip.soon{background:linear-gradient(var(--amber-glow), var(--amber-glow)) var(--surface); border-color:var(--warn);}
+@supports (color: color-mix(in srgb, red, blue)) {
+  #topbar .ctl.wdlic-chip.soon{background:color-mix(in srgb, var(--warn) 14%, var(--surface)); border-color:color-mix(in srgb, var(--warn) 45%, transparent);}
+}
 #topbar .ctl.wdlic-chip svg{width:16px; height:16px; color:var(--warn);}
 #topbar .ctl.wdlic-chip{position:relative;}
 #topbar .ctl.wdlic-chip::after{content:""; position:absolute; left:0; right:0; top:50%; height:max(100%, 44px); transform:translateY(-50%);}
@@ -22420,6 +22584,32 @@ function ic(n, cls){ return '<svg viewBox="0 0 24 24" fill="none" stroke="curren
 
 const T = {
 fr:{
+'lic.m_welcome_t':'Bienvenue dans Nucleum Hub',
+'lic.m_welcome_p':'Choisissez comment commencer. L’essai gratuit n’est accordé qu’une fois par maison.',
+'lic.w_trial_t':'Essai gratuit, 3 jours',
+'lic.w_trial_p':'Tout est débloqué, sur tous les écrans. Sans carte, sans compte.',
+'lic.btn_start_trial':'Commencer l’essai',
+'lic.w_trial_server':'Le démarrage contacte notre serveur de licences.',
+'lic.w_trial_admin':'Seul l’administrateur de Home Assistant peut le démarrer.',
+'lic.w_key_t':'J’ai une licence',
+'lic.w_key_p':'Déjà acheté ? Saisissez la clé reçue par e-mail.',
+'lic.w_key_admin':'Seul l’administrateur de Home Assistant peut la saisir.',
+'lic.btn_have_key':'J’ai une clé',
+'lic.btn_buy':'Acheter une licence',
+'lic.used':'L’essai gratuit a déjà été utilisé pour cette maison.',
+'lic.starting':'Démarrage…',
+'lic.e_rate_limited':'Trop de tentatives pour le moment. Réessayez dans {n} min.',
+'lic.e_rate_limited0':'Trop de tentatives pour le moment. Réessayez dans quelques minutes.',
+'lic.e_unavailable':'Notre serveur de licences est injoignable. Vérifiez que Home Assistant est connecté à Internet, puis réessayez.',
+'lic.e_invalid_token':'L’essai gratuit n’a pas pu être vérifié. Vérifiez la date, l’heure et le fuseau horaire de Home Assistant, puis réessayez.',
+'lic.e_licensed':'Cette maison a déjà une licence. Saisissez sa clé.',
+'lic.e_failed':'L’essai gratuit n’a pas pu démarrer. Réessayez dans un instant.',
+'lic.chip_left':'Essai · {left}',
+'lic.card_left':'Essai gratuit : encore {left}',
+'lic.hours_one':'{n} h',
+'lic.hours_few':'{n} h',
+'lic.hours_many':'{n} h',
+'lic.hours_other':'{n} h',
 'lic.eyebrow':'Licence',
 'lic.foot':'Les lumières, l’alarme et le reste de la maison continuent de fonctionner depuis l’application Home Assistant.',
 'lic.settings':'Paramètres de l’intégration',
@@ -22443,15 +22633,15 @@ fr:{
 'lic.btn_check':'Vérifier maintenant',
 'lic.btn_open_settings':'Ouvrir les paramètres',
 'lic.band_aria':'Avis sur la licence',
-'lic.card_p':'Choisissez une offre pour qu’il ne s’arrête pas.',
+'lic.card_p':'Se termine le {date} à {time}. Le tableau de bord demandera alors une licence. Les lumières, l’alarme et le reste de la maison continuent de fonctionner depuis l’application Home Assistant.',
 'lic.a_sub_end_s':'Payé jusqu’au {date} ; il ne se renouvelle pas.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Démarrage de votre essai de 60 minutes…',
-'lic.m_pending_p':'Home Assistant demande l’essai à notre serveur. Cela prend quelques secondes.',
+'lic.m_pending_t':'Démarrage de votre essai gratuit…',
+'lic.m_pending_p':'Home Assistant demande l’essai gratuit à notre serveur de licences. Cela prend quelques secondes.',
 'lic.m_key_t':'Activez Nucleum Hub',
-'lic.m_key_p':'Vous avez déjà une clé de licence ? Saisissez-la dans Home Assistant, dans les paramètres de l’intégration. L’essai de 60 minutes démarre tout seul quand Home Assistant est connecté à Internet.',
-'lic.m_trial_over_t':'Votre essai de 60 minutes est terminé',
-'lic.m_trial_over_p':'Merci de l’avoir essayé. Pour continuer à l’utiliser, choisissez l’abonnement mensuel ou la licence unique, puis saisissez dans Home Assistant la clé reçue par e-mail. Votre disposition et vos réglages sont conservés.',
+'lic.m_key_p':'Vous avez déjà une clé de licence ? Saisissez-la dans Home Assistant, dans les paramètres de l’intégration. Pas encore de clé ? Consultez les prix et choisissez une offre.',
+'lic.m_trial_over_t':'Votre essai gratuit est terminé',
+'lic.m_trial_over_p':'Saisissez votre clé ou achetez une licence pour continuer à utiliser Nucleum Hub. Les lumières, l’alarme et le reste de la maison continuent de fonctionner depuis l’application Home Assistant.',
 'lic.m_sub_expired_t':'Votre abonnement s’est arrêté',
 'lic.m_sub_expired_p':'Le paiement mensuel n’est plus actif, le tableau de bord s’est donc arrêté. Renouvelez l’abonnement et il redémarre tout seul, avec la même clé et tout ce que vous avez configuré.',
 'lic.m_expired_t':'Votre licence a expiré',
@@ -22490,9 +22680,9 @@ fr:{
 'lic.a_waiting':'Interrogation de l’intégration Nucleum Hub…',
 'lic.pill_missing':'Manquante',
 'lic.pill_inactive':'Inactive',
-'lic.a_trial_b':'Essai',
-'lic.a_trial_s':'Se termine à {time}. Votre disposition et vos réglages restent après l’achat.',
-'lic.a_trial_note':'Un essai par installation de Home Assistant',
+'lic.a_trial_b':'Essai gratuit',
+'lic.a_trial_s':'Se termine le {date} à {time}. Votre disposition et vos réglages restent après l’achat.',
+'lic.a_trial_note':'Un essai gratuit par maison et par installation de Home Assistant',
 'lic.a_sub_b':'Abonnement mensuel',
 'lic.a_sub_s':'Payé jusqu’au {date} ; se renouvelle tout seul.',
 'lic.pill_active_sub':'Actif',
@@ -22516,14 +22706,6 @@ fr:{
 'lic.days_few':'{n} jours',
 'lic.days_many':'{n} jours',
 'lic.days_other':'{n} jours',
-'lic.chip_one':'Essai · encore {n} min',
-'lic.chip_few':'Essai · encore {n} min',
-'lic.chip_many':'Essai · encore {n} min',
-'lic.chip_other':'Essai · encore {n} min',
-'lic.card_t_one':'Plus que {n} minute d’essai',
-'lic.card_t_few':'Plus que {n} minutes d’essai',
-'lic.card_t_many':'Plus que {n} minutes d’essai',
-'lic.card_t_other':'Plus que {n} minutes d’essai',
 'ui.rl_gone_ticked':'Ce qui est coché n’existe plus dans Home Assistant.',
 'ui.rl_off_pres':'Le symbole de présence n’apparaît plus sur la carte.',
 'ui.rl_off_open':'La carte n’affiche plus les portes et fenêtres ouvertes.',
@@ -24066,6 +24248,32 @@ fr:{
 'tap_toggle':'En direct · connecté à Home Assistant',
 },
 de:{
+'lic.m_welcome_t':'Willkommen bei Nucleum Hub',
+'lic.m_welcome_p':'Wähle, wie du startest. Die kostenlose Testphase gibt es einmal pro Zuhause.',
+'lic.w_trial_t':'Kostenlose Testphase, 3 Tage',
+'lic.w_trial_p':'Alles freigeschaltet, auf jedem Bildschirm. Keine Karte, kein Konto.',
+'lic.btn_start_trial':'Testphase starten',
+'lic.w_trial_server':'Beim Start wird unser Lizenzserver kontaktiert.',
+'lic.w_trial_admin':'Nur ein Home-Assistant-Administrator kann sie starten.',
+'lic.w_key_t':'Ich habe eine Lizenz',
+'lic.w_key_p':'Schon gekauft? Gib den Schlüssel aus deiner E-Mail ein.',
+'lic.w_key_admin':'Nur ein Home-Assistant-Administrator kann ihn eingeben.',
+'lic.btn_have_key':'Ich habe einen Schlüssel',
+'lic.btn_buy':'Lizenz kaufen',
+'lic.used':'Die kostenlose Testphase wurde für dieses Zuhause schon genutzt.',
+'lic.starting':'Wird gestartet…',
+'lic.e_rate_limited':'Gerade zu viele Versuche. Versuche es in {n} Min. erneut.',
+'lic.e_rate_limited0':'Gerade zu viele Versuche. Versuche es in ein paar Minuten erneut.',
+'lic.e_unavailable':'Unser Lizenzserver war nicht erreichbar. Prüfe, ob Home Assistant online ist, und versuche es erneut.',
+'lic.e_invalid_token':'Die kostenlose Testphase ließ sich nicht prüfen. Prüfe Datum, Uhrzeit und Zeitzone von Home Assistant und versuche es erneut.',
+'lic.e_licensed':'Dieses Zuhause hat schon eine Lizenz. Gib ihren Schlüssel ein.',
+'lic.e_failed':'Die kostenlose Testphase konnte nicht starten. Versuche es gleich noch einmal.',
+'lic.chip_left':'Testphase · {left}',
+'lic.card_left':'Kostenlose Testphase: noch {left}',
+'lic.hours_one':'{n} Std.',
+'lic.hours_few':'{n} Std.',
+'lic.hours_many':'{n} Std.',
+'lic.hours_other':'{n} Std.',
 'lic.eyebrow':'Lizenz',
 'lic.foot':'Licht, Alarmanlage und der Rest des Hauses funktionieren weiter über die Home Assistant App.',
 'lic.settings':'Einstellungen der Integration',
@@ -24089,15 +24297,15 @@ de:{
 'lic.btn_check':'Jetzt prüfen',
 'lic.btn_open_settings':'Einstellungen öffnen',
 'lic.band_aria':'Hinweis zur Lizenz',
-'lic.card_p':'Wähle einen Plan, damit das Dashboard weiterläuft.',
+'lic.card_p':'Endet am {date} um {time}. Dann fragt das Dashboard nach einer Lizenz. Licht, Alarmanlage und der Rest des Hauses funktionieren weiter über die Home Assistant App.',
 'lic.a_sub_end_s':'Bezahlt bis {date}; verlängert sich nicht.',
 'lic.pill_min':'{n} Min.',
-'lic.m_pending_t':'Deine 60-minütige Testphase startet…',
-'lic.m_pending_p':'Home Assistant fragt die Testphase bei unserem Server an. Das dauert ein paar Sekunden.',
+'lic.m_pending_t':'Deine kostenlose Testphase startet…',
+'lic.m_pending_p':'Home Assistant fragt die kostenlose Testphase bei unserem Lizenzserver an. Das dauert ein paar Sekunden.',
 'lic.m_key_t':'Nucleum Hub aktivieren',
-'lic.m_key_p':'Du hast schon einen Lizenzschlüssel? Gib ihn in Home Assistant ein, in den Einstellungen der Integration. Die 60-minütige Testphase startet von selbst, sobald Home Assistant mit dem Internet verbunden ist.',
-'lic.m_trial_over_t':'Deine 60-minütige Testphase ist vorbei',
-'lic.m_trial_over_p':'Danke, dass du es ausprobiert hast. Um es weiter zu nutzen, wähle das Monatsabo oder die Einmallizenz und gib dann den Schlüssel aus der E-Mail in Home Assistant ein. Dein Layout und deine Einstellungen bleiben erhalten.',
+'lic.m_key_p':'Du hast schon einen Lizenzschlüssel? Gib ihn in Home Assistant ein, in den Einstellungen der Integration. Noch keinen Schlüssel? Sieh dir die Preise an und wähle einen Plan.',
+'lic.m_trial_over_t':'Deine kostenlose Testphase ist vorbei',
+'lic.m_trial_over_p':'Gib deinen Schlüssel ein oder kaufe eine Lizenz, um Nucleum Hub weiter zu nutzen. Licht, Alarmanlage und der Rest des Hauses funktionieren weiter über die Home Assistant App.',
 'lic.m_sub_expired_t':'Dein Abo ist beendet',
 'lic.m_sub_expired_p':'Die monatliche Zahlung ist nicht mehr aktiv, deshalb hat das Dashboard gestoppt. Verlängere das Abo, und es startet von selbst wieder, mit demselben Schlüssel und allem, was du eingerichtet hast.',
 'lic.m_expired_t':'Deine Lizenz ist abgelaufen',
@@ -24136,9 +24344,9 @@ de:{
 'lic.a_waiting':'Die Integration Nucleum Hub wird gefragt…',
 'lic.pill_missing':'Fehlt',
 'lic.pill_inactive':'Nicht aktiv',
-'lic.a_trial_b':'Testphase',
-'lic.a_trial_s':'Endet um {time}. Dein Layout und deine Einstellungen bleiben nach dem Kauf erhalten.',
-'lic.a_trial_note':'Eine Testphase pro Home-Assistant-Installation',
+'lic.a_trial_b':'Kostenlose Testphase',
+'lic.a_trial_s':'Endet am {date} um {time}. Dein Layout und deine Einstellungen bleiben nach dem Kauf erhalten.',
+'lic.a_trial_note':'Eine kostenlose Testphase pro Zuhause und Home-Assistant-Installation',
 'lic.a_sub_b':'Monatsabo',
 'lic.a_sub_s':'Bezahlt bis {date}; verlängert sich von selbst.',
 'lic.pill_active_sub':'Aktiv',
@@ -24162,14 +24370,6 @@ de:{
 'lic.days_few':'{n} Tage',
 'lic.days_many':'{n} Tage',
 'lic.days_other':'{n} Tage',
-'lic.chip_one':'Testphase · noch {n} Min.',
-'lic.chip_few':'Testphase · noch {n} Min.',
-'lic.chip_many':'Testphase · noch {n} Min.',
-'lic.chip_other':'Testphase · noch {n} Min.',
-'lic.card_t_one':'Noch {n} Minute Testphase',
-'lic.card_t_few':'Noch {n} Minuten Testphase',
-'lic.card_t_many':'Noch {n} Minuten Testphase',
-'lic.card_t_other':'Noch {n} Minuten Testphase',
 'ui.rl_gone_ticked':'Das Angehakte gibt es in Home Assistant nicht mehr.',
 'ui.rl_off_pres':'Das Anwesenheitssymbol erscheint nicht mehr auf der Karte.',
 'ui.rl_off_open':'Die Karte zeigt keine offenen Türen und Fenster mehr.',
@@ -25712,6 +25912,32 @@ de:{
 'tap_toggle':'Live · mit Home Assistant verbunden',
 },
 en:{
+'lic.m_welcome_t':'Welcome to Nucleum Hub',
+'lic.m_welcome_p':'Choose how to start. The free trial is given once per home.',
+'lic.w_trial_t':'Free trial, 3 days',
+'lic.w_trial_p':'Everything unlocked, on every screen. No card, no account.',
+'lic.btn_start_trial':'Start the free trial',
+'lic.w_trial_server':'Starting it contacts our licence server.',
+'lic.w_trial_admin':'Only the Home Assistant administrator can start it.',
+'lic.w_key_t':'I have a licence',
+'lic.w_key_p':'Bought already? Enter the key from your e-mail.',
+'lic.w_key_admin':'Only the Home Assistant administrator can enter it.',
+'lic.btn_have_key':'I have a key',
+'lic.btn_buy':'Buy a licence',
+'lic.used':'The free trial has already been used on this home.',
+'lic.starting':'Starting…',
+'lic.e_rate_limited':'Too many tries just now. Try again in {n} min.',
+'lic.e_rate_limited0':'Too many tries just now. Try again in a few minutes.',
+'lic.e_unavailable':'Our licence server could not be reached. Check that Home Assistant is online, then try again.',
+'lic.e_invalid_token':'The free trial could not be checked. Check the date, time and time zone of Home Assistant, then try again.',
+'lic.e_licensed':'This home already has a licence. Enter its key.',
+'lic.e_failed':'The free trial could not start. Try again in a moment.',
+'lic.chip_left':'Trial · {left}',
+'lic.card_left':'Free trial: {left} left',
+'lic.hours_one':'{n} h',
+'lic.hours_few':'{n} h',
+'lic.hours_many':'{n} h',
+'lic.hours_other':'{n} h',
 'lic.eyebrow':'Licence',
 'lic.foot':'Lights, the alarm and the rest of the home keep working from the Home Assistant app.',
 'lic.settings':'Integration settings',
@@ -25735,15 +25961,15 @@ en:{
 'lic.btn_check':'Check now',
 'lic.btn_open_settings':'Open the settings',
 'lic.band_aria':'Licence notice',
-'lic.card_p':'Choose a plan so it does not stop.',
+'lic.card_p':'Ends on {date} at {time}. Then the dashboard asks for a licence. Lights, the alarm and the rest of the home keep working from the Home Assistant app.',
 'lic.a_sub_end_s':'Paid until {date}; it does not renew.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Starting your 60-minute trial…',
-'lic.m_pending_p':'Home Assistant is asking our server for the trial. It takes a few seconds.',
+'lic.m_pending_t':'Starting your free trial…',
+'lic.m_pending_p':'Home Assistant is asking our licence server for the free trial. It takes a few seconds.',
 'lic.m_key_t':'Activate Nucleum Hub',
-'lic.m_key_p':'Already have a licence key? Enter it in Home Assistant, in the integration settings. The 60-minute trial starts by itself when Home Assistant is connected to the internet.',
-'lic.m_trial_over_t':'Your 60-minute trial is over',
-'lic.m_trial_over_p':'Thank you for trying it. To keep using it, choose the monthly subscription or the one-time licence, then enter the key from the e-mail in Home Assistant. Your layout and settings stay.',
+'lic.m_key_p':'Already have a licence key? Enter it in Home Assistant, in the integration settings. No key yet? See the prices and choose a plan.',
+'lic.m_trial_over_t':'Your free trial has ended',
+'lic.m_trial_over_p':'Enter your key or buy a licence to keep using Nucleum Hub. Lights, the alarm and the rest of the home keep working from the Home Assistant app.',
 'lic.m_sub_expired_t':'Your subscription has stopped',
 'lic.m_sub_expired_p':'The monthly payment is no longer active, so the dashboard stopped. Renew the subscription and it starts again by itself, with the same key and everything you set up.',
 'lic.m_expired_t':'Your licence has expired',
@@ -25782,9 +26008,9 @@ en:{
 'lic.a_waiting':'Asking the Nucleum Hub integration…',
 'lic.pill_missing':'Missing',
 'lic.pill_inactive':'Not active',
-'lic.a_trial_b':'Trial',
-'lic.a_trial_s':'Ends at {time}. Your layout and settings stay after you buy.',
-'lic.a_trial_note':'One trial per Home Assistant installation',
+'lic.a_trial_b':'Free trial',
+'lic.a_trial_s':'Ends on {date} at {time}. Your layout and settings stay after you buy.',
+'lic.a_trial_note':'One free trial per home and Home Assistant installation',
 'lic.a_sub_b':'Monthly subscription',
 'lic.a_sub_s':'Paid until {date}; renews by itself.',
 'lic.pill_active_sub':'Active',
@@ -25808,14 +26034,6 @@ en:{
 'lic.days_few':'{n} days',
 'lic.days_many':'{n} days',
 'lic.days_other':'{n} days',
-'lic.chip_one':'Trial · {n} min left',
-'lic.chip_few':'Trial · {n} min left',
-'lic.chip_many':'Trial · {n} min left',
-'lic.chip_other':'Trial · {n} min left',
-'lic.card_t_one':'{n} minute of the trial left',
-'lic.card_t_few':'{n} minutes of the trial left',
-'lic.card_t_many':'{n} minutes of the trial left',
-'lic.card_t_other':'{n} minutes of the trial left',
 'ui.rl_gone_ticked':'What is ticked is no longer in Home Assistant.',
 'ui.rl_off_pres':'The presence sign no longer shows on the card.',
 'ui.rl_off_open':'The card no longer shows open doors and windows.',
@@ -27169,6 +27387,32 @@ choose_type:'What kind of card?', type_tiles:'Entity tiles', type_stats:'Big num
 washer_done:'done at', dish_prog:'Program', move_hint:'Drag to move', tap_toggle:'Live · connected to Home Assistant',
 },
 ro:{
+'lic.m_welcome_t':'Bine ai venit în Nucleum Hub',
+'lic.m_welcome_p':'Alege cum începi. Încercarea gratuită se dă o singură dată pe casă.',
+'lic.w_trial_t':'Încercare gratuită 3 zile',
+'lic.w_trial_p':'Totul deblocat, pe toate ecranele. Fără card, fără cont.',
+'lic.btn_start_trial':'Începe încercarea',
+'lic.w_trial_server':'Pornirea contactează serverul nostru de licențe.',
+'lic.w_trial_admin':'Doar administratorul Home Assistant o poate porni.',
+'lic.w_key_t':'Am o licență',
+'lic.w_key_p':'Ai cumpărat deja? Pune cheia primită pe e-mail.',
+'lic.w_key_admin':'Doar administratorul Home Assistant o poate pune.',
+'lic.btn_have_key':'Am o cheie',
+'lic.btn_buy':'Cumpără o licență',
+'lic.used':'Încercarea gratuită a fost folosită pe această casă.',
+'lic.starting':'Se pornește…',
+'lic.e_rate_limited':'Prea multe încercări acum. Încearcă din nou peste {n} min.',
+'lic.e_rate_limited0':'Prea multe încercări acum. Încearcă din nou peste câteva minute.',
+'lic.e_unavailable':'Serverul nostru de licențe nu a putut fi contactat. Verifică dacă Home Assistant e legat la internet, apoi încearcă din nou.',
+'lic.e_invalid_token':'Încercarea gratuită nu a putut fi verificată. Verifică data, ora și fusul orar din Home Assistant, apoi încearcă din nou.',
+'lic.e_licensed':'Casa aceasta are deja o licență. Pune cheia ei.',
+'lic.e_failed':'Încercarea gratuită nu a putut porni. Încearcă din nou peste puțin timp.',
+'lic.chip_left':'Încercare · {left}',
+'lic.card_left':'Încercare gratuită: încă {left}',
+'lic.hours_one':'{n} oră',
+'lic.hours_few':'{n} ore',
+'lic.hours_many':'{n} ore',
+'lic.hours_other':'{n} de ore',
 'lic.eyebrow':'Licența',
 'lic.foot':'Luminile, alarma și restul casei merg în continuare din aplicația Home Assistant.',
 'lic.settings':'Setările integrării',
@@ -27192,15 +27436,15 @@ ro:{
 'lic.btn_check':'Verifică acum',
 'lic.btn_open_settings':'Deschide setările',
 'lic.band_aria':'Anunț despre licență',
-'lic.card_p':'Alege un plan ca să nu se oprească.',
+'lic.card_p':'Se încheie {date}, la {time}. Atunci dashboard-ul cere o licență. Luminile, alarma și restul casei merg în continuare din aplicația Home Assistant.',
 'lic.a_sub_end_s':'Plătit până pe {date}; nu se mai reînnoiește.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Pornim proba de 60 de minute…',
-'lic.m_pending_p':'Home Assistant cere proba de la serverul nostru. Durează câteva secunde.',
+'lic.m_pending_t':'Se pornește încercarea gratuită…',
+'lic.m_pending_p':'Home Assistant cere încercarea gratuită de la serverul nostru de licențe. Durează câteva secunde.',
 'lic.m_key_t':'Activează Nucleum Hub',
-'lic.m_key_p':'Ai deja o cheie de licență? Pune-o în Home Assistant, în setările integrării. Proba de 60 de minute pornește singură când Home Assistant e legat la internet.',
-'lic.m_trial_over_t':'Cele 60 de minute de probă s-au terminat',
-'lic.m_trial_over_p':'Îți mulțumim că l-ai încercat. Ca să-l folosești mai departe, alege abonamentul lunar sau licența o dată, apoi pune în Home Assistant cheia primită pe e-mail. Aspectul și setările tale rămân.',
+'lic.m_key_p':'Ai deja o cheie de licență? Pune-o în Home Assistant, în setările integrării. Nu ai încă o cheie? Vezi prețurile și alege un plan.',
+'lic.m_trial_over_t':'Încercarea gratuită s-a terminat',
+'lic.m_trial_over_p':'Pune cheia sau cumpără o licență ca să folosești în continuare Nucleum Hub. Luminile, alarma și restul casei merg în continuare din aplicația Home Assistant.',
 'lic.m_sub_expired_t':'Abonamentul s-a oprit',
 'lic.m_sub_expired_p':'Plata lunară nu mai e activă, așa că dashboard-ul s-a oprit. Reînnoiește abonamentul și pornește din nou singur, cu aceeași cheie și cu tot ce ai configurat.',
 'lic.m_expired_t':'Licența a expirat',
@@ -27239,9 +27483,9 @@ ro:{
 'lic.a_waiting':'Se întreabă integrarea Nucleum Hub…',
 'lic.pill_missing':'Lipsește',
 'lic.pill_inactive':'Inactivă',
-'lic.a_trial_b':'Probă',
-'lic.a_trial_s':'Se termină la {time}. Aspectul și setările rămân după cumpărare.',
-'lic.a_trial_note':'Proba merge o dată pe instalarea Home Assistant',
+'lic.a_trial_b':'Încercare gratuită',
+'lic.a_trial_s':'Se încheie pe {date}, la {time}. Aspectul și setările rămân după cumpărare.',
+'lic.a_trial_note':'O singură încercare gratuită pe casă și pe instalarea Home Assistant',
 'lic.a_sub_b':'Abonament lunar',
 'lic.a_sub_s':'Plătit până pe {date}; se reînnoiește singur.',
 'lic.pill_active_sub':'Activ',
@@ -27265,14 +27509,6 @@ ro:{
 'lic.days_few':'{n} zile',
 'lic.days_many':'{n} zile',
 'lic.days_other':'{n} de zile',
-'lic.chip_one':'Probă · mai e {n} min',
-'lic.chip_few':'Probă · mai sunt {n} min',
-'lic.chip_many':'Probă · mai sunt {n} min',
-'lic.chip_other':'Probă · mai sunt {n} min',
-'lic.card_t_one':'Mai e {n} minut din probă',
-'lic.card_t_few':'Mai sunt {n} minute din probă',
-'lic.card_t_many':'Mai sunt {n} minute din probă',
-'lic.card_t_other':'Mai sunt {n} de minute din probă',
 'ui.rl_gone_ticked':'Ce e bifat nu mai există în Home Assistant.',
 'ui.rl_off_pres':'Semnul de prezență nu mai apare pe card.',
 'ui.rl_off_open':'Cardul nu mai arată ușile și ferestrele deschise.',
@@ -28626,6 +28862,32 @@ choose_type:'Ce fel de card?', type_tiles:'Tile-uri cu entități', type_stats:'
 washer_done:'gata la', dish_prog:'Program', move_hint:'Trage pentru a muta', tap_toggle:'Live · conectat la Home Assistant',
 },
 nl:{
+'lic.m_welcome_t':'Welkom bij Nucleum Hub',
+'lic.m_welcome_p':'Kies hoe je begint. De gratis proefperiode krijg je één keer per huis.',
+'lic.w_trial_t':'Gratis proefperiode, 3 dagen',
+'lic.w_trial_p':'Alles ontgrendeld, op elk scherm. Geen kaart, geen account.',
+'lic.btn_start_trial':'Start de proefperiode',
+'lic.w_trial_server':'Bij het starten wordt contact gemaakt met onze licentieserver.',
+'lic.w_trial_admin':'Alleen een beheerder van Home Assistant kan die starten.',
+'lic.w_key_t':'Ik heb een licentie',
+'lic.w_key_p':'Al gekocht? Vul de sleutel uit je e-mail in.',
+'lic.w_key_admin':'Alleen een beheerder van Home Assistant kan die invullen.',
+'lic.btn_have_key':'Ik heb een sleutel',
+'lic.btn_buy':'Koop een licentie',
+'lic.used':'De gratis proefperiode is voor dit huis al gebruikt.',
+'lic.starting':'Starten…',
+'lic.e_rate_limited':'Te veel pogingen op dit moment. Probeer het over {n} min opnieuw.',
+'lic.e_rate_limited0':'Te veel pogingen op dit moment. Probeer het over een paar minuten opnieuw.',
+'lic.e_unavailable':'Onze licentieserver was niet bereikbaar. Controleer of Home Assistant online is en probeer het opnieuw.',
+'lic.e_invalid_token':'De gratis proefperiode kon niet worden gecontroleerd. Controleer de datum, tijd en tijdzone van Home Assistant en probeer het opnieuw.',
+'lic.e_licensed':'Dit huis heeft al een licentie. Vul de sleutel ervan in.',
+'lic.e_failed':'De gratis proefperiode kon niet starten. Probeer het zo meteen opnieuw.',
+'lic.chip_left':'Proefperiode · {left}',
+'lic.card_left':'Gratis proefperiode: nog {left}',
+'lic.hours_one':'{n} uur',
+'lic.hours_few':'{n} uur',
+'lic.hours_many':'{n} uur',
+'lic.hours_other':'{n} uur',
 'lic.eyebrow':'Licentie',
 'lic.foot':'De lampen, het alarm en de rest van het huis blijven werken via de Home Assistant-app.',
 'lic.settings':'Instellingen van de integratie',
@@ -28649,15 +28911,15 @@ nl:{
 'lic.btn_check':'Nu controleren',
 'lic.btn_open_settings':'Open de instellingen',
 'lic.band_aria':'Melding over de licentie',
-'lic.card_p':'Kies een plan zodat het dashboard niet stopt.',
+'lic.card_p':'Eindigt op {date} om {time}. Daarna vraagt het dashboard om een licentie. De lampen, het alarm en de rest van het huis blijven werken via de Home Assistant-app.',
 'lic.a_sub_end_s':'Betaald tot {date}; wordt niet verlengd.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Je proefperiode van 60 minuten start…',
-'lic.m_pending_p':'Home Assistant vraagt de proefperiode aan bij onze server. Dat duurt een paar seconden.',
+'lic.m_pending_t':'Je gratis proefperiode start…',
+'lic.m_pending_p':'Home Assistant vraagt de gratis proefperiode aan bij onze licentieserver. Dat duurt een paar seconden.',
 'lic.m_key_t':'Activeer Nucleum Hub',
-'lic.m_key_p':'Heb je al een licentiesleutel? Vul hem in Home Assistant in, in de instellingen van de integratie. De proefperiode van 60 minuten start vanzelf zodra Home Assistant met het internet verbonden is.',
-'lic.m_trial_over_t':'Je proefperiode van 60 minuten is voorbij',
-'lic.m_trial_over_p':'Bedankt dat je het hebt geprobeerd. Kies het maandabonnement of de eenmalige licentie om het te blijven gebruiken, en vul daarna de sleutel uit de e-mail in Home Assistant in. Je indeling en instellingen blijven bewaard.',
+'lic.m_key_p':'Heb je al een licentiesleutel? Vul hem in Home Assistant in, in de instellingen van de integratie. Nog geen sleutel? Bekijk de prijzen en kies een plan.',
+'lic.m_trial_over_t':'Je gratis proefperiode is voorbij',
+'lic.m_trial_over_p':'Vul je sleutel in of koop een licentie om Nucleum Hub te blijven gebruiken. De lampen, het alarm en de rest van het huis blijven werken via de Home Assistant-app.',
 'lic.m_sub_expired_t':'Je abonnement is gestopt',
 'lic.m_sub_expired_p':'De maandelijkse betaling is niet meer actief, dus het dashboard is gestopt. Verleng het abonnement en het start vanzelf weer, met dezelfde sleutel en alles wat je hebt ingesteld.',
 'lic.m_expired_t':'Je licentie is verlopen',
@@ -28696,9 +28958,9 @@ nl:{
 'lic.a_waiting':'De integratie Nucleum Hub wordt gevraagd…',
 'lic.pill_missing':'Ontbreekt',
 'lic.pill_inactive':'Niet actief',
-'lic.a_trial_b':'Proefperiode',
-'lic.a_trial_s':'Eindigt om {time}. Je indeling en instellingen blijven na de aankoop bewaard.',
-'lic.a_trial_note':'Eén proefperiode per installatie van Home Assistant',
+'lic.a_trial_b':'Gratis proefperiode',
+'lic.a_trial_s':'Eindigt op {date} om {time}. Je indeling en instellingen blijven na de aankoop bewaard.',
+'lic.a_trial_note':'Eén gratis proefperiode per huis en per installatie van Home Assistant',
 'lic.a_sub_b':'Maandabonnement',
 'lic.a_sub_s':'Betaald tot {date}; wordt vanzelf verlengd.',
 'lic.pill_active_sub':'Actief',
@@ -28722,14 +28984,6 @@ nl:{
 'lic.days_few':'{n} dagen',
 'lic.days_many':'{n} dagen',
 'lic.days_other':'{n} dagen',
-'lic.chip_one':'Proefperiode · nog {n} min',
-'lic.chip_few':'Proefperiode · nog {n} min',
-'lic.chip_many':'Proefperiode · nog {n} min',
-'lic.chip_other':'Proefperiode · nog {n} min',
-'lic.card_t_one':'Nog {n} minuut van je proefperiode',
-'lic.card_t_few':'Nog {n} minuten van je proefperiode',
-'lic.card_t_many':'Nog {n} minuten van je proefperiode',
-'lic.card_t_other':'Nog {n} minuten van je proefperiode',
 'ui.rl_gone_ticked':'Wat is aangevinkt, bestaat niet meer in Home Assistant.',
 'ui.rl_off_pres':'Het aanwezigheidssymbool staat niet meer op de kaart.',
 'ui.rl_off_open':'De kaart toont geen open deuren en ramen meer.',
@@ -30272,6 +30526,32 @@ nl:{
 'tap_toggle':'Live · verbonden met Home Assistant',
 },
 es:{
+'lic.m_welcome_t':'Te damos la bienvenida a Nucleum Hub',
+'lic.m_welcome_p':'Elige cómo empezar. La prueba gratuita se da una sola vez por casa.',
+'lic.w_trial_t':'Prueba gratuita, 3 días',
+'lic.w_trial_p':'Todo desbloqueado, en todas las pantallas. Sin tarjeta ni cuenta.',
+'lic.btn_start_trial':'Empezar la prueba',
+'lic.w_trial_server':'Al empezarla se contacta con nuestro servidor de licencias.',
+'lic.w_trial_admin':'Solo el administrador de Home Assistant puede iniciarla.',
+'lic.w_key_t':'Tengo una licencia',
+'lic.w_key_p':'¿Ya la compraste? Introduce la clave que recibiste por correo.',
+'lic.w_key_admin':'Solo el administrador de Home Assistant puede introducirla.',
+'lic.btn_have_key':'Tengo una clave',
+'lic.btn_buy':'Comprar una licencia',
+'lic.used':'La prueba gratuita ya se usó en esta casa.',
+'lic.starting':'Iniciando…',
+'lic.e_rate_limited':'Demasiados intentos ahora mismo. Vuelve a intentarlo en {n} min.',
+'lic.e_rate_limited0':'Demasiados intentos ahora mismo. Vuelve a intentarlo en unos minutos.',
+'lic.e_unavailable':'No se pudo contactar con nuestro servidor de licencias. Comprueba que Home Assistant tiene internet y vuelve a intentarlo.',
+'lic.e_invalid_token':'No se pudo comprobar la prueba gratuita. Revisa la fecha, la hora y la zona horaria de Home Assistant y vuelve a intentarlo.',
+'lic.e_licensed':'Esta casa ya tiene una licencia. Introduce su clave.',
+'lic.e_failed':'No se pudo iniciar la prueba gratuita. Vuelve a intentarlo en un momento.',
+'lic.chip_left':'Prueba · {left}',
+'lic.card_left':'Prueba gratuita: termina en {left}',
+'lic.hours_one':'{n} h',
+'lic.hours_few':'{n} h',
+'lic.hours_many':'{n} h',
+'lic.hours_other':'{n} h',
 'lic.eyebrow':'Licencia',
 'lic.foot':'Las luces, la alarma y el resto de la casa siguen funcionando desde la app de Home Assistant.',
 'lic.settings':'Ajustes de la integración',
@@ -30295,15 +30575,15 @@ es:{
 'lic.btn_check':'Comprobar ahora',
 'lic.btn_open_settings':'Abrir los ajustes',
 'lic.band_aria':'Aviso sobre la licencia',
-'lic.card_p':'Elige un plan para que el panel no se detenga.',
+'lic.card_p':'Termina el {date} a las {time}. Entonces el panel pedirá una licencia. Las luces, la alarma y el resto de la casa siguen funcionando desde la app de Home Assistant.',
 'lic.a_sub_end_s':'Pagada hasta el {date}; no se renueva.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Iniciando tu prueba de 60 minutos…',
-'lic.m_pending_p':'Home Assistant está pidiendo la prueba a nuestro servidor. Tarda unos segundos.',
+'lic.m_pending_t':'Iniciando tu prueba gratuita…',
+'lic.m_pending_p':'Home Assistant está pidiendo la prueba gratuita a nuestro servidor de licencias. Tarda unos segundos.',
 'lic.m_key_t':'Activa Nucleum Hub',
-'lic.m_key_p':'¿Ya tienes una clave de licencia? Introdúcela en Home Assistant, en los ajustes de la integración. La prueba de 60 minutos empieza sola cuando Home Assistant está conectado a internet.',
-'lic.m_trial_over_t':'Tu prueba de 60 minutos ha terminado',
-'lic.m_trial_over_p':'Gracias por probarlo. Para seguir usándolo, elige la suscripción mensual o la licencia de pago único y luego introduce en Home Assistant la clave que recibiste por correo. Tu diseño y tus ajustes se conservan.',
+'lic.m_key_p':'¿Ya tienes una clave de licencia? Introdúcela en Home Assistant, en los ajustes de la integración. ¿Aún no tienes clave? Mira los precios y elige un plan.',
+'lic.m_trial_over_t':'Tu prueba gratuita ha terminado',
+'lic.m_trial_over_p':'Introduce tu clave o compra una licencia para seguir usando Nucleum Hub. Las luces, la alarma y el resto de la casa siguen funcionando desde la app de Home Assistant.',
 'lic.m_sub_expired_t':'Tu suscripción se ha detenido',
 'lic.m_sub_expired_p':'El pago mensual ya no está activo, así que el panel se ha detenido. Renueva la suscripción y vuelve a funcionar solo, con la misma clave y todo lo que configuraste.',
 'lic.m_expired_t':'Tu licencia ha caducado',
@@ -30342,9 +30622,9 @@ es:{
 'lic.a_waiting':'Consultando la integración Nucleum Hub…',
 'lic.pill_missing':'Falta',
 'lic.pill_inactive':'Inactiva',
-'lic.a_trial_b':'Prueba',
-'lic.a_trial_s':'Termina a las {time}. Tu diseño y tus ajustes se conservan después de comprar.',
-'lic.a_trial_note':'Una prueba por instalación de Home Assistant',
+'lic.a_trial_b':'Prueba gratuita',
+'lic.a_trial_s':'Termina el {date} a las {time}. Tu diseño y tus ajustes se conservan después de comprar.',
+'lic.a_trial_note':'Una prueba gratuita por casa y por instalación de Home Assistant',
 'lic.a_sub_b':'Suscripción mensual',
 'lic.a_sub_s':'Pagada hasta el {date}; se renueva sola.',
 'lic.pill_active_sub':'Activa',
@@ -30368,14 +30648,6 @@ es:{
 'lic.days_few':'{n} días',
 'lic.days_many':'{n} días',
 'lic.days_other':'{n} días',
-'lic.chip_one':'Prueba · queda {n} min',
-'lic.chip_few':'Prueba · quedan {n} min',
-'lic.chip_many':'Prueba · quedan {n} min',
-'lic.chip_other':'Prueba · quedan {n} min',
-'lic.card_t_one':'Queda {n} minuto de prueba',
-'lic.card_t_few':'Quedan {n} minutos de prueba',
-'lic.card_t_many':'Quedan {n} minutos de prueba',
-'lic.card_t_other':'Quedan {n} minutos de prueba',
 'ui.rl_gone_ticked':'Lo marcado ya no está en Home Assistant.',
 'ui.rl_off_pres':'El indicador de presencia ya no aparece en la tarjeta.',
 'ui.rl_off_open':'La tarjeta ya no muestra las puertas y ventanas abiertas.',
@@ -31918,6 +32190,32 @@ es:{
 'tap_toggle':'En vivo · conectado a Home Assistant',
 },
 it:{
+'lic.m_welcome_t':'Ti diamo il benvenuto in Nucleum Hub',
+'lic.m_welcome_p':'Scegli come iniziare. La prova gratuita si ottiene una sola volta per casa.',
+'lic.w_trial_t':'Prova gratuita, 3 giorni',
+'lic.w_trial_p':'Tutto sbloccato, su ogni schermo. Niente carta, niente account.',
+'lic.btn_start_trial':'Inizia la prova',
+'lic.w_trial_server':'L’avvio contatta il nostro server delle licenze.',
+'lic.w_trial_admin':'Solo l’amministratore di Home Assistant può avviarla.',
+'lic.w_key_t':'Ho una licenza',
+'lic.w_key_p':'Già acquistata? Inserisci la chiave ricevuta per e-mail.',
+'lic.w_key_admin':'Solo l’amministratore di Home Assistant può inserirla.',
+'lic.btn_have_key':'Ho una chiave',
+'lic.btn_buy':'Acquista una licenza',
+'lic.used':'La prova gratuita è già stata usata in questa casa.',
+'lic.starting':'Avvio…',
+'lic.e_rate_limited':'Troppi tentativi in questo momento. Riprova tra {n} min.',
+'lic.e_rate_limited0':'Troppi tentativi in questo momento. Riprova tra qualche minuto.',
+'lic.e_unavailable':'Non è stato possibile raggiungere il nostro server delle licenze. Controlla che Home Assistant sia online, poi riprova.',
+'lic.e_invalid_token':'Non è stato possibile verificare la prova gratuita. Controlla data, ora e fuso orario di Home Assistant, poi riprova.',
+'lic.e_licensed':'Questa casa ha già una licenza. Inserisci la sua chiave.',
+'lic.e_failed':'Non è stato possibile avviare la prova gratuita. Riprova tra un momento.',
+'lic.chip_left':'Prova · {left}',
+'lic.card_left':'Prova gratuita: ancora {left}',
+'lic.hours_one':'{n} ora',
+'lic.hours_few':'{n} ore',
+'lic.hours_many':'{n} ore',
+'lic.hours_other':'{n} ore',
 'lic.eyebrow':'Licenza',
 'lic.foot':'Le luci, l’allarme e il resto della casa continuano a funzionare dall’app Home Assistant.',
 'lic.settings':'Impostazioni dell’integrazione',
@@ -31941,15 +32239,15 @@ it:{
 'lic.btn_check':'Verifica ora',
 'lic.btn_open_settings':'Apri le impostazioni',
 'lic.band_aria':'Avviso sulla licenza',
-'lic.card_p':'Scegli un piano perché la plancia non si fermi.',
+'lic.card_p':'Termina {date} alle {time}. Poi la plancia chiede una licenza. Le luci, l’allarme e il resto della casa continuano a funzionare dall’app Home Assistant.',
 'lic.a_sub_end_s':'Pagato fino al {date}; non si rinnova.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Avvio della prova di 60 minuti…',
-'lic.m_pending_p':'Home Assistant sta chiedendo la prova al nostro server. Ci vuole qualche secondo.',
+'lic.m_pending_t':'Avvio della prova gratuita…',
+'lic.m_pending_p':'Home Assistant sta chiedendo la prova gratuita al nostro server delle licenze. Ci vuole qualche secondo.',
 'lic.m_key_t':'Attiva Nucleum Hub',
-'lic.m_key_p':'Hai già una chiave di licenza? Inseriscila in Home Assistant, nelle impostazioni dell’integrazione. La prova di 60 minuti parte da sola quando Home Assistant è connesso a internet.',
-'lic.m_trial_over_t':'La tua prova di 60 minuti è finita',
-'lic.m_trial_over_p':'Grazie per averlo provato. Per continuare a usarlo, scegli l’abbonamento mensile o la licenza a pagamento unico, poi inserisci in Home Assistant la chiave ricevuta per e-mail. Il tuo layout e le tue impostazioni restano.',
+'lic.m_key_p':'Hai già una chiave di licenza? Inseriscila in Home Assistant, nelle impostazioni dell’integrazione. Non hai ancora una chiave? Guarda i prezzi e scegli un piano.',
+'lic.m_trial_over_t':'La tua prova gratuita è finita',
+'lic.m_trial_over_p':'Inserisci la chiave o acquista una licenza per continuare a usare Nucleum Hub. Le luci, l’allarme e il resto della casa continuano a funzionare dall’app Home Assistant.',
 'lic.m_sub_expired_t':'Il tuo abbonamento si è fermato',
 'lic.m_sub_expired_p':'Il pagamento mensile non è più attivo, quindi la plancia si è fermata. Rinnova l’abbonamento e ripartirà da sola, con la stessa chiave e tutto ciò che hai configurato.',
 'lic.m_expired_t':'La tua licenza è scaduta',
@@ -31988,9 +32286,9 @@ it:{
 'lic.a_waiting':'Richiesta all’integrazione Nucleum Hub…',
 'lic.pill_missing':'Mancante',
 'lic.pill_inactive':'Non attiva',
-'lic.a_trial_b':'Prova',
-'lic.a_trial_s':'Termina alle {time}. Layout e impostazioni restano dopo l’acquisto.',
-'lic.a_trial_note':'Una prova per installazione di Home Assistant',
+'lic.a_trial_b':'Prova gratuita',
+'lic.a_trial_s':'Termina il {date} alle {time}. Layout e impostazioni restano dopo l’acquisto.',
+'lic.a_trial_note':'Una prova gratuita per casa e per installazione di Home Assistant',
 'lic.a_sub_b':'Abbonamento mensile',
 'lic.a_sub_s':'Pagato fino al {date}; si rinnova da solo.',
 'lic.pill_active_sub':'Attivo',
@@ -32014,14 +32312,6 @@ it:{
 'lic.days_few':'{n} giorni',
 'lic.days_many':'{n} giorni',
 'lic.days_other':'{n} giorni',
-'lic.chip_one':'Prova · manca {n} min',
-'lic.chip_few':'Prova · mancano {n} min',
-'lic.chip_many':'Prova · mancano {n} min',
-'lic.chip_other':'Prova · mancano {n} min',
-'lic.card_t_one':'Manca {n} minuto alla fine della prova',
-'lic.card_t_few':'Mancano {n} minuti alla fine della prova',
-'lic.card_t_many':'Mancano {n} minuti alla fine della prova',
-'lic.card_t_other':'Mancano {n} minuti alla fine della prova',
 'ui.rl_gone_ticked':'Ciò che è spuntato non è più in Home Assistant.',
 'ui.rl_off_pres':'Il simbolo di presenza non compare più sulla scheda.',
 'ui.rl_off_open':'La scheda non mostra più porte e finestre aperte.',
@@ -33564,6 +33854,32 @@ it:{
 'tap_toggle':'In tempo reale · connesso a Home Assistant',
 },
 pl:{
+'lic.m_welcome_t':'Witaj w Nucleum Hub',
+'lic.m_welcome_p':'Wybierz, jak zacząć. Bezpłatny okres próbny przysługuje raz na dom.',
+'lic.w_trial_t':'Bezpłatny okres próbny, 3 dni',
+'lic.w_trial_p':'Wszystko odblokowane, na każdym ekranie. Bez karty, bez konta.',
+'lic.btn_start_trial':'Rozpocznij okres próbny',
+'lic.w_trial_server':'Uruchomienie łączy się z naszym serwerem licencji.',
+'lic.w_trial_admin':'Tylko administrator Home Assistant może go uruchomić.',
+'lic.w_key_t':'Mam licencję',
+'lic.w_key_p':'Już kupione? Wpisz klucz z e-maila.',
+'lic.w_key_admin':'Tylko administrator Home Assistant może go wpisać.',
+'lic.btn_have_key':'Mam klucz',
+'lic.btn_buy':'Kup licencję',
+'lic.used':'Bezpłatny okres próbny został już wykorzystany w tym domu.',
+'lic.starting':'Uruchamianie…',
+'lic.e_rate_limited':'Zbyt wiele prób w tej chwili. Spróbuj ponownie za {n} min.',
+'lic.e_rate_limited0':'Zbyt wiele prób w tej chwili. Spróbuj ponownie za kilka minut.',
+'lic.e_unavailable':'Nie udało się połączyć z naszym serwerem licencji. Sprawdź, czy Home Assistant ma internet, i spróbuj ponownie.',
+'lic.e_invalid_token':'Nie udało się sprawdzić bezpłatnego okresu próbnego. Sprawdź datę, godzinę i strefę czasową w Home Assistant i spróbuj ponownie.',
+'lic.e_licensed':'Ten dom ma już licencję. Wpisz jej klucz.',
+'lic.e_failed':'Nie udało się uruchomić bezpłatnego okresu próbnego. Spróbuj ponownie za chwilę.',
+'lic.chip_left':'Okres próbny · {left}',
+'lic.card_left':'Bezpłatny okres próbny: jeszcze {left}',
+'lic.hours_one':'{n} godz.',
+'lic.hours_few':'{n} godz.',
+'lic.hours_many':'{n} godz.',
+'lic.hours_other':'{n} godz.',
 'lic.eyebrow':'Licencja',
 'lic.foot':'Światła, alarm i reszta domu nadal działają w aplikacji Home Assistant.',
 'lic.settings':'Ustawienia integracji',
@@ -33587,15 +33903,15 @@ pl:{
 'lic.btn_check':'Sprawdź teraz',
 'lic.btn_open_settings':'Otwórz ustawienia',
 'lic.band_aria':'Komunikat o licencji',
-'lic.card_p':'Wybierz plan, żeby panel działał dalej.',
+'lic.card_p':'Koniec: {date}, godz. {time}. Potem panel poprosi o licencję. Światła, alarm i reszta domu nadal działają w aplikacji Home Assistant.',
 'lic.a_sub_end_s':'Opłacona do {date}; nie odnowi się.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Uruchamiamy 60-minutowy okres próbny…',
-'lic.m_pending_p':'Home Assistant prosi nasz serwer o okres próbny. To potrwa kilka sekund.',
+'lic.m_pending_t':'Uruchamiamy bezpłatny okres próbny…',
+'lic.m_pending_p':'Home Assistant prosi nasz serwer licencji o bezpłatny okres próbny. To potrwa kilka sekund.',
 'lic.m_key_t':'Aktywuj Nucleum Hub',
-'lic.m_key_p':'Masz już klucz licencyjny? Wpisz go w Home Assistant, w ustawieniach integracji. 60-minutowy okres próbny uruchomi się sam, gdy Home Assistant będzie połączony z internetem.',
-'lic.m_trial_over_t':'Twój 60-minutowy okres próbny się skończył',
-'lic.m_trial_over_p':'Dziękujemy za wypróbowanie. Aby dalej korzystać z panelu, wybierz subskrypcję miesięczną lub licencję jednorazową, a potem wpisz w Home Assistant klucz z e-maila. Twój układ i ustawienia zostają.',
+'lic.m_key_p':'Masz już klucz licencyjny? Wpisz go w Home Assistant, w ustawieniach integracji. Nie masz jeszcze klucza? Zobacz ceny i wybierz plan.',
+'lic.m_trial_over_t':'Twój bezpłatny okres próbny się skończył',
+'lic.m_trial_over_p':'Wpisz klucz albo kup licencję, aby dalej korzystać z Nucleum Hub. Światła, alarm i reszta domu nadal działają w aplikacji Home Assistant.',
 'lic.m_sub_expired_t':'Twoja subskrypcja została zatrzymana',
 'lic.m_sub_expired_p':'Miesięczna płatność nie jest już aktywna, więc panel się zatrzymał. Odnów subskrypcję, a panel sam uruchomi się ponownie, z tym samym kluczem i wszystkimi Twoimi ustawieniami.',
 'lic.m_expired_t':'Twoja licencja wygasła',
@@ -33634,9 +33950,9 @@ pl:{
 'lic.a_waiting':'Pytamy integrację Nucleum Hub…',
 'lic.pill_missing':'Brak',
 'lic.pill_inactive':'Nieaktywna',
-'lic.a_trial_b':'Okres próbny',
-'lic.a_trial_s':'Kończy się o {time}. Układ i ustawienia zostają po zakupie.',
-'lic.a_trial_note':'Jeden okres próbny na instalację Home Assistant',
+'lic.a_trial_b':'Bezpłatny okres próbny',
+'lic.a_trial_s':'Kończy się {date} o {time}. Układ i ustawienia zostają po zakupie.',
+'lic.a_trial_note':'Jeden bezpłatny okres próbny na dom i instalację Home Assistant',
 'lic.a_sub_b':'Subskrypcja miesięczna',
 'lic.a_sub_s':'Opłacona do {date}; odnawia się sama.',
 'lic.pill_active_sub':'Aktywna',
@@ -33660,14 +33976,6 @@ pl:{
 'lic.days_few':'{n} dni',
 'lic.days_many':'{n} dni',
 'lic.days_other':'{n} dni',
-'lic.chip_one':'Okres próbny · została {n} min',
-'lic.chip_few':'Okres próbny · zostały {n} min',
-'lic.chip_many':'Okres próbny · zostało {n} min',
-'lic.chip_other':'Okres próbny · zostało {n} min',
-'lic.card_t_one':'Została {n} minuta okresu próbnego',
-'lic.card_t_few':'Zostały {n} minuty okresu próbnego',
-'lic.card_t_many':'Zostało {n} minut okresu próbnego',
-'lic.card_t_other':'Zostało {n} minut okresu próbnego',
 'ui.rl_gone_ticked':'Zaznaczonych elementów nie ma już w Home Assistant.',
 'ui.rl_off_pres':'Ikona obecności nie pojawia się już na karcie.',
 'ui.rl_off_open':'Karta nie pokazuje już otwartych drzwi i okien.',
@@ -35210,6 +35518,32 @@ pl:{
 'tap_toggle':'Na żywo · połączono z Home Assistant',
 },
 sv:{
+'lic.m_welcome_t':'Välkommen till Nucleum Hub',
+'lic.m_welcome_p':'Välj hur du vill börja. Den gratis provperioden ges en gång per hem.',
+'lic.w_trial_t':'Gratis provperiod, 3 dagar',
+'lic.w_trial_p':'Allt upplåst, på alla skärmar. Inget kort, inget konto.',
+'lic.btn_start_trial':'Starta provperioden',
+'lic.w_trial_server':'Starten kontaktar vår licensserver.',
+'lic.w_trial_admin':'Bara administratören i Home Assistant kan starta den.',
+'lic.w_key_t':'Jag har en licens',
+'lic.w_key_p':'Redan köpt? Ange nyckeln från mejlet.',
+'lic.w_key_admin':'Bara administratören i Home Assistant kan ange den.',
+'lic.btn_have_key':'Jag har en nyckel',
+'lic.btn_buy':'Köp en licens',
+'lic.used':'Den gratis provperioden har redan använts i det här hemmet.',
+'lic.starting':'Startar…',
+'lic.e_rate_limited':'För många försök just nu. Försök igen om {n} min.',
+'lic.e_rate_limited0':'För många försök just nu. Försök igen om några minuter.',
+'lic.e_unavailable':'Vår licensserver gick inte att nå. Kontrollera att Home Assistant är online och försök igen.',
+'lic.e_invalid_token':'Den gratis provperioden kunde inte kontrolleras. Kontrollera datum, tid och tidszon i Home Assistant och försök igen.',
+'lic.e_licensed':'Det här hemmet har redan en licens. Ange dess nyckel.',
+'lic.e_failed':'Den gratis provperioden kunde inte starta. Försök igen om en stund.',
+'lic.chip_left':'Provperiod · {left}',
+'lic.card_left':'Gratis provperiod: {left} kvar',
+'lic.hours_one':'{n} tim',
+'lic.hours_few':'{n} tim',
+'lic.hours_many':'{n} tim',
+'lic.hours_other':'{n} tim',
 'lic.eyebrow':'Licens',
 'lic.foot':'Lamporna, larmet och resten av hemmet fungerar fortfarande via Home Assistant-appen.',
 'lic.settings':'Integrationens inställningar',
@@ -35233,15 +35567,15 @@ sv:{
 'lic.btn_check':'Kontrollera nu',
 'lic.btn_open_settings':'Öppna inställningarna',
 'lic.band_aria':'Meddelande om licensen',
-'lic.card_p':'Välj en plan så att panelen inte stannar.',
+'lic.card_p':'Slutar {date} kl. {time}. Sedan ber panelen om en licens. Lamporna, larmet och resten av hemmet fungerar fortfarande via Home Assistant-appen.',
 'lic.a_sub_end_s':'Betalt till {date}; förnyas inte.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Din provperiod på 60 minuter startar…',
-'lic.m_pending_p':'Home Assistant ber vår server om provperioden. Det tar några sekunder.',
+'lic.m_pending_t':'Din gratis provperiod startar…',
+'lic.m_pending_p':'Home Assistant ber vår licensserver om den gratis provperioden. Det tar några sekunder.',
 'lic.m_key_t':'Aktivera Nucleum Hub',
-'lic.m_key_p':'Har du redan en licensnyckel? Ange den i Home Assistant, i integrationens inställningar. Provperioden på 60 minuter startar av sig själv när Home Assistant är anslutet till internet.',
-'lic.m_trial_over_t':'Din provperiod på 60 minuter är slut',
-'lic.m_trial_over_p':'Tack för att du provade. För att fortsätta använda panelen, välj månadsabonnemanget eller engångslicensen och ange sedan nyckeln från mejlet i Home Assistant. Din layout och dina inställningar finns kvar.',
+'lic.m_key_p':'Har du redan en licensnyckel? Ange den i Home Assistant, i integrationens inställningar. Ingen nyckel än? Se priserna och välj en plan.',
+'lic.m_trial_over_t':'Din gratis provperiod är slut',
+'lic.m_trial_over_p':'Ange din nyckel eller köp en licens för att fortsätta använda Nucleum Hub. Lamporna, larmet och resten av hemmet fungerar fortfarande via Home Assistant-appen.',
 'lic.m_sub_expired_t':'Ditt abonnemang har stoppats',
 'lic.m_sub_expired_p':'Månadsbetalningen är inte längre aktiv, så panelen har stannat. Förnya abonnemanget så startar den igen av sig själv, med samma nyckel och allt du har ställt in.',
 'lic.m_expired_t':'Din licens har gått ut',
@@ -35280,9 +35614,9 @@ sv:{
 'lic.a_waiting':'Frågar integrationen Nucleum Hub…',
 'lic.pill_missing':'Saknas',
 'lic.pill_inactive':'Inte aktiv',
-'lic.a_trial_b':'Provperiod',
-'lic.a_trial_s':'Slutar kl. {time}. Din layout och dina inställningar finns kvar efter köpet.',
-'lic.a_trial_note':'En provperiod per Home Assistant-installation',
+'lic.a_trial_b':'Gratis provperiod',
+'lic.a_trial_s':'Slutar {date} kl. {time}. Din layout och dina inställningar finns kvar efter köpet.',
+'lic.a_trial_note':'En gratis provperiod per hem och Home Assistant-installation',
 'lic.a_sub_b':'Månadsabonnemang',
 'lic.a_sub_s':'Betalt till {date}; förnyas automatiskt.',
 'lic.pill_active_sub':'Aktivt',
@@ -35306,14 +35640,6 @@ sv:{
 'lic.days_few':'{n} dagar',
 'lic.days_many':'{n} dagar',
 'lic.days_other':'{n} dagar',
-'lic.chip_one':'Provperiod · {n} min kvar',
-'lic.chip_few':'Provperiod · {n} min kvar',
-'lic.chip_many':'Provperiod · {n} min kvar',
-'lic.chip_other':'Provperiod · {n} min kvar',
-'lic.card_t_one':'{n} minut kvar av provperioden',
-'lic.card_t_few':'{n} minuter kvar av provperioden',
-'lic.card_t_many':'{n} minuter kvar av provperioden',
-'lic.card_t_other':'{n} minuter kvar av provperioden',
 'ui.rl_gone_ticked':'Det markerade finns inte längre i Home Assistant.',
 'ui.rl_off_pres':'Närvarosymbolen visas inte längre på kortet.',
 'ui.rl_off_open':'Kortet visar inte längre öppna dörrar och fönster.',
@@ -36856,6 +37182,32 @@ sv:{
 'tap_toggle':'Live · ansluten till Home Assistant',
 },
 cs:{
+'lic.m_welcome_t':'Vítejte v Nucleum Hub',
+'lic.m_welcome_p':'Vyberte, jak začít. Bezplatnou zkušební dobu dostane každá domácnost jen jednou.',
+'lic.w_trial_t':'Bezplatná zkušební doba, 3 dny',
+'lic.w_trial_p':'Vše odemčené, na všech obrazovkách. Bez karty, bez účtu.',
+'lic.btn_start_trial':'Spustit zkušební dobu',
+'lic.w_trial_server':'Spuštění kontaktuje náš licenční server.',
+'lic.w_trial_admin':'Spustit ji může jen správce Home Assistantu.',
+'lic.w_key_t':'Mám licenci',
+'lic.w_key_p':'Už máte zakoupeno? Zadejte klíč z e-mailu.',
+'lic.w_key_admin':'Zadat ho může jen správce Home Assistantu.',
+'lic.btn_have_key':'Mám klíč',
+'lic.btn_buy':'Koupit licenci',
+'lic.used':'Bezplatná zkušební doba už byla v této domácnosti využita.',
+'lic.starting':'Spouští se…',
+'lic.e_rate_limited':'Teď příliš mnoho pokusů. Zkuste to znovu za {n} min.',
+'lic.e_rate_limited0':'Teď příliš mnoho pokusů. Zkuste to znovu za pár minut.',
+'lic.e_unavailable':'Náš licenční server nebyl dostupný. Zkontrolujte, že je Home Assistant online, a zkuste to znovu.',
+'lic.e_invalid_token':'Bezplatnou zkušební dobu se nepodařilo ověřit. Zkontrolujte datum, čas a časové pásmo v Home Assistantu a zkuste to znovu.',
+'lic.e_licensed':'Tato domácnost už má licenci. Zadejte její klíč.',
+'lic.e_failed':'Bezplatnou zkušební dobu se nepodařilo spustit. Zkuste to za chvíli znovu.',
+'lic.chip_left':'Zkušební doba · {left}',
+'lic.card_left':'Bezplatná zkušební doba: ještě {left}',
+'lic.hours_one':'{n} hod.',
+'lic.hours_few':'{n} hod.',
+'lic.hours_many':'{n} hod.',
+'lic.hours_other':'{n} hod.',
 'lic.eyebrow':'Licence',
 'lic.foot':'Světla, alarm a zbytek domu dál fungují z aplikace Home Assistant.',
 'lic.settings':'Nastavení integrace',
@@ -36879,15 +37231,15 @@ cs:{
 'lic.btn_check':'Ověřit teď',
 'lic.btn_open_settings':'Otevřít nastavení',
 'lic.band_aria':'Oznámení o licenci',
-'lic.card_p':'Vyberte tarif, aby se panel nezastavil.',
+'lic.card_p':'Konec: {date} v {time}. Pak si panel řekne o licenci. Světla, alarm a zbytek domu dál fungují z aplikace Home Assistant.',
 'lic.a_sub_end_s':'Zaplaceno do {date}; neobnoví se.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Spouštíme 60minutovou zkušební dobu…',
-'lic.m_pending_p':'Home Assistant žádá náš server o zkušební dobu. Potrvá to pár sekund.',
+'lic.m_pending_t':'Spouštíme bezplatnou zkušební dobu…',
+'lic.m_pending_p':'Home Assistant žádá náš licenční server o bezplatnou zkušební dobu. Potrvá to pár sekund.',
 'lic.m_key_t':'Aktivujte Nucleum Hub',
-'lic.m_key_p':'Už máte licenční klíč? Zadejte ho v Home Assistantu, v nastavení integrace. 60minutová zkušební doba se spustí sama, jakmile bude Home Assistant připojený k internetu.',
-'lic.m_trial_over_t':'Vaše 60minutová zkušební doba skončila',
-'lic.m_trial_over_p':'Děkujeme, že jste ho vyzkoušeli. Pokud ho chcete používat dál, vyberte měsíční předplatné nebo jednorázovou licenci a pak zadejte v Home Assistantu klíč z e-mailu. Vaše rozvržení a nastavení zůstanou.',
+'lic.m_key_p':'Už máte licenční klíč? Zadejte ho v Home Assistantu, v nastavení integrace. Ještě nemáte klíč? Podívejte se na ceny a vyberte tarif.',
+'lic.m_trial_over_t':'Vaše bezplatná zkušební doba skončila',
+'lic.m_trial_over_p':'Zadejte klíč nebo kupte licenci, abyste mohli Nucleum Hub dál používat. Světla, alarm a zbytek domu dál fungují z aplikace Home Assistant.',
 'lic.m_sub_expired_t':'Vaše předplatné se zastavilo',
 'lic.m_sub_expired_p':'Měsíční platba už není aktivní, a proto se panel zastavil. Obnovte předplatné a panel se sám znovu spustí, se stejným klíčem a se vším, co jste nastavili.',
 'lic.m_expired_t':'Vaše licence vypršela',
@@ -36926,9 +37278,9 @@ cs:{
 'lic.a_waiting':'Dotazujeme se integrace Nucleum Hub…',
 'lic.pill_missing':'Chybí',
 'lic.pill_inactive':'Neaktivní',
-'lic.a_trial_b':'Zkušební doba',
-'lic.a_trial_s':'Končí v {time}. Rozvržení a nastavení po nákupu zůstanou.',
-'lic.a_trial_note':'Jedna zkušební doba na instalaci Home Assistantu',
+'lic.a_trial_b':'Bezplatná zkušební doba',
+'lic.a_trial_s':'Končí {date} v {time}. Rozvržení a nastavení po nákupu zůstanou.',
+'lic.a_trial_note':'Jedna bezplatná zkušební doba na domácnost a instalaci Home Assistantu',
 'lic.a_sub_b':'Měsíční předplatné',
 'lic.a_sub_s':'Zaplaceno do {date}; obnovuje se samo.',
 'lic.pill_active_sub':'Aktivní',
@@ -36952,14 +37304,6 @@ cs:{
 'lic.days_few':'{n} dny',
 'lic.days_many':'{n} dne',
 'lic.days_other':'{n} dní',
-'lic.chip_one':'Zkušební doba · zbývá {n} min',
-'lic.chip_few':'Zkušební doba · zbývají {n} min',
-'lic.chip_many':'Zkušební doba · zbývá {n} min',
-'lic.chip_other':'Zkušební doba · zbývá {n} min',
-'lic.card_t_one':'Zbývá {n} minuta zkušební doby',
-'lic.card_t_few':'Zbývají {n} minuty zkušební doby',
-'lic.card_t_many':'Zbývá {n} minuty zkušební doby',
-'lic.card_t_other':'Zbývá {n} minut zkušební doby',
 'ui.rl_gone_ticked':'Zaškrtnuté položky už v Home Assistantu nejsou.',
 'ui.rl_off_pres':'Ikona přítomnosti se už na kartě nezobrazí.',
 'ui.rl_off_open':'Karta už nezobrazí otevřené dveře a okna.',
@@ -38502,6 +38846,32 @@ cs:{
 'tap_toggle':'Živě · připojeno k Home Assistant',
 },
 da:{
+'lic.m_welcome_t':'Velkommen til Nucleum Hub',
+'lic.m_welcome_p':'Vælg, hvordan du vil starte. Den gratis prøveperiode gives én gang pr. hjem.',
+'lic.w_trial_t':'Gratis prøveperiode, 3 dage',
+'lic.w_trial_p':'Alt låst op, på alle skærme. Intet kort, ingen konto.',
+'lic.btn_start_trial':'Start prøveperioden',
+'lic.w_trial_server':'Når den startes, kontaktes vores licensserver.',
+'lic.w_trial_admin':'Kun administratoren af Home Assistant kan starte den.',
+'lic.w_key_t':'Jeg har en licens',
+'lic.w_key_p':'Allerede købt? Indtast nøglen fra din e-mail.',
+'lic.w_key_admin':'Kun administratoren af Home Assistant kan indtaste den.',
+'lic.btn_have_key':'Jeg har en nøgle',
+'lic.btn_buy':'Køb en licens',
+'lic.used':'Den gratis prøveperiode er allerede brugt i dette hjem.',
+'lic.starting':'Starter…',
+'lic.e_rate_limited':'For mange forsøg lige nu. Prøv igen om {n} min.',
+'lic.e_rate_limited0':'For mange forsøg lige nu. Prøv igen om et par minutter.',
+'lic.e_unavailable':'Vores licensserver kunne ikke nås. Tjek, at Home Assistant er online, og prøv igen.',
+'lic.e_invalid_token':'Den gratis prøveperiode kunne ikke kontrolleres. Tjek dato, klokkeslæt og tidszone i Home Assistant, og prøv igen.',
+'lic.e_licensed':'Dette hjem har allerede en licens. Indtast dens nøgle.',
+'lic.e_failed':'Den gratis prøveperiode kunne ikke starte. Prøv igen om lidt.',
+'lic.chip_left':'Prøveperiode · {left}',
+'lic.card_left':'Gratis prøveperiode: {left} tilbage',
+'lic.hours_one':'{n} t.',
+'lic.hours_few':'{n} t.',
+'lic.hours_many':'{n} t.',
+'lic.hours_other':'{n} t.',
 'lic.eyebrow':'Licens',
 'lic.foot':'Lys, alarm og resten af hjemmet virker stadig fra Home Assistant-appen.',
 'lic.settings':'Integrationens indstillinger',
@@ -38525,15 +38895,15 @@ da:{
 'lic.btn_check':'Kontrollér nu',
 'lic.btn_open_settings':'Åbn indstillingerne',
 'lic.band_aria':'Besked om licensen',
-'lic.card_p':'Vælg en plan, så dashboardet ikke stopper.',
+'lic.card_p':'Slutter {date} kl. {time}. Derefter beder dashboardet om en licens. Lys, alarm og resten af hjemmet virker stadig fra Home Assistant-appen.',
 'lic.a_sub_end_s':'Betalt til {date}; fornyes ikke.',
 'lic.pill_min':'{n} min.',
-'lic.m_pending_t':'Din prøveperiode på 60 minutter starter…',
-'lic.m_pending_p':'Home Assistant beder vores server om prøveperioden. Det tager et par sekunder.',
+'lic.m_pending_t':'Din gratis prøveperiode starter…',
+'lic.m_pending_p':'Home Assistant beder vores licensserver om den gratis prøveperiode. Det tager et par sekunder.',
 'lic.m_key_t':'Aktivér Nucleum Hub',
-'lic.m_key_p':'Har du allerede en licensnøgle? Indtast den i Home Assistant, i integrationens indstillinger. Prøveperioden på 60 minutter starter af sig selv, når Home Assistant er forbundet til internettet.',
-'lic.m_trial_over_t':'Din prøveperiode på 60 minutter er slut',
-'lic.m_trial_over_p':'Tak, fordi du prøvede det. Vil du blive ved med at bruge det, så vælg månedsabonnementet eller engangslicensen, og indtast derefter nøglen fra e-mailen i Home Assistant. Dit layout og dine indstillinger bliver.',
+'lic.m_key_p':'Har du allerede en licensnøgle? Indtast den i Home Assistant, i integrationens indstillinger. Ingen nøgle endnu? Se priserne, og vælg en plan.',
+'lic.m_trial_over_t':'Din gratis prøveperiode er slut',
+'lic.m_trial_over_p':'Indtast din nøgle, eller køb en licens for at blive ved med at bruge Nucleum Hub. Lys, alarm og resten af hjemmet virker stadig fra Home Assistant-appen.',
 'lic.m_sub_expired_t':'Dit abonnement er stoppet',
 'lic.m_sub_expired_p':'Den månedlige betaling er ikke længere aktiv, så dashboardet er stoppet. Forny abonnementet, så starter det igen af sig selv med den samme nøgle og alt, hvad du har sat op.',
 'lic.m_expired_t':'Din licens er udløbet',
@@ -38572,9 +38942,9 @@ da:{
 'lic.a_waiting':'Spørger integrationen Nucleum Hub…',
 'lic.pill_missing':'Mangler',
 'lic.pill_inactive':'Ikke aktiv',
-'lic.a_trial_b':'Prøveperiode',
-'lic.a_trial_s':'Slutter kl. {time}. Dit layout og dine indstillinger bliver efter købet.',
-'lic.a_trial_note':'Én prøveperiode pr. Home Assistant-installation',
+'lic.a_trial_b':'Gratis prøveperiode',
+'lic.a_trial_s':'Slutter {date} kl. {time}. Dit layout og dine indstillinger bliver efter købet.',
+'lic.a_trial_note':'Én gratis prøveperiode pr. hjem og Home Assistant-installation',
 'lic.a_sub_b':'Månedsabonnement',
 'lic.a_sub_s':'Betalt til {date}; fornyes automatisk.',
 'lic.pill_active_sub':'Aktivt',
@@ -38598,14 +38968,6 @@ da:{
 'lic.days_few':'{n} dage',
 'lic.days_many':'{n} dage',
 'lic.days_other':'{n} dage',
-'lic.chip_one':'Prøveperiode · {n} min. tilbage',
-'lic.chip_few':'Prøveperiode · {n} min. tilbage',
-'lic.chip_many':'Prøveperiode · {n} min. tilbage',
-'lic.chip_other':'Prøveperiode · {n} min. tilbage',
-'lic.card_t_one':'{n} minut tilbage af prøveperioden',
-'lic.card_t_few':'{n} minutter tilbage af prøveperioden',
-'lic.card_t_many':'{n} minutter tilbage af prøveperioden',
-'lic.card_t_other':'{n} minutter tilbage af prøveperioden',
 'ui.rl_gone_ticked':'Det markerede findes ikke længere i Home Assistant.',
 'ui.rl_off_pres':'Tilstedeværelsessymbolet vises ikke længere på kortet.',
 'ui.rl_off_open':'Kortet viser ikke længere åbne døre og vinduer.',
@@ -40148,6 +40510,32 @@ da:{
 'tap_toggle':'Live · forbundet til Home Assistant',
 },
 'pt-BR':{
+'lic.m_welcome_t':'Boas-vindas ao Nucleum Hub',
+'lic.m_welcome_p':'Escolha como começar. O teste grátis é dado uma única vez por casa.',
+'lic.w_trial_t':'Teste grátis, 3 dias',
+'lic.w_trial_p':'Tudo liberado, em todas as telas. Sem cartão, sem conta.',
+'lic.btn_start_trial':'Começar o teste',
+'lic.w_trial_server':'Começar o teste contata nosso servidor de licenças.',
+'lic.w_trial_admin':'Só o administrador do Home Assistant pode começá-lo.',
+'lic.w_key_t':'Tenho uma licença',
+'lic.w_key_p':'Já comprou? Insira a chave recebida por e-mail.',
+'lic.w_key_admin':'Só o administrador do Home Assistant pode inseri-la.',
+'lic.btn_have_key':'Tenho uma chave',
+'lic.btn_buy':'Comprar uma licença',
+'lic.used':'O teste grátis já foi usado nesta casa.',
+'lic.starting':'Iniciando…',
+'lic.e_rate_limited':'Muitas tentativas agora. Tente de novo em {n} min.',
+'lic.e_rate_limited0':'Muitas tentativas agora. Tente de novo em alguns minutos.',
+'lic.e_unavailable':'Não foi possível falar com nosso servidor de licenças. Verifique se o Home Assistant está online e tente de novo.',
+'lic.e_invalid_token':'Não foi possível verificar o teste grátis. Confira a data, a hora e o fuso horário do Home Assistant e tente de novo.',
+'lic.e_licensed':'Esta casa já tem uma licença. Insira a chave dela.',
+'lic.e_failed':'Não foi possível começar o teste grátis. Tente de novo em instantes.',
+'lic.chip_left':'Teste · {left}',
+'lic.card_left':'Teste grátis: termina em {left}',
+'lic.hours_one':'{n} h',
+'lic.hours_few':'{n} h',
+'lic.hours_many':'{n} h',
+'lic.hours_other':'{n} h',
 'lic.eyebrow':'Licença',
 'lic.foot':'As luzes, o alarme e o resto da casa continuam funcionando pelo app do Home Assistant.',
 'lic.settings':'Configurações da integração',
@@ -40171,15 +40559,15 @@ da:{
 'lic.btn_check':'Verificar agora',
 'lic.btn_open_settings':'Abrir as configurações',
 'lic.band_aria':'Aviso sobre a licença',
-'lic.card_p':'Escolha um plano para que o painel não pare.',
+'lic.card_p':'Termina {date}, às {time}. Depois o painel pede uma licença. As luzes, o alarme e o resto da casa continuam funcionando pelo app do Home Assistant.',
 'lic.a_sub_end_s':'Paga até {date}; não será renovada.',
 'lic.pill_min':'{n} min',
-'lic.m_pending_t':'Iniciando seu período de teste de 60 minutos…',
-'lic.m_pending_p':'O Home Assistant está pedindo o período de teste ao nosso servidor. Leva alguns segundos.',
+'lic.m_pending_t':'Iniciando seu teste grátis…',
+'lic.m_pending_p':'O Home Assistant está pedindo o teste grátis ao nosso servidor de licenças. Leva alguns segundos.',
 'lic.m_key_t':'Ative o Nucleum Hub',
-'lic.m_key_p':'Já tem uma chave de licença? Insira-a no Home Assistant, nas configurações da integração. O período de teste de 60 minutos começa sozinho quando o Home Assistant está conectado à internet.',
-'lic.m_trial_over_t':'Seu período de teste de 60 minutos terminou',
-'lic.m_trial_over_p':'Obrigado por experimentar. Para continuar usando, escolha a assinatura mensal ou a licença única e depois insira no Home Assistant a chave recebida por e-mail. Seu layout e suas configurações continuam.',
+'lic.m_key_p':'Já tem uma chave de licença? Insira-a no Home Assistant, nas configurações da integração. Ainda não tem chave? Veja os preços e escolha um plano.',
+'lic.m_trial_over_t':'Seu teste grátis terminou',
+'lic.m_trial_over_p':'Insira sua chave ou compre uma licença para continuar usando o Nucleum Hub. As luzes, o alarme e o resto da casa continuam funcionando pelo app do Home Assistant.',
 'lic.m_sub_expired_t':'Sua assinatura parou',
 'lic.m_sub_expired_p':'O pagamento mensal não está mais ativo, então o painel parou. Renove a assinatura e ele volta a funcionar sozinho, com a mesma chave e tudo o que você configurou.',
 'lic.m_expired_t':'Sua licença expirou',
@@ -40218,9 +40606,9 @@ da:{
 'lic.a_waiting':'Consultando a integração Nucleum Hub…',
 'lic.pill_missing':'Ausente',
 'lic.pill_inactive':'Inativa',
-'lic.a_trial_b':'Período de teste',
-'lic.a_trial_s':'Termina às {time}. Seu layout e suas configurações continuam depois da compra.',
-'lic.a_trial_note':'Um período de teste por instalação do Home Assistant',
+'lic.a_trial_b':'Teste grátis',
+'lic.a_trial_s':'Termina em {date}, às {time}. Seu layout e suas configurações continuam depois da compra.',
+'lic.a_trial_note':'Um teste grátis por casa e por instalação do Home Assistant',
 'lic.a_sub_b':'Assinatura mensal',
 'lic.a_sub_s':'Paga até {date}; renova sozinha.',
 'lic.pill_active_sub':'Ativa',
@@ -40244,14 +40632,6 @@ da:{
 'lic.days_few':'{n} dias',
 'lic.days_many':'{n} dias',
 'lic.days_other':'{n} dias',
-'lic.chip_one':'Teste · falta {n} min',
-'lic.chip_few':'Teste · faltam {n} min',
-'lic.chip_many':'Teste · faltam {n} min',
-'lic.chip_other':'Teste · faltam {n} min',
-'lic.card_t_one':'Falta {n} minuto de teste',
-'lic.card_t_few':'Faltam {n} minutos de teste',
-'lic.card_t_many':'Faltam {n} minutos de teste',
-'lic.card_t_other':'Faltam {n} minutos de teste',
 'ui.rl_gone_ticked':'O que está marcado não existe mais no Home Assistant.',
 'ui.rl_off_pres':'O sinal de presença não aparece mais no cartão.',
 'ui.rl_off_open':'O cartão não mostra mais as portas e janelas abertas.',

@@ -1,7 +1,8 @@
-"""The licence at work (D-064 to D-068, D-073; server/README.md §10.9): the trial at the first start, the activation
-and the release that the admin asks for in the options flow (flow.py), the refreshes on their schedule
-(schedule.py), the revocation statements kept and applied, and the state the dashboard is told over the WebSocket
-(websocket.py: ``wall_dashboard/licence`` and its subscription).
+"""The licence at work (D-064 to D-068, D-073, D-090; server/README.md §10.9): the 3-day free trial that a Home
+Assistant admin starts from the dashboard (websocket.py: ``wall_dashboard/licence/trial``), the activation and the
+release that the admin asks for in the options flow (flow.py), the refreshes on their schedule (schedule.py), the
+revocation statements kept and applied, and the state the dashboard is told over the WebSocket (websocket.py:
+``wall_dashboard/licence`` and its subscription).
 
 Made once per setup of the entry, only in the sale edition and only after the panel is registered (``__init__``
 imports this module lazily, in the executor, inside ``try``): whatever goes wrong here, the panel and its alarm keypad
@@ -22,7 +23,9 @@ The rules it keeps:
 - a store that cannot be read, or a home id that cannot be had, leaves the dashboard fully usable: FULL with the reason
   broken_environment (plan §4.1 p.5), and nothing is written over what could not be read. Both are tried again at
   each wake, so a disk that was not ready at the start does not keep the licence out of the way until a restart;
-- the key is never kept: it goes to the server once and is forgotten.
+- the key is never kept: it goes to the server once and is forgotten;
+- the trial is never asked for by itself (D-090): not at the start, not by a wake, not when Configure opens, not by
+  "Check now". Only the admin's press (async_start_trial) sends it, once per press.
 """
 
 from __future__ import annotations
@@ -77,7 +80,7 @@ BROKEN = {"state": "FULL", "reason": "broken_environment", "until": None, "plan"
 
 # The link the dashboard shows next to a state: (its kind, the site's page). Only these states have one: the others
 # are fixed in Home Assistant (activate again, connect it to the internet) or by support (a refund, a revocation).
-# The trial's is the "Choose a plan" of its last minutes (D-076, T2).
+# The trial's is the "Buy a licence" of its card in the dashboard (D-090).
 LINKS: dict[tuple[str, str | None], tuple[str, str]] = {
     ("TRIAL", None): ("buy", "pricing"),
     ("ACTIVATE", "no_token"): ("buy", "pricing"),
@@ -100,8 +103,8 @@ class Outcome:
     """What a request the admin asked for came to. ``error`` is None when it was done, else a code of the options
     flow's errors (strings.json): invalid_key, unknown_key, licence_inactive, subscription_ended, plan_unsupported,
     active_elsewhere, move_limit, home_has_licence, role_conflict, conflict, rate_limited, not_configured,
-    cannot_connect, identity, invalid_token, not_bound, unavailable, unknown; or, for the trial asked from the settings,
-    trial_used and licensed. With it, the facts to show."""
+    cannot_connect, identity, invalid_token, not_bound, unavailable, unknown; or, for the trial an admin starts from
+    the dashboard (async_start_trial), trial_used, licensed and not_available. With it, the facts to show."""
 
     error: str | None = None
     minutes: int | None = None  # rate_limited: when to try again
@@ -179,7 +182,7 @@ def make_verifier() -> Verifier:
 async def async_start(hass: HomeAssistant, *, build_info: Any, verifier: Verifier | None = None,
                       api: LicenceApi | None = None, clock: Callable[[], float] | None = None,
                       rng: schedule.Random | None = None) -> LicenceManager:
-    """The licence of this setup, started: its store read, the trial or the next refresh planned."""
+    """The licence of this setup, started: its store read, the next refresh planned (never a trial: D-090)."""
     if verifier is None:
         verifier = await hass.async_add_executor_job(make_verifier)
     manager = LicenceManager(
@@ -218,6 +221,8 @@ class LicenceManager:
         self._unsub_wake: Callable[[], None] | None = None
         self._tasks: set[asyncio.Task[Any]] = set()  # the wakes and the checks the settings asked for
         self._exchanges: set[asyncio.Task[Outcome]] = set()  # the requests themselves (_exchange)
+        self._trial_press: asyncio.Task[Outcome] | None = None  # the admin's press of the trial, until it is answered
+        self._trial_on_wire = False  # its request is on its way to the server (trial_pending)
         self._stopped = False
         self._said: Any = None
         self._token_cache: dict[str, dict[str, Any]] = {}
@@ -298,14 +303,28 @@ class LicenceManager:
 
     @property
     def due(self) -> float | None:
-        """When the next request of the schedule goes (the trial or a refresh), or None."""
+        """When the next refresh of the schedule goes, or None (the trial is never on the schedule)."""
         return self._due
 
     @property
+    def trial_available(self) -> bool:
+        """The admin can start the free trial here: no licence and no token, the trial never answered on this
+        installation (``held.trial``), and the licence can judge. The dashboard then shows its card (D-090)."""
+        return self._wants_trial()
+
+    @property
+    def trial_used(self) -> bool:
+        """The server gave this installation the trial or refused it as used (``held.trial_used``, kept for good, also
+        after a release). Not ``held.trial``, which an activation sets too: a home that bought a key without a trial and
+        freed it later is never told that its free trial was used."""
+        return self._broken is None and self._held.trial_used
+
+    @property
     def trial_pending(self) -> bool:
-        """The first start's trial is on its way: no token yet, and its request has not been answered or failed. The
-        dashboard can then say so instead of showing the activation screen for those seconds."""
-        return self._wants_trial() and self._held.tried.get("trial") is None
+        """The admin's request for the trial is on its way to the server right now: every screen says "Starting your
+        free trial…" for those seconds. Never True merely because none was made, nor for a press that sent nothing
+        (over the budget, before a Retry-After)."""
+        return self._trial_on_wire
 
     @property
     def lost(self) -> bool:
@@ -318,8 +337,8 @@ class LicenceManager:
         grace, notice), Home Assistant's time (``now``), the link to show with its kind (buy, renew, payment; None
         while the site's address is a placeholder or the state has none), ``cloned`` ("the same licence runs in two
         homes; move one", never a block), ``lost`` ("the licence data on this Home Assistant was lost: enter your key
-        again"; no link to buy another then) and ``trial_pending``. Never the home id, the nonce, the token or lic
-        (D-067)."""
+        again"; no link to buy another then), and the free trial's ``trial_available``, ``trial_used`` and
+        ``trial_pending`` (their properties above). Never the home id, the nonce, the token or lic (D-067)."""
         now = self._clock()
         said = self._said_now(now)
         kind_page = None if said["lost"] else LINKS.get((said["state"], said["reason"]))
@@ -331,8 +350,10 @@ class LicenceManager:
         }
 
     def _said_now(self, now: float) -> dict[str, Any]:
-        """The payload without what does not change with the state (``now``, the link's language)."""
+        """The payload without what does not change with the state (``now``, the link's language): a change of any
+        of it, the trial's three fields included, is pushed to the subscriptions (_changed)."""
         return {**self._result(now), "cloned": self.holds_licence and self._held.cloned, "lost": self.lost,
+                "trial_available": self.trial_available, "trial_used": self.trial_used,
                 "trial_pending": self.trial_pending}
 
     # --- what the admin asks for (the options flow) ---------------------------------------------------------------
@@ -415,105 +436,135 @@ class LicenceManager:
         return Outcome(moves_left=moves_left)
 
     async def async_check(self) -> Outcome:
-        """"Check the licence now" in the options flow: a refresh at once (within the budget and any Retry-After),
-        or the trial when the first start could not get it."""
+        """"Check the licence now" in the options flow: a refresh at once (within the budget and any Retry-After).
+        Without a licence there is nothing to check (not_bound): it never asks for the trial (D-090)."""
         if self._broken is not None:
             return Outcome("unavailable")
         if self._held.licensed:
             return await self._async_refresh(forced=True)
-        if self._wants_trial():
-            return await self._async_trial(forced=True)
         return Outcome("not_bound")
 
     @callback
     def async_request_check(self) -> None:
         """The settings were opened (the options flow, or the dashboard's own, server/README.md §10.9): a refresh in
-        the background when the last request is older than SETTINGS_GAP and the budget allows it."""
-        if self._broken is not None or self._stopped:
+        the background when a licence is bound here, the last request is older than SETTINGS_GAP and the budget
+        allows it. Never the trial (D-090): opening the settings must not start the 3 days."""
+        if self._broken is not None or self._stopped or not self._held.licensed:
             return
         now = self._clock()
-        kind = "refresh" if self._held.licensed else "trial" if self._wants_trial() else None
-        if kind is None:
-            return
-        last = self._held.tried.get(kind)
+        last = self._held.tried.get("refresh")
         if last is not None and now - schedule.SETTINGS_GAP < last <= now:
             return
-        if not self._budget(kind).allows(now) or self._held.not_before.get(kind, 0) > now:
+        if not self._budget("refresh").allows(now) or self._held.not_before.get("refresh", 0) > now:
             return
-        if kind == "refresh":
-            self._spawn(self._async_refresh(forced=True), "nucleum_hub_licence_refresh")
-        else:
-            self._spawn(self._async_trial(forced=True), "nucleum_hub_licence_trial")
+        self._spawn(self._async_refresh(forced=True), "nucleum_hub_licence_refresh")
 
-    # --- the requests -----------------------------------------------------------------------------------------------
+    # --- the free trial, which only an admin starts (D-090) ----------------------------------------------------------
+    async def async_start_trial(self) -> Outcome:
+        """"Start the free trial" pressed by a Home Assistant admin on the dashboard's activation screen
+        (websocket.py ``wall_dashboard/licence/trial``, which checks the admin): the server is asked once
+        (POST /v1/trial). A press while one is still on its way, waiting for the lock or on the wire, gets that one's
+        answer and sends nothing (two tablets, a double tap).
+
+        The answer: done when the trial's token is held and verified (the state is TRIAL; also when it already was,
+        for a screen that pressed late); ``trial_used`` or ``licensed`` (the server's 409s, or what it said here
+        before: ``licensed`` is a licence this Home Assistant lost, ``lost``); ``rate_limited`` with ``minutes`` (the
+        budget or the server's Retry-After: nothing sent); ``invalid_token`` (the server started the trial but its
+        token does not verify here, mostly Home Assistant's date, time or time zone: the trial stays offered, and a
+        press once they are right gets the same trial, which the server hands over again while it lasts);
+        ``not_available`` (a licence is bound here, or was and was freed without a trial ever given here, or the
+        licence cannot judge); or a failure that may pass
+        (cannot_connect, not_configured, identity, unavailable, unknown). Nothing is retried by itself."""
+        task = self._trial_press
+        if task is None or task.done():
+            task = self._trial_press = self._exchange_task(self._trial())
+        return await asyncio.shield(task)
+
     def _wants_trial(self) -> bool:
         held = self._held
         return self._broken is None and not held.trial and held.token is None and not held.licensed
 
-    async def _async_trial(self, *, forced: bool = False) -> Outcome:
-        """The trial's token (D-065: 60 minutes from the first start, once per installation and per home)."""
-        return await self._exchange(self._trial(forced))
+    def _trial_refused(self, now: float) -> Outcome | None:
+        """Why a press sends nothing, or None when the trial may be asked for."""
+        if self._broken is not None or self._held.licensed:
+            return Outcome("not_available")
+        if self._wants_trial():
+            return None
+        if self._result(now)["state"] == "TRIAL":
+            return Outcome()  # already running here
+        if self._held.lost:
+            return Outcome("licensed")
+        # a home that had a licence here and freed it was never given the trial: not offered, but not "used" either
+        return Outcome("trial_used" if self._held.trial_used else "not_available")
 
-    async def _trial(self, forced: bool) -> Outcome:
+    async def _trial(self) -> Outcome:
         async with self._lock:
             if self._stopped:
                 return Outcome("unavailable")
-            if not self._wants_trial():
-                return Outcome()
             now = self._clock()
-            wait = self._wait(now, "trial", forced)
+            refused = self._trial_refused(now)
+            if refused is not None:
+                return refused
+            wait = self._wait(now, "trial", True)
             if wait is not None:
-                self._plan()
-                self._arm()
-                return wait
-            outcome = Outcome()
-            server_now: int | None = None
+                return wait  # nothing sent, so no screen ever shows "Starting…" for it
+            self._trial_on_wire = True
+            self._changed()
             try:
-                iidh = await self._identity.async_iidh()
-                answer = await self._api.trial(self._home, iidh)
-            except IdentityUnavailable as err:
-                # Home Assistant gave no instance id or has no owner yet: nothing was sent, asked again on the backoff
-                _LOGGER.debug("Nucleum Hub trial: no identity yet (%s)", err.code)
-                self._sent("trial", now, counted=False)
-                self._fail("trial", now, transient=True)
-                outcome = Outcome("identity")
-            except (TrialUsed, TrialLicensed) as err:
-                # the server keeps the trial (once per installation and per home)
-                self._sent("trial", now)
-                self._held.trial = True
-                self._held.failures.pop("trial", None)
-                if isinstance(err, TrialLicensed):
-                    # the server holds a licence for this home, and this Home Assistant has nothing of it: its store
-                    # was lost (a damaged file Home Assistant moved aside, or one removed). Only the key brings it
-                    # back (the same binding with a new nonce, not a move), so the admin is told that, not "buy one"
-                    self._held.lost = True
-                    _LOGGER.warning("This home holds a Nucleum Hub licence, but what this Home Assistant kept of it "
-                                    "was lost; enter the key again in Settings › Devices & services › Nucleum Hub › "
-                                    "Configure (it does not count as a move)")
-                outcome = Outcome(err.code)
-            except LicenceApiError as err:
-                self._sent("trial", now, counted=not isinstance(err, ApiNotConfigured))
-                self._fail("trial", now, err=err)
-                outcome = _api_error(err)
-            else:
-                self._sent("trial", now)
-                server_now = answer.now
-                if self._accept_token(answer.token, now, trial=True) is None:
-                    self._held.trial = True
-                    self._held.failures.pop("trial", None)
-                else:
-                    # kept unanswered: while the trial lasts the server hands the same trial over again, so a build
-                    # whose clock or roots were wrong still gets it once they are right; the slow rhythm meanwhile
-                    self._fail("trial", now)
-                    outcome = Outcome("invalid_token")
+                outcome, server_now = await self._ask_trial(now)
+            finally:
+                self._trial_on_wire = False
+                self._changed()  # even after a mistake of ours, no screen is left saying "Starting…"
             await self._async_save()
             if server_now is not None:
                 self._check_clock(server_now, now)
             self._plan()
-            self._arm()
+            self._arm()  # the trial's end is a change of the state: the timer wakes for it
             self._changed()
             return outcome
 
+    async def _ask_trial(self, now: float) -> tuple[Outcome, int | None]:
+        """The trial's request and what its answer changes in what is held: (the outcome, the server's clock)."""
+        held = self._held
+        held.failures.pop("trial", None)  # the count of the 1.0 builds' automatic attempts: nothing reads it now
+        try:
+            iidh = await self._identity.async_iidh()
+            answer = await self._api.trial(self._home, iidh)
+        except IdentityUnavailable as err:
+            # Home Assistant gave no instance id or has no owner yet: nothing was sent, the budget is not spent
+            _LOGGER.debug("Nucleum Hub trial: no identity yet (%s)", err.code)
+            self._sent("trial", now, counted=False)
+            return Outcome("identity"), None
+        except (TrialUsed, TrialLicensed) as err:
+            # the server keeps the trial (once per installation and per home): an answer, kept for good
+            self._sent("trial", now)
+            held.trial = True
+            if isinstance(err, TrialUsed):
+                held.trial_used = True  # not for licensed, which the server says before it looks at the trials
+            else:
+                # the server holds a licence for this home, and this Home Assistant has nothing of it: its store
+                # was lost (a damaged file Home Assistant moved aside, or one removed). Only the key brings it
+                # back (the same binding with a new nonce, not a move), so the admin is told that, not "buy one".
+                # Since the trial is asked only by the admin (D-090), this press is where a lost store shows
+                held.lost = True
+                _LOGGER.warning("This home holds a Nucleum Hub licence, but what this Home Assistant kept of it "
+                                "was lost; enter the key again in Settings › Devices & services › Nucleum Hub › "
+                                "Configure (it does not count as a move)")
+            return Outcome(err.code), None
+        except LicenceApiError as err:
+            self._sent("trial", now, counted=not isinstance(err, ApiNotConfigured))
+            if isinstance(err, RateLimited):
+                held.not_before["trial"] = int(now + err.retry_after)
+            return _api_error(err), None
+        self._sent("trial", now)
+        if self._accept_token(answer.token, now, trial=True) is not None:
+            # not kept, and the trial stays offered: the server started it and hands the same trial over again while
+            # it lasts, so the admin's next press, once Home Assistant's clock (or this build's roots) is right, gets it
+            return Outcome("invalid_token"), answer.now
+        held.trial = held.trial_used = True
+        return Outcome(), answer.now
+
+    # --- the requests -----------------------------------------------------------------------------------------------
     async def _async_refresh(self, *, forced: bool = False) -> Outcome:
         """The next token, a new nonce and the licence's statements (the 200), or the statements an error carries."""
         return await self._exchange(self._refresh(forced))
@@ -576,10 +627,14 @@ class LicenceManager:
         already on the wire, so its answer is still kept. Lost, a nonce the server rotated would make the next refresh
         send a stale one, which the server counts towards "cloned" (server/README.md §10.9). Not a background task:
         Home Assistant cancels those as it stops. async_stop waits for it."""
+        return await asyncio.shield(self._exchange_task(unit))
+
+    def _exchange_task(self, unit: Coroutine[Any, Any, Outcome]) -> asyncio.Task[Outcome]:
+        """The task of one request (_exchange), for a caller that also keeps it (async_start_trial)."""
         task = self._hass.async_create_task(unit, "nucleum_hub_licence_request")
         self._exchanges.add(task)
         task.add_done_callback(self._exchanges.discard)
-        return await asyncio.shield(task)
+        return task
 
     def _wait(self, now: float, kind: str, forced: bool) -> Outcome | None:
         """rate_limited when this request would go over the budget or before the server's Retry-After (or, for a
@@ -698,19 +753,15 @@ class LicenceManager:
 
     # --- the schedule -------------------------------------------------------------------------------------------------
     def _plan(self, *, starting: bool = False) -> None:
-        """When the next request goes (the trial, or the next refresh), or None."""
+        """When the next refresh goes, or None: without a licence nothing is asked by itself (the trial waits for the
+        admin's press, D-090), and the timer still wakes for the trial's end and every hour (_arm)."""
         now = self._clock()
         held = self._held
-        if self._broken is not None:
-            self._due = None
-        elif held.licensed:
+        if self._broken is None and held.licensed:
             due, spread = schedule.planned(self._claims(now), held.role, checked=held.checked, now=now,
                                            bound=held.bound)
             self._due = schedule.next_attempt(due, spread, self._attempt("refresh"), self._budget("refresh"),
                                               now=now, rng=self._rng, starting=starting)
-        elif self._wants_trial():
-            self._due = schedule.next_attempt(now + schedule.TRIAL_DELAY, 0.0, self._attempt("trial"),
-                                              self._budget("trial"), now=now, rng=self._rng)
         else:
             self._due = None
 
@@ -756,11 +807,8 @@ class LicenceManager:
                 if self._broken is None:
                     self._plan(starting=True)
             now = self._clock()
-            if self._due is not None and now >= self._due:
-                if self._held.licensed:
-                    await self._async_refresh()
-                elif self._wants_trial():
-                    await self._async_trial()
+            if self._due is not None and now >= self._due and self._held.licensed:
+                await self._async_refresh()  # the only request a wake makes: never the trial (D-090)
             self._changed()
         except Exception as err:  # noqa: BLE001 (the schedule must go on: the next wake tries again)
             _LOGGER.error("The Nucleum Hub licence could not check its state (%s); it tries again later",

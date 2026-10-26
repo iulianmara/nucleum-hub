@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub is een wanddashboard voor Home Assistant. Na bevestigen verschijnt het in de zijbalk als ‘Nucleum Hub’, voor alle gebruikers en op alle schermen. Daarnaast zet het albumhoezen die een tablet niet kan tonen (bijvoorbeeld de HEIC-hoezen van een Apple TV) bij jou thuis om naar JPEG, zonder iets aan het internet te vragen. Er valt niets in te stellen.\n\n**De gratis proefperiode van 60 minuten begint wanneer je Verzenden kiest.** De integratie neemt dan contact op met onze licentieserver, om die te starten en later om je licentie te controleren. Door Verzenden te kiezen, aanvaard je de [licentieovereenkomst (EULA)](https://nucleumhub.com/nl/legal/eula) voor de proefperiode. Hoe we met gegevens omgaan: [Privacy en cookies](https://nucleumhub.com/nl/legal/privacy)."
+        "description": "Nucleum Hub is een wanddashboard voor Home Assistant. Na bevestigen verschijnt het in de zijbalk als ‘Nucleum Hub’, voor alle gebruikers en op alle schermen. Daarnaast zet het albumhoezen die een tablet niet kan tonen (bijvoorbeeld de HEIC-hoezen van een Apple TV) bij jou thuis om naar JPEG, zonder iets aan het internet te vragen. Er valt niets in te stellen.\n\n**De gratis proefperiode van 3 dagen start daarna een Home Assistant-beheerder vanuit het dashboard.** De integratie neemt alleen contact op met onze licentieserver wanneer de proefperiode wordt gestart of een licentiesleutel wordt ingevoerd, en later om je licentie te controleren. Door Verzenden te kiezen, aanvaard je de [licentieovereenkomst (EULA)](https://nucleumhub.com/nl/legal/eula). Hoe we met gegevens omgaan: [Privacy en cookies](https://nucleumhub.com/nl/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Maandabonnement",
         "life": "Eenmalige licentie",
-        "trial": "Proefperiode",
+        "trial": "Gratis proefperiode",
         "other": "Licentie"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Je proefperiode van 60 minuten start…",
+        "trial_pending": "Je gratis proefperiode start…",
         "full": "Licentie actief.",
         "full_until": "Licentie actief, huidige periode tot {until}.",
-        "trial": "Proefperiode: alles is open tot {until}.",
+        "trial": "Gratis proefperiode: alles is open tot {until}.",
         "payment_due": "De laatste betaling is niet gelukt. Alles blijft werken tot {until}: betaal via de link in de e-mail van Paddle.",
         "provisional": "Je licentie heeft één controle bij de licentieserver nodig. Verbind Home Assistant vóór {until} met internet.",
         "renewal_due": "Je licentie moet vóór {until} worden verlengd.",
@@ -114,10 +114,11 @@
         "uncovered": "Deze versie is verschenen nadat je updates afliepen. Ga terug naar een versie die je licentie dekt, of verleng.",
         "broken_environment": "De licentie kan op deze Home Assistant niet worden gecontroleerd (het logboek zegt waarom), dus het dashboard blijft volledig bruikbaar.",
         "no_token": "Nog geen licentie. Plak de sleutel uit je aankoopmail.",
+        "trial_available": "Nog geen licentie. Start de gratis proefperiode van 3 dagen vanuit het Nucleum Hub-dashboard, of plak de sleutel uit je aankoopmail.",
         "lost": "De licentiegegevens op deze Home Assistant zijn verloren gegaan (een beschadigd of verwijderd bestand), maar je licentie is nog steeds aan dit huis gekoppeld. Plak de sleutel uit je aankoopmail opnieuw: dit telt niet als verhuizing.",
         "invalid": "De licentie kon niet worden gecontroleerd. Voer je sleutel opnieuw in.",
         "moved": "De licentie is naar een andere Home Assistant verhuisd. Voer de sleutel opnieuw in om hem hierheen terug te halen.",
-        "trial_over": "De proefperiode van 60 minuten is voorbij. Koop een licentie om het dashboard te blijven gebruiken.",
+        "trial_over": "De gratis proefperiode is voorbij. Plak je licentiesleutel of koop een licentie om het dashboard te blijven gebruiken.",
         "subscription_expired": "Het abonnement is verlopen. Verleng het om het dashboard weer te gebruiken.",
         "staging_unverified": "Deze testinstantie kon 7 dagen lang niet bij de licentieserver worden gecontroleerd en is daarom gestopt. Verbind haar met internet en controleer dan de licentie.",
         "life_unverified": "Verbind Home Assistant met internet om je licentie te bevestigen. Eén geslaagde controle maakt hem permanent.",

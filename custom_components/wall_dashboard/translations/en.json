@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub is a wall dashboard for Home Assistant. Select Submit and it appears in the sidebar as \"Nucleum Hub\", for every user and on every screen. It also converts music artwork that a tablet cannot show (for example an Apple TV's HEIC covers) into JPEG inside your home, without asking the internet. There is nothing to set.\n\n**The 60-minute free trial starts when you select Submit.** The integration then contacts our licence server, to start it and, later, to check your licence. By selecting Submit you accept the [licence agreement (EULA)](https://nucleumhub.com/legal/eula) for the trial. How we handle data: [Privacy and cookies](https://nucleumhub.com/legal/privacy)."
+        "description": "Nucleum Hub is a wall dashboard for Home Assistant. Select Submit and it appears in the sidebar as \"Nucleum Hub\", for every user and on every screen. It also converts music artwork that a tablet cannot show (for example an Apple TV's HEIC covers) into JPEG inside your home, without asking the internet. There is nothing to set.\n\n**The 3-day free trial is started afterwards from the dashboard, by a Home Assistant administrator.** The integration contacts our licence server only when the trial is started or a licence key is entered, and later to check your licence. By selecting Submit you accept the [licence agreement (EULA)](https://nucleumhub.com/legal/eula). How we handle data: [Privacy and cookies](https://nucleumhub.com/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Monthly subscription",
         "life": "One-time licence",
-        "trial": "Trial",
+        "trial": "Free trial",
         "other": "Licence"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Starting your 60-minute trial…",
+        "trial_pending": "Starting your free trial…",
         "full": "Licence active.",
         "full_until": "Licence active, current period until {until}.",
-        "trial": "Trial: everything is open until {until}.",
+        "trial": "Free trial: everything is open until {until}.",
         "payment_due": "The last payment did not go through. Everything keeps working until {until}: pay with the link in the e-mail from Paddle.",
         "provisional": "Your licence needs one check with the licence server. Connect Home Assistant to the internet before {until}.",
         "renewal_due": "Your licence needs renewing before {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "This version came out after your updates ended. Go back to a version your licence covers, or renew.",
         "broken_environment": "The licence cannot be checked on this Home Assistant (its log says why), so the dashboard stays fully usable.",
         "no_token": "No licence yet. Paste the key from your purchase e-mail.",
+        "trial_available": "No licence yet. Start the 3-day free trial from the Nucleum Hub dashboard, or paste the key from your purchase e-mail.",
         "lost": "The licence data on this Home Assistant was lost (a damaged or removed file), but your licence is still bound to this home. Paste the key from your purchase e-mail again: it does not count as a move.",
         "invalid": "The licence could not be verified. Enter your key again.",
         "moved": "The licence was moved to another Home Assistant. Enter the key again to bring it back here.",
-        "trial_over": "The 60-minute trial has ended. Buy a licence to keep using the dashboard.",
+        "trial_over": "The free trial has ended. Paste your licence key, or buy a licence to keep using the dashboard.",
         "subscription_expired": "The subscription has expired. Renew it to use the dashboard again.",
         "staging_unverified": "This test instance could not be checked with the licence server for 7 days, so it is stopped. Connect it to the internet, then check the licence.",
         "life_unverified": "Connect Home Assistant to the internet to confirm your licence. One successful check makes it permanent.",

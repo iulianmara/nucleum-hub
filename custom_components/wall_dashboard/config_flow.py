@@ -1,8 +1,10 @@
 """Adding Nucleum Hub in Settings › Devices & services: one per Home Assistant, nothing to fill in.
 
-In the sale edition's package the one step is "trial" (D-081, the EULA's trial clause): the same text, then that the
-60-minute trial starts at Submit, that the integration then contacts the licence server, and links to the EULA and the
-privacy notice; Submit accepts the EULA for the trial. The owner's package keeps "user" (no licence, no trial).
+In the sale edition's package the one step is "trial" (D-081, D-090): the same text, then that the 3-day free trial
+is started afterwards from the dashboard by a Home Assistant admin, that the integration contacts the licence server
+only when the trial is started or a key is entered (and later to check the licence), and links to the EULA and the
+privacy notice; Submit accepts the EULA. Submit itself sends nothing. The owner's package keeps "user" (no licence,
+no trial).
 
 Configure, in the sale edition's package only, is the licence (licence/flow.py): the key pasted, the licence checked
 or removed from this home. The owner's package has no licence folder (D-037), so it has no Configure either.
@@ -42,7 +44,8 @@ class WallDashboardConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user")
 
     async def async_step_trial(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """The sale edition's step: its text names the trial, the licence server, the EULA and the privacy notice."""
+        """The sale edition's step: its text names the trial (started later, from the dashboard), the licence server,
+        the EULA and the privacy notice. Nothing is asked of the server here (D-090)."""
         if user_input is not None:
             return self.async_create_entry(title=NAME, data={})
         return self.async_show_form(step_id="trial")

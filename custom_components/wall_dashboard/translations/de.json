@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub ist ein Wand-Dashboard für Home Assistant. Nach dem Bestätigen erscheint es als „Nucleum Hub“ in der Seitenleiste, für alle Benutzer und auf allen Bildschirmen. Außerdem wandelt es Musik-Cover, die ein Tablet nicht anzeigen kann (zum Beispiel die HEIC-Cover eines Apple TV), bei dir zu Hause in JPEG um, ohne das Internet zu fragen. Es gibt nichts einzustellen.\n\n**Der kostenlose 60-Minuten-Test beginnt, sobald du Absenden wählst.** Die Integration kontaktiert dann unseren Lizenzserver, um ihn zu starten und später deine Lizenz zu prüfen. Indem du Absenden wählst, nimmst du den [Lizenzvertrag (EULA)](https://nucleumhub.com/de/legal/eula) für den Test an. Wie wir mit Daten umgehen: [Datenschutz und Cookies](https://nucleumhub.com/de/legal/privacy)."
+        "description": "Nucleum Hub ist ein Wand-Dashboard für Home Assistant. Nach dem Bestätigen erscheint es als „Nucleum Hub“ in der Seitenleiste, für alle Benutzer und auf allen Bildschirmen. Außerdem wandelt es Musik-Cover, die ein Tablet nicht anzeigen kann (zum Beispiel die HEIC-Cover eines Apple TV), bei dir zu Hause in JPEG um, ohne das Internet zu fragen. Es gibt nichts einzustellen.\n\n**Die kostenlose 3-tägige Testphase startet danach ein Home-Assistant-Administrator im Dashboard.** Die Integration kontaktiert unseren Lizenzserver nur, wenn die Testphase gestartet oder ein Lizenzschlüssel eingegeben wird, und später, um deine Lizenz zu prüfen. Indem du Absenden wählst, nimmst du den [Lizenzvertrag (EULA)](https://nucleumhub.com/de/legal/eula) an. Wie wir mit Daten umgehen: [Datenschutz und Cookies](https://nucleumhub.com/de/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Monatsabo",
         "life": "Einmallizenz",
-        "trial": "Testphase",
+        "trial": "Kostenlose Testphase",
         "other": "Lizenz"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Deine 60-minütige Testphase startet…",
+        "trial_pending": "Deine kostenlose Testphase startet…",
         "full": "Lizenz aktiv.",
         "full_until": "Lizenz aktiv, aktueller Zeitraum bis {until}.",
-        "trial": "Testphase: Alles ist bis {until} freigeschaltet.",
+        "trial": "Kostenlose Testphase: Alles ist bis {until} freigeschaltet.",
         "payment_due": "Die letzte Zahlung ist nicht durchgegangen. Alles funktioniert weiter bis {until}: Bezahle über den Link in der E-Mail von Paddle.",
         "provisional": "Deine Lizenz braucht eine Prüfung beim Lizenzserver. Verbinde Home Assistant bis {until} mit dem Internet.",
         "renewal_due": "Deine Lizenz muss bis {until} verlängert werden.",
@@ -114,10 +114,11 @@
         "uncovered": "Diese Version ist nach dem Ende deiner Updates erschienen. Kehre zu einer Version zurück, die deine Lizenz abdeckt, oder verlängere.",
         "broken_environment": "Die Lizenz kann auf diesem Home Assistant nicht geprüft werden (das Protokoll sagt, warum), daher bleibt das Dashboard voll nutzbar.",
         "no_token": "Noch keine Lizenz. Füge den Schlüssel aus deiner Kauf-E-Mail ein.",
+        "trial_available": "Noch keine Lizenz. Starte die kostenlose 3-tägige Testphase im Nucleum Hub Dashboard oder füge den Schlüssel aus deiner Kauf-E-Mail ein.",
         "lost": "Die Lizenzdaten auf diesem Home Assistant sind verloren gegangen (eine beschädigte oder gelöschte Datei), deine Lizenz ist aber weiter an dieses Zuhause gebunden. Füge den Schlüssel aus deiner Kauf-E-Mail noch einmal ein: Das zählt nicht als Umzug.",
         "invalid": "Die Lizenz konnte nicht geprüft werden. Gib deinen Schlüssel noch einmal ein.",
         "moved": "Die Lizenz wurde auf ein anderes Home Assistant umgezogen. Gib den Schlüssel noch einmal ein, um sie hierher zurückzuholen.",
-        "trial_over": "Die 60-minütige Testphase ist vorbei. Kaufe eine Lizenz, um das Dashboard weiter zu nutzen.",
+        "trial_over": "Die kostenlose Testphase ist vorbei. Füge deinen Lizenzschlüssel ein oder kaufe eine Lizenz, um das Dashboard weiter zu nutzen.",
         "subscription_expired": "Das Abo ist abgelaufen. Verlängere es, um das Dashboard wieder zu nutzen.",
         "staging_unverified": "Diese Testinstanz konnte 7 Tage lang nicht beim Lizenzserver geprüft werden und ist deshalb gesperrt. Verbinde sie mit dem Internet und prüfe dann die Lizenz.",
         "life_unverified": "Verbinde Home Assistant mit dem Internet, um deine Lizenz zu bestätigen. Eine einzige erfolgreiche Prüfung macht sie dauerhaft.",

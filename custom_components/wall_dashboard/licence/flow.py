@@ -1,5 +1,7 @@
 """The licence in Home Assistant's settings: Settings › Devices & services › Nucleum Hub › Configure (the key's e-mail
-says so, server/worker/templates). The dashboard's activation screen sends the admin here (D-065).
+says so, server/worker/templates). The dashboard's activation screen sends the admin here for the key (D-065); the
+free trial is started on that screen, not here (D-090), and the state above the key's form says so while it is
+offered.
 
 - Without a licence bound here, the form to paste the key opens at once, with the state above it: the key as it came
   in the e-mail (any case, spaces, O for 0 all work: contract.canonical_key) and whether this Home Assistant is the
@@ -65,7 +67,10 @@ def status_code(payload: dict[str, Any]) -> str:
         return "kept_lts"
     if state == "UNCOVERED":
         return "uncovered"
-    return _ACTIVATE.get(reason, "no_token")
+    code = _ACTIVATE.get(reason, "no_token")
+    if code == "no_token" and payload.get("trial_available"):
+        return "trial_available"  # "start the 3-day free trial from the dashboard, or paste the key"
+    return code
 
 
 def _when(seconds: Any) -> str:

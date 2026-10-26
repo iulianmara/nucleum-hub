@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub é um painel de parede para o Home Assistant. Ao confirmar, ele aparece na barra lateral como “Nucleum Hub”, para todos os usuários e em todas as telas. Ele também converte para JPEG, na sua casa, as capas de música que um tablet não consegue mostrar (por exemplo, as capas HEIC de uma Apple TV), sem pedir nada à internet. Não há nada para configurar.\n\n**A avaliação gratuita de 60 minutos começa quando você seleciona Enviar.** A integração então contata o nosso servidor de licenças, para iniciá-la e, depois, para verificar a sua licença. Ao selecionar Enviar, você aceita o [contrato de licença (EULA)](https://nucleumhub.com/pt-br/legal/eula) para a avaliação. Como tratamos os dados: [Privacidade e cookies](https://nucleumhub.com/pt-br/legal/privacy)."
+        "description": "Nucleum Hub é um painel de parede para o Home Assistant. Ao confirmar, ele aparece na barra lateral como “Nucleum Hub”, para todos os usuários e em todas as telas. Ele também converte para JPEG, na sua casa, as capas de música que um tablet não consegue mostrar (por exemplo, as capas HEIC de uma Apple TV), sem pedir nada à internet. Não há nada para configurar.\n\n**O teste grátis de 3 dias é iniciado depois no painel, por um administrador do Home Assistant.** A integração só contata o nosso servidor de licenças quando o teste é iniciado ou uma chave de licença é inserida e, depois, para verificar a sua licença. Ao selecionar Enviar, você aceita o [contrato de licença (EULA)](https://nucleumhub.com/pt-br/legal/eula). Como tratamos os dados: [Privacidade e cookies](https://nucleumhub.com/pt-br/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Assinatura mensal",
         "life": "Licença única",
-        "trial": "Período de teste",
+        "trial": "Avaliação gratuita",
         "other": "Licença"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Iniciando seu período de teste de 60 minutos…",
+        "trial_pending": "Iniciando seu teste grátis…",
         "full": "Licença ativa.",
         "full_until": "Licença ativa, período atual até {until}.",
-        "trial": "Período de teste: tudo liberado até {until}.",
+        "trial": "Avaliação gratuita: tudo liberado até {until}.",
         "payment_due": "O último pagamento não foi concluído. Tudo continua funcionando até {until}: pague pelo link do e-mail da Paddle.",
         "provisional": "Sua licença precisa de uma verificação com o servidor de licenças. Conecte o Home Assistant à internet antes de {until}.",
         "renewal_due": "Sua licença precisa ser renovada antes de {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Esta versão saiu depois que suas atualizações terminaram. Volte para uma versão coberta pela licença, ou renove.",
         "broken_environment": "A licença não pode ser verificada neste Home Assistant (o log diz por quê), então o painel continua totalmente utilizável.",
         "no_token": "Ainda não há licença. Cole a chave do e-mail da sua compra.",
+        "trial_available": "Ainda não há licença. Inicie o teste grátis de 3 dias no painel do Nucleum Hub ou cole a chave do e-mail da sua compra.",
         "lost": "Os dados da licença neste Home Assistant foram perdidos (um arquivo danificado ou apagado), mas sua licença continua vinculada a esta casa. Cole de novo a chave do e-mail da sua compra: isso não conta como transferência.",
         "invalid": "Não foi possível verificar a licença. Insira sua chave de novo.",
         "moved": "A licença foi transferida para outro Home Assistant. Insira a chave de novo para trazê-la de volta para cá.",
-        "trial_over": "O período de teste de 60 minutos terminou. Compre uma licença para continuar usando o painel.",
+        "trial_over": "O teste grátis terminou. Cole a sua chave de licença ou compre uma licença para continuar usando o painel.",
         "subscription_expired": "A assinatura expirou. Renove-a para voltar a usar o painel.",
         "staging_unverified": "Não foi possível verificar esta instância de teste com o servidor de licenças por 7 dias, por isso ela está parada. Conecte-a à internet e depois verifique a licença.",
         "life_unverified": "Conecte o Home Assistant à internet para confirmar sua licença. Uma única verificação bem-sucedida a torna permanente.",

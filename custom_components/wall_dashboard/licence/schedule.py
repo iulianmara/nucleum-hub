@@ -27,6 +27,9 @@ started together by a Home Assistant release do not ask in the same second. The 
 at most 10 refreshes an hour and 50 a day, 5 trial requests an hour and 15 a day, half the server's own limits
 (server/worker/limits.mjs: refresh 20 and 100, trial 10 and 30), so a Home Assistant that restarts in a loop or an
 admin who keeps opening the settings never meets a 429.
+
+The free trial is never on this schedule: only a Home Assistant admin asks for it, from the dashboard (D-090); the
+budget above still holds for those requests, so a button pressed again and again is told when to try again.
 """
 
 from __future__ import annotations
@@ -48,7 +51,6 @@ BACKOFF_FIRST: Final = 300
 BACKOFF_MAX: Final = 6 * HOUR
 MIN_GAP: Final = 60  # never two requests of one kind closer than this
 START_DELAY: Final = (30.0, 600.0)  # the first refresh after Home Assistant starts: spread over ten minutes
-TRIAL_DELAY: Final = 2.0  # the trial at the first start: right after setup, which it never delays
 SETTINGS_GAP: Final = 600  # opening the settings asks again only when the last request is older than this
 
 # (per hour, per day) of what this integration sends; the server's are twice these (limits.mjs LIMITS)

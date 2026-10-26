@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub er et vægdashboard til Home Assistant. Når du bekræfter, vises det i sidepanelet som »Nucleum Hub«, for alle brugere og på alle skærme. Det konverterer også musikcovers, som en tablet ikke kan vise (for eksempel HEIC-covers fra et Apple TV), til JPEG hjemme hos dig, uden at spørge internettet. Der er intet at indstille.\n\n**Den gratis prøveperiode på 60 minutter starter, når du vælger Indsend.** Integrationen kontakter derefter vores licensserver for at starte den og senere for at kontrollere din licens. Ved at vælge Indsend accepterer du [licensaftalen (EULA)](https://nucleumhub.com/da/legal/eula) for prøveperioden. Sådan behandler vi data: [Privatliv og cookies](https://nucleumhub.com/da/legal/privacy)."
+        "description": "Nucleum Hub er et vægdashboard til Home Assistant. Når du bekræfter, vises det i sidepanelet som »Nucleum Hub«, for alle brugere og på alle skærme. Det konverterer også musikcovers, som en tablet ikke kan vise (for eksempel HEIC-covers fra et Apple TV), til JPEG hjemme hos dig, uden at spørge internettet. Der er intet at indstille.\n\n**Den gratis prøveperiode på 3 dage startes derefter fra dashboardet af en Home Assistant-administrator.** Integrationen kontakter kun vores licensserver, når prøveperioden startes eller en licensnøgle indtastes, og senere for at kontrollere din licens. Ved at vælge Indsend accepterer du [licensaftalen (EULA)](https://nucleumhub.com/da/legal/eula). Sådan behandler vi data: [Privatliv og cookies](https://nucleumhub.com/da/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Månedsabonnement",
         "life": "Engangslicens",
-        "trial": "Prøveperiode",
+        "trial": "Gratis prøveperiode",
         "other": "Licens"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Din prøveperiode på 60 minutter starter…",
+        "trial_pending": "Din gratis prøveperiode starter…",
         "full": "Licensen er aktiv.",
         "full_until": "Licensen er aktiv, nuværende periode til {until}.",
-        "trial": "Prøveperiode: alt er åbent til {until}.",
+        "trial": "Gratis prøveperiode: alt er åbent til {until}.",
         "payment_due": "Den seneste betaling gik ikke igennem. Alt virker til {until}: betal via linket i e-mailen fra Paddle.",
         "provisional": "Din licens skal kontrolleres én gang hos licensserveren. Forbind Home Assistant til internettet før {until}.",
         "renewal_due": "Din licens skal fornyes før {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Denne version udkom, efter dine opdateringer sluttede. Gå tilbage til en version, som din licens dækker, eller forny.",
         "broken_environment": "Licensen kan ikke kontrolleres på denne Home Assistant (loggen siger hvorfor), så dashboardet kan stadig bruges fuldt ud.",
         "no_token": "Ingen licens endnu. Indsæt nøglen fra din købsmail.",
+        "trial_available": "Ingen licens endnu. Start den gratis prøveperiode på 3 dage fra Nucleum Hub-dashboardet, eller indsæt nøglen fra din købsmail.",
         "lost": "Licensdataene på denne Home Assistant er gået tabt (en beskadiget eller slettet fil), men din licens er stadig knyttet til dette hjem. Indsæt nøglen fra din købsmail igen: det tæller ikke som en flytning.",
         "invalid": "Licensen kunne ikke kontrolleres. Indtast din nøgle igen.",
         "moved": "Licensen er flyttet til en anden Home Assistant. Indtast nøglen igen for at hente den tilbage hertil.",
-        "trial_over": "Prøveperioden på 60 minutter er slut. Køb en licens for at blive ved med at bruge dashboardet.",
+        "trial_over": "Den gratis prøveperiode er slut. Indsæt din licensnøgle, eller køb en licens for at blive ved med at bruge dashboardet.",
         "subscription_expired": "Abonnementet er udløbet. Forny det for at bruge dashboardet igen.",
         "staging_unverified": "Denne testinstans har ikke kunnet kontrolleres hos licensserveren i 7 dage, så den er stoppet. Forbind den til internettet, og kontrollér derefter licensen.",
         "life_unverified": "Forbind Home Assistant til internettet for at bekræfte din licens. Én vellykket kontrol gør den permanent.",

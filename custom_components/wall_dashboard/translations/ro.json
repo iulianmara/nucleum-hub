@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub este un dashboard de perete pentru Home Assistant. Apasă Trimite și apare în bara laterală ca „Nucleum Hub”, pentru toți utilizatorii și pe toate ecranele. În plus, convertește în JPEG, în casă, copertele muzicii pe care o tabletă nu le poate arăta (de exemplu cele HEIC de la un Apple TV), fără să ceară nimic de pe internet. Nu e nimic de setat.\n\n**Evaluarea gratuită de 60 de minute pornește când apeși Trimite.** Integrarea contactează atunci serverul nostru de licențe, ca s-o pornească și, mai târziu, ca să-ți verifice licența. Apăsând Trimite, accepți [contractul de licență (EULA)](https://nucleumhub.com/ro/legal/eula) pentru evaluare. Cum folosim datele: [Confidențialitate și cookie-uri](https://nucleumhub.com/ro/legal/privacy)."
+        "description": "Nucleum Hub este un dashboard de perete pentru Home Assistant. Apasă Trimite și apare în bara laterală ca „Nucleum Hub”, pentru toți utilizatorii și pe toate ecranele. În plus, convertește în JPEG, în casă, copertele muzicii pe care o tabletă nu le poate arăta (de exemplu cele HEIC de la un Apple TV), fără să ceară nimic de pe internet. Nu e nimic de setat.\n\n**Încercarea gratuită de 3 zile se pornește apoi din dashboard, de către un administrator Home Assistant.** Integrarea contactează serverul nostru de licențe doar când se pornește încercarea sau se introduce o cheie de licență și, mai târziu, ca să-ți verifice licența. Apăsând Trimite, accepți [contractul de licență (EULA)](https://nucleumhub.com/ro/legal/eula). Cum folosim datele: [Confidențialitate și cookie-uri](https://nucleumhub.com/ro/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Abonament lunar",
         "life": "Licență o dată",
-        "trial": "Perioadă de probă",
+        "trial": "Încercare gratuită",
         "other": "Licență"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Pornește perioada ta de probă de 60 de minute…",
+        "trial_pending": "Se pornește încercarea gratuită…",
         "full": "Licență activă.",
         "full_until": "Licență activă, perioada curentă până pe {until}.",
-        "trial": "Perioadă de probă: totul e deschis până pe {until}.",
+        "trial": "Încercare gratuită: totul e deschis până pe {until}.",
         "payment_due": "Ultima plată nu a reușit. Totul merge mai departe până pe {until}: plătește cu linkul din e-mailul de la Paddle.",
         "provisional": "Licența ta are nevoie de o verificare cu serverul de licențe. Conectează Home Assistant la internet înainte de {until}.",
         "renewal_due": "Licența ta trebuie reînnoită înainte de {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Această versiune a apărut după ce s-au încheiat actualizările tale. Întoarce-te la o versiune acoperită de licență sau reînnoiește.",
         "broken_environment": "Licența nu poate fi verificată pe acest Home Assistant (jurnalul spune de ce), deci dashboard-ul rămâne complet utilizabil.",
         "no_token": "Nicio licență încă. Lipește cheia din e-mailul de cumpărare.",
+        "trial_available": "Nicio licență încă. Pornește încercarea gratuită de 3 zile din dashboard-ul Nucleum Hub sau lipește cheia din e-mailul de cumpărare.",
         "lost": "Datele licenței de pe acest Home Assistant s-au pierdut (un fișier deteriorat sau șters), dar licența ta e în continuare legată de această casă. Lipește din nou cheia din e-mailul de cumpărare: nu se socotește ca mutare.",
         "invalid": "Licența nu a putut fi verificată. Introdu din nou cheia.",
         "moved": "Licența a fost mutată pe alt Home Assistant. Introdu din nou cheia ca s-o aduci înapoi aici.",
-        "trial_over": "Perioada de probă de 60 de minute s-a încheiat. Cumpără o licență ca să folosești în continuare dashboard-ul.",
+        "trial_over": "Încercarea gratuită s-a terminat. Lipește cheia de licență sau cumpără o licență ca să folosești în continuare dashboard-ul.",
         "subscription_expired": "Abonamentul a expirat. Reînnoiește-l ca să folosești din nou dashboard-ul.",
         "staging_unverified": "Această instanță de test nu a putut fi verificată cu serverul de licențe timp de 7 zile, deci e oprită. Conectează-o la internet, apoi verifică licența.",
         "life_unverified": "Leagă Home Assistant la internet ca să-ți confirmi licența. O singură verificare reușită o face permanentă.",

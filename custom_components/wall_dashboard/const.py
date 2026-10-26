@@ -99,6 +99,10 @@ EDITION_SALE: Final = "sale"
 # Any signed-in user may ask (every screen shows the activation screen, D-065). Registered in the sale edition only.
 WS_LICENCE: Final = f"{DOMAIN}/licence"
 WS_LICENCE_SUBSCRIBE: Final = f"{DOMAIN}/licence/subscribe"
+# "Start the free trial" on the activation screen (D-090): {"type": "wall_dashboard/licence/trial"}, from a Home
+# Assistant admin only (any other user gets the WebSocket error "unauthorized"). The answer: {"ok": true}, or
+# {"ok": false, "error": <code>, "minutes": <a number for rate_limited, else null>} (websocket.py TRIAL_ERRORS).
+WS_LICENCE_TRIAL: Final = f"{DOMAIN}/licence/trial"
 # Sent on Home Assistant's dispatcher when the state changed; the subscriptions survive a reload of the entry.
 SIGNAL_LICENCE: Final = f"{DOMAIN}_licence"
 DATA_LICENCE_REGISTERED: Final = f"{DOMAIN}_licence_registered"

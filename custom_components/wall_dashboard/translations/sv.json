@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub är en väggpanel för Home Assistant. När du bekräftar visas den i sidofältet som ”Nucleum Hub”, för alla användare och på alla skärmar. Den konverterar också musikomslag som en surfplatta inte kan visa (till exempel HEIC-omslag från en Apple TV) till JPEG hemma hos dig, utan att fråga internet. Det finns inget att ställa in.\n\n**Den kostnadsfria provperioden på 60 minuter startar när du väljer Skicka.** Integrationen kontaktar då vår licensserver, för att starta den och senare för att kontrollera din licens. Genom att välja Skicka godkänner du [licensavtalet (EULA)](https://nucleumhub.com/sv/legal/eula) för provperioden. Hur vi hanterar uppgifter: [Integritet och cookies](https://nucleumhub.com/sv/legal/privacy)."
+        "description": "Nucleum Hub är en väggpanel för Home Assistant. När du bekräftar visas den i sidofältet som ”Nucleum Hub”, för alla användare och på alla skärmar. Den konverterar också musikomslag som en surfplatta inte kan visa (till exempel HEIC-omslag från en Apple TV) till JPEG hemma hos dig, utan att fråga internet. Det finns inget att ställa in.\n\n**Den kostnadsfria provperioden på 3 dagar startar sedan en Home Assistant-administratör från panelen.** Integrationen kontaktar vår licensserver bara när provperioden startas eller en licensnyckel anges, och senare för att kontrollera din licens. Genom att välja Skicka godkänner du [licensavtalet (EULA)](https://nucleumhub.com/sv/legal/eula). Hur vi hanterar uppgifter: [Integritet och cookies](https://nucleumhub.com/sv/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Månadsabonnemang",
         "life": "Engångslicens",
-        "trial": "Provperiod",
+        "trial": "Kostnadsfri provperiod",
         "other": "Licens"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Din provperiod på 60 minuter startar…",
+        "trial_pending": "Din kostnadsfria provperiod startar…",
         "full": "Licensen är aktiv.",
         "full_until": "Licensen är aktiv, nuvarande period till {until}.",
-        "trial": "Provperiod: allt är öppet till {until}.",
+        "trial": "Kostnadsfri provperiod: allt är öppet till {until}.",
         "payment_due": "Den senaste betalningen gick inte igenom. Allt fungerar till {until}: betala via länken i mejlet från Paddle.",
         "provisional": "Din licens behöver en kontroll mot licensservern. Anslut Home Assistant till internet före {until}.",
         "renewal_due": "Din licens behöver förnyas före {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Den här versionen kom ut efter att dina uppdateringar tog slut. Gå tillbaka till en version som licensen täcker, eller förnya.",
         "broken_environment": "Licensen kan inte kontrolleras på den här Home Assistant (loggen säger varför), så panelen går fortfarande att använda fullt ut.",
         "no_token": "Ingen licens ännu. Klistra in nyckeln från köpmejlet.",
+        "trial_available": "Ingen licens ännu. Starta den kostnadsfria provperioden på 3 dagar i Nucleum Hub-panelen, eller klistra in nyckeln från köpmejlet.",
         "lost": "Licensuppgifterna på den här Home Assistant har gått förlorade (en skadad eller borttagen fil), men din licens är fortfarande kopplad till det här hemmet. Klistra in nyckeln från köpmejlet igen: det räknas inte som en flytt.",
         "invalid": "Licensen kunde inte kontrolleras. Ange nyckeln igen.",
         "moved": "Licensen har flyttats till en annan Home Assistant. Ange nyckeln igen för att hämta tillbaka den hit.",
-        "trial_over": "Provperioden på 60 minuter är slut. Köp en licens för att fortsätta använda panelen.",
+        "trial_over": "Den kostnadsfria provperioden är slut. Klistra in din licensnyckel eller köp en licens för att fortsätta använda panelen.",
         "subscription_expired": "Abonnemanget har gått ut. Förnya det för att använda panelen igen.",
         "staging_unverified": "Den här testinstansen har inte kunnat kontrolleras mot licensservern på 7 dagar, så den är stoppad. Anslut den till internet och kontrollera sedan licensen.",
         "life_unverified": "Anslut Home Assistant till internet för att bekräfta din licens. En enda lyckad kontroll gör den permanent.",

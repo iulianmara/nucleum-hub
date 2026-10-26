@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub es un panel de pared para Home Assistant. Al confirmar, aparece en la barra lateral como «Nucleum Hub», para todos los usuarios y en todas las pantallas. Además, convierte a JPEG, en tu casa, las carátulas de música que una tableta no puede mostrar (por ejemplo, las carátulas HEIC de un Apple TV), sin pedir nada a internet. No hay nada que configurar.\n\n**La prueba gratuita de 60 minutos empieza cuando seleccionas Enviar.** La integración contacta entonces con nuestro servidor de licencias, para iniciarla y, más adelante, para comprobar tu licencia. Al seleccionar Enviar aceptas el [contrato de licencia (EULA)](https://nucleumhub.com/es/legal/eula) para la prueba. Cómo tratamos los datos: [Privacidad y cookies](https://nucleumhub.com/es/legal/privacy)."
+        "description": "Nucleum Hub es un panel de pared para Home Assistant. Al confirmar, aparece en la barra lateral como «Nucleum Hub», para todos los usuarios y en todas las pantallas. Además, convierte a JPEG, en tu casa, las carátulas de música que una tableta no puede mostrar (por ejemplo, las carátulas HEIC de un Apple TV), sin pedir nada a internet. No hay nada que configurar.\n\n**La prueba gratuita de 3 días la inicia después un administrador de Home Assistant desde el panel.** La integración solo contacta con nuestro servidor de licencias cuando se inicia la prueba o se introduce una clave de licencia y, más adelante, para comprobar tu licencia. Al seleccionar Enviar aceptas el [contrato de licencia (EULA)](https://nucleumhub.com/es/legal/eula). Cómo tratamos los datos: [Privacidad y cookies](https://nucleumhub.com/es/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Suscripción mensual",
         "life": "Licencia de pago único",
-        "trial": "Prueba",
+        "trial": "Prueba gratuita",
         "other": "Licencia"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Empezando tu prueba de 60 minutos…",
+        "trial_pending": "Empezando tu prueba gratuita…",
         "full": "Licencia activa.",
         "full_until": "Licencia activa, periodo actual hasta el {until}.",
-        "trial": "Prueba: todo está abierto hasta el {until}.",
+        "trial": "Prueba gratuita: todo está abierto hasta el {until}.",
         "payment_due": "El último pago no se completó. Todo sigue funcionando hasta el {until}: paga con el enlace del correo de Paddle.",
         "provisional": "Tu licencia necesita una comprobación con el servidor de licencias. Conecta Home Assistant a internet antes del {until}.",
         "renewal_due": "Tu licencia debe renovarse antes del {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Esta versión salió después de que terminaran tus actualizaciones. Vuelve a una versión que cubra tu licencia, o renueva.",
         "broken_environment": "La licencia no se puede comprobar en este Home Assistant (el registro dice por qué), así que el panel sigue siendo totalmente utilizable.",
         "no_token": "Aún no hay licencia. Pega la clave del correo de tu compra.",
+        "trial_available": "Aún no hay licencia. Inicia la prueba gratuita de 3 días desde el panel de Nucleum Hub o pega la clave del correo de tu compra.",
         "lost": "Los datos de la licencia de este Home Assistant se han perdido (un archivo dañado o borrado), pero tu licencia sigue vinculada a este hogar. Pega de nuevo la clave del correo de tu compra: no cuenta como traslado.",
         "invalid": "No se pudo verificar la licencia. Introduce tu clave de nuevo.",
         "moved": "La licencia se trasladó a otro Home Assistant. Introduce la clave de nuevo para traerla aquí.",
-        "trial_over": "La prueba de 60 minutos ha terminado. Compra una licencia para seguir usando el panel.",
+        "trial_over": "La prueba gratuita ha terminado. Pega tu clave de licencia o compra una licencia para seguir usando el panel.",
         "subscription_expired": "La suscripción ha caducado. Renuévala para volver a usar el panel.",
         "staging_unverified": "Esta instancia de prueba no se pudo comprobar con el servidor de licencias durante 7 días, así que está detenida. Conéctala a internet y comprueba la licencia.",
         "life_unverified": "Conecta Home Assistant a internet para confirmar tu licencia. Una sola comprobación correcta la hace permanente.",

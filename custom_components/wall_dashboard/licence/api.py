@@ -129,7 +129,8 @@ class RequestRejected(LicenceApiError):
     """The request itself was wrong (the integration's mistake, or a server that changed): 400 ``invalid``
     with ``fields`` (the names of the wrong fields, never their values), ``invalid_json``, ``invalid_body``,
     413 ``too_large``, 415 ``unsupported_media_type``, 403 ``origin_not_allowed``, 404 ``not_found``, 405
-    ``method_not_allowed``, or any other 4xx code this version does not know."""
+    ``method_not_allowed``, 409 ``update_required`` (a trial request without ``ask: true``, which this build always
+    sends: D-090), or any other 4xx code this version does not know."""
 
     code = "invalid"
 
@@ -439,9 +440,12 @@ class LicenceApi:
         return not self._placeholder
 
     async def trial(self, home: str, iidh: str) -> TrialAnswer:
-        """The 60-minute trial's token (D-065): once per installation and per home, asked at the first start."""
+        """The free trial's token (D-090: 3 days from the server's yes, once per installation and per home), asked
+        only when a Home Assistant admin starts it from the dashboard. ``ask: true`` says so: the server answers a
+        request without it (the 1.0 builds that asked by themselves at the first start) with 409
+        ``update_required`` and uses nothing up."""
         _invalid(home=is_home_id(home), iidh=is_iidh(iidh))
-        answer = _Answer(await self._post(ROUTE_TRIAL, {"home": home, "iidh": iidh}))
+        answer = _Answer(await self._post(ROUTE_TRIAL, {"home": home, "iidh": iidh, "ask": True}))
         return TrialAnswer(token=answer.take("token", is_statement), now=answer.now())
 
     async def activate(self, key: str, home: str, iidh: str, *, role: str = "prod", version: str | None = None,

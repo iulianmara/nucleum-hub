@@ -50,8 +50,9 @@ The first time, Home Assistant installs the `pillow-heif` library from PyPI by i
 
 ## Your licence
 
-- **The trial.** The first time Nucleum Hub starts, it asks our licence server for a 60-minute trial, with everything
-  open. It needs the internet once for that, and you get it once per Home Assistant installation.
+- **The free trial.** 3 days with everything open, once per home. A Home Assistant administrator starts it from the
+  Nucleum Hub dashboard (**Start the free trial** on its first screen); until then the integration does not contact our
+  licence server. It needs the internet when it starts.
 - **Activate.** Open **Settings › Devices & services › Nucleum Hub › Configure**, paste the key from the e-mail you got
   after your purchase, choose whether this Home Assistant is **My home** or **A test instance**, and select **Submit**.
   Upper or lower case and spaces in the key do not matter. If the licence is active in another home, Nucleum Hub asks

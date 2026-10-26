@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub je nástěnný dashboard pro Home Assistant. Po potvrzení se objeví na postranním panelu jako „Nucleum Hub“, pro všechny uživatele a na všech obrazovkách. Navíc u vás doma převádí do JPEG obaly hudby, které tablet neumí zobrazit (například obaly HEIC z Apple TV), aniž by se ptal internetu. Není co nastavovat.\n\n**Bezplatná 60minutová zkušební doba začne, jakmile zvolíte Odeslat.** Integrace pak kontaktuje náš licenční server, aby ji spustila a později ověřovala vaši licenci. Zvolením Odeslat přijímáte [licenční smlouvu (EULA)](https://nucleumhub.com/cs/legal/eula) pro zkušební dobu. Jak zacházíme s údaji: [Soukromí a cookies](https://nucleumhub.com/cs/legal/privacy)."
+        "description": "Nucleum Hub je nástěnný dashboard pro Home Assistant. Po potvrzení se objeví na postranním panelu jako „Nucleum Hub“, pro všechny uživatele a na všech obrazovkách. Navíc u vás doma převádí do JPEG obaly hudby, které tablet neumí zobrazit (například obaly HEIC z Apple TV), aniž by se ptal internetu. Není co nastavovat.\n\n**Bezplatnou 3denní zkušební dobu pak spustí administrátor Home Assistant z panelu.** Integrace kontaktuje náš licenční server jen při spuštění zkušební doby nebo zadání licenčního klíče a později kvůli ověření vaší licence. Zvolením Odeslat přijímáte [licenční smlouvu (EULA)](https://nucleumhub.com/cs/legal/eula). Jak zacházíme s údaji: [Soukromí a cookies](https://nucleumhub.com/cs/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Měsíční předplatné",
         "life": "Jednorázová licence",
-        "trial": "Zkušební doba",
+        "trial": "Bezplatná zkušební doba",
         "other": "Licence"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Spouští se vaše 60minutová zkušební doba…",
+        "trial_pending": "Spouští se vaše bezplatná zkušební doba…",
         "full": "Licence je aktivní.",
         "full_until": "Licence je aktivní, aktuální období do {until}.",
-        "trial": "Zkušební doba: vše je otevřené do {until}.",
+        "trial": "Bezplatná zkušební doba: vše je otevřené do {until}.",
         "payment_due": "Poslední platba neprošla. Vše funguje dál do {until}: zaplaťte přes odkaz v e-mailu od Paddle.",
         "provisional": "Vaše licence potřebuje jedno ověření u licenčního serveru. Připojte Home Assistant k internetu do {until}.",
         "renewal_due": "Vaši licenci je třeba obnovit do {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Tato verze vyšla až po konci vašich aktualizací. Vraťte se k verzi, kterou licence pokrývá, nebo licenci obnovte.",
         "broken_environment": "Licenci nelze na tomto Home Assistantu ověřit (důvod je v protokolu), takže panel zůstává plně použitelný.",
         "no_token": "Zatím žádná licence. Vložte klíč z e-mailu o nákupu.",
+        "trial_available": "Zatím žádná licence. Spusťte bezplatnou 3denní zkušební dobu v panelu Nucleum Hub, nebo vložte klíč z e-mailu o nákupu.",
         "lost": "Údaje o licenci na tomto Home Assistant se ztratily (poškozený nebo smazaný soubor), ale vaše licence je stále vázaná na tuto domácnost. Vložte znovu klíč z e-mailu o nákupu: nepočítá se to jako přesun.",
         "invalid": "Licenci se nepodařilo ověřit. Zadejte klíč znovu.",
         "moved": "Licence byla přesunuta na jiný Home Assistant. Zadejte klíč znovu, abyste ji vrátili sem.",
-        "trial_over": "60minutová zkušební doba skončila. Kupte si licenci, abyste mohli panel dál používat.",
+        "trial_over": "Bezplatná zkušební doba skončila. Vložte licenční klíč nebo si kupte licenci, abyste mohli panel dál používat.",
         "subscription_expired": "Předplatné vypršelo. Obnovte ho, abyste mohli panel znovu používat.",
         "staging_unverified": "Tuto testovací instanci se 7 dní nepodařilo ověřit u licenčního serveru, proto je zastavená. Připojte ji k internetu a pak licenci ověřte.",
         "life_unverified": "Připojte Home Assistant k internetu, abyste potvrdili svou licenci. Jediné úspěšné ověření ji učiní trvalou.",

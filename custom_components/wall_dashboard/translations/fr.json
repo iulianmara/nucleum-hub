@@ -7,7 +7,7 @@
       },
       "trial": {
         "title": "Nucleum Hub",
-        "description": "Nucleum Hub est un tableau de bord mural pour Home Assistant. Après validation, il apparaît dans la barre latérale sous le nom « Nucleum Hub », pour tous les utilisateurs et sur tous les écrans. Il convertit aussi en JPEG, chez vous, les pochettes musicales qu'une tablette ne sait pas afficher (par exemple les pochettes HEIC d'une Apple TV), sans rien demander à Internet. Il n'y a rien à régler.\n\n**L’essai gratuit de 60 minutes commence lorsque vous sélectionnez Valider.** L’intégration contacte alors notre serveur de licences, pour le démarrer puis, plus tard, pour vérifier votre licence. En sélectionnant Valider, vous acceptez le [contrat de licence (CLUF)](https://nucleumhub.com/fr/legal/eula) pour l’essai. Comment nous traitons les données : [Confidentialité et cookies](https://nucleumhub.com/fr/legal/privacy)."
+        "description": "Nucleum Hub est un tableau de bord mural pour Home Assistant. Après validation, il apparaît dans la barre latérale sous le nom « Nucleum Hub », pour tous les utilisateurs et sur tous les écrans. Il convertit aussi en JPEG, chez vous, les pochettes musicales qu'une tablette ne sait pas afficher (par exemple les pochettes HEIC d'une Apple TV), sans rien demander à Internet. Il n'y a rien à régler.\n\n**L’essai gratuit de 3 jours se lance ensuite depuis le tableau de bord, par un administrateur Home Assistant.** L’intégration ne contacte notre serveur de licences que lorsque l’essai est lancé ou qu’une clé de licence est saisie, puis, plus tard, pour vérifier votre licence. En sélectionnant Valider, vous acceptez le [contrat de licence (CLUF)](https://nucleumhub.com/fr/legal/eula). Comment nous traitons les données : [Confidentialité et cookies](https://nucleumhub.com/fr/legal/privacy)."
       }
     },
     "abort": {
@@ -97,16 +97,16 @@
       "options": {
         "sub": "Abonnement mensuel",
         "life": "Licence unique",
-        "trial": "Essai",
+        "trial": "Essai gratuit",
         "other": "Licence"
       }
     },
     "licence_status": {
       "options": {
-        "trial_pending": "Démarrage de votre essai de 60 minutes…",
+        "trial_pending": "Démarrage de votre essai gratuit…",
         "full": "Licence active.",
         "full_until": "Licence active, période en cours jusqu’au {until}.",
-        "trial": "Essai : tout est ouvert jusqu’au {until}.",
+        "trial": "Essai gratuit : tout est ouvert jusqu’au {until}.",
         "payment_due": "Le dernier paiement n’a pas abouti. Tout continue de fonctionner jusqu’au {until} : payez avec le lien de l’e-mail de Paddle.",
         "provisional": "Votre licence a besoin d’une vérification auprès du serveur de licences. Connectez Home Assistant à internet avant le {until}.",
         "renewal_due": "Votre licence doit être renouvelée avant le {until}.",
@@ -114,10 +114,11 @@
         "uncovered": "Cette version est sortie après la fin de vos mises à jour. Revenez à une version couverte par votre licence, ou renouvelez.",
         "broken_environment": "La licence ne peut pas être vérifiée sur ce Home Assistant (le journal indique pourquoi), donc le tableau de bord reste entièrement utilisable.",
         "no_token": "Pas encore de licence. Collez la clé de votre e-mail d’achat.",
+        "trial_available": "Pas encore de licence. Lancez l’essai gratuit de 3 jours depuis le tableau de bord Nucleum Hub, ou collez la clé de votre e-mail d’achat.",
         "lost": "Les données de licence de ce Home Assistant ont été perdues (un fichier endommagé ou supprimé), mais votre licence reste liée à ce logement. Collez à nouveau la clé de votre e-mail d’achat : cela ne compte pas comme un déplacement.",
         "invalid": "La licence n’a pas pu être vérifiée. Saisissez à nouveau votre clé.",
         "moved": "La licence a été déplacée sur un autre Home Assistant. Saisissez à nouveau la clé pour la ramener ici.",
-        "trial_over": "L’essai de 60 minutes est terminé. Achetez une licence pour continuer à utiliser le tableau de bord.",
+        "trial_over": "L’essai gratuit est terminé. Collez votre clé de licence ou achetez une licence pour continuer à utiliser le tableau de bord.",
         "subscription_expired": "L’abonnement a expiré. Renouvelez-le pour utiliser à nouveau le tableau de bord.",
         "staging_unverified": "Cette instance de test n’a pas pu être vérifiée auprès du serveur de licences pendant 7 jours, elle est donc arrêtée. Connectez-la à internet, puis vérifiez la licence.",
         "life_unverified": "Connectez Home Assistant à internet pour confirmer votre licence. Une seule vérification réussie la rend permanente.",

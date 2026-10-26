@@ -9,10 +9,18 @@
   lose the binding);
 - ``revocations``: every revocation statement that verified, never deleted (a statement covers only the tokens issued
   up to it, D-067, so one kept forever never hurts a licence put back by support);
-- ``trial``: True once the server answered the trial request (a token, trial_used, or licensed), so it is asked once;
+- ``trial``: True once the server answered an admin's request for the free trial (a token, trial_used, or licensed),
+  or a licence was activated here: the trial is then no longer offered (trial_available, D-090);
+- ``trial_used``: True only when the server gave this installation the free trial (its token kept) or refused it as
+  used (trial_used): the dashboard's "The free trial has already been used on this home." Never set by an activation
+  or by licensed (the server answers licensed before it looks at the trials), so a home that bought a key without a
+  trial and freed it later is not told a trial it never had. A store written before this field (no key) gets it from
+  ``trial``, as those builds asked for the trial by themselves at the first start: ``trial`` without a licence bound
+  and without ``lost``;
 - ``lost``: True when the server answered the trial with licensed: this home holds a licence, but what this Home
   Assistant kept of it is gone (the file was damaged or removed). The key is then asked for again, and the dashboard
-  and Configure say why (a first start would offer to buy one). Cleared by the next token kept;
+  and Configure say why instead of offering to buy one. Since only an admin asks for the trial (D-090), a lost store
+  shows at that press, or when the key is entered again (the same binding). Cleared by the next token kept;
 - the facts of the last refresh (``cloned``, ``moves_left``), and what the schedule needs to survive a restart:
   ``checked`` (the last 200), ``tried`` and ``failures`` (the last request and the failures in a row),
   ``not_before`` (a 429's Retry-After), ``bound`` (False after not_bound) and ``sent`` (the requests of the last
@@ -27,7 +35,8 @@ licence. One that cannot be read is never written over (the licence then stays o
 broken_environment, plan §4.1 p.5), and one written by a newer version raises in Home Assistant's Store, which counts
 as unreadable. A file that is not JSON any more (a power cut on an SD card) is another case: Home Assistant moves it
 aside itself (``wall_dashboard.licence.corrupt.<time>``, with a repair issue) and hands over nothing, so the licence
-starts as on a first start and the server's answer to the trial tells a lost licence apart (``lost`` above).
+starts as on a first start, and the server's answer to the admin's trial request tells a lost licence apart (``lost``
+above).
 
 The file is read once per Home Assistant run, and what was read is shared by every setup of the entry with one lock
 (``async_get_storage``, like the home id): a request that was on its way when the entry was reloaded lands in the
@@ -63,6 +72,7 @@ class Held:
     role: str | None = None
     revocations: list[str] = field(default_factory=list)
     trial: bool = False
+    trial_used: bool = False
     lost: bool = False
     cloned: bool = False
     moves_left: int | None = None
@@ -80,7 +90,7 @@ class Held:
 
     def forget_licence(self) -> None:
         """After "free this home" (the release): the token, the nonce and the binding go; the statements, the trial's
-        answer and the budget stay."""
+        answer (``trial``, ``trial_used``) and the budget stay."""
         self.token = self.nonce = self.lic = self.role = None
         self.cloned = False
         self.checked = None
@@ -109,6 +119,10 @@ class Held:
             held.revocations = list(dict.fromkeys(s for s in statements if is_statement(s)))[-MAX_STATEMENTS:]
         held.trial = data.get("trial") is True
         held.lost = data.get("lost") is True
+        if "trial_used" in data:
+            held.trial_used = data["trial_used"] is True
+        else:  # a store written before the field (see the module's docstring)
+            held.trial_used = held.trial and not held.licensed and not held.lost
         held.cloned = data.get("cloned") is True
         held.moves_left = _count(data.get("moves_left"))
         held.checked = _moment(data.get("checked"))

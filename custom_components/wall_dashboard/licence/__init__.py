@@ -22,8 +22,9 @@ What each module does (the server's side of every rule: server/README.md §7.1 a
 - ``schedule``: when the licence asks the server again (the rhythm of each plan, the backoff, the budget under the
   server's rate limits). Pure: the standard library and ``state`` only.
 - ``storage``: what the licence keeps between restarts, in ``.storage/wall_dashboard.licence``.
-- ``manager``: the licence at work, one per setup of the entry: the trial, the activation and the release, the
-  refreshes, the revocation statements, and the state the dashboard is told (websocket.py).
+- ``manager``: the licence at work, one per setup of the entry: the free trial an admin starts from the dashboard
+  (D-090), the activation and the release, the refreshes, the revocation statements, and the state the dashboard is
+  told (websocket.py).
 - ``flow``: Configure in Home Assistant's settings (the options flow): the key, the check, the release.
 
 Nothing in this package imports its modules here: importing ``licence`` costs nothing and cannot fail.

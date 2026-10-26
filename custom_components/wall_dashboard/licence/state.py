@@ -36,7 +36,7 @@ from types import MappingProxyType
 from typing import Any, Final, NamedTuple
 
 DAY_S: Final = 86400
-TRIAL_S: Final = 3600  # the trial: 60 minutes of clock time from the first start (D-065)
+TRIAL_S: Final = 259200  # the free trial: 3 days (72 hours) of clock time from the server's yes to the admin (D-090)
 REFUND_DAYS: Final = 14  # the refund window of a first payment, and the one-time licence's provisional token
 STAGING_TOKEN_S: Final = 7 * DAY_S  # the staging instance's token lives at most this long from its iat (D-068)
 LIFE_VERIFY_S: Final = 30 * DAY_S  # a permanent one-time token older than this carries verify_security (D-068)
