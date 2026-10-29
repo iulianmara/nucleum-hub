@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>window.WD_VERSION = '1.0';
-window.WD_BUILD = '2026-10-26.543a30b';
+<script>window.WD_VERSION = '1.0.1';
+window.WD_BUILD = '2026-10-29.e17686f';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -12122,6 +12122,348 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
   };
 })();
 </script>
+<script>window.WD_STANDIN = (function () {
+  'use strict';
+
+  var D = {};
+  D.vacuum = { sw: 2.4, body:
+    '<ellipse data-r="sh" cx="60" cy="87" rx="47" ry="11" stroke="none"/>' +
+    '<path data-r="f2" d="M13 60v12A47 19 0 0 0 107 72V60A47 19 0 0 1 13 60Z"/>' +
+    '<ellipse data-r="f1" cx="60" cy="60" rx="47" ry="19"/>' +
+    '<path d="M24 71.2v12M96 71.2v12"/>' +
+    '<path data-r="f2" d="M48 49v7a12 5 0 0 0 24 0v-7"/>' +
+    '<ellipse data-r="f3" cx="60" cy="49" rx="12" ry="5"/>' +
+    '<circle data-r="acc" cx="60" cy="70" r="2.8" stroke="none"/>' };
+  D.mower = { sw: 2.4, body:
+    '<ellipse data-r="sh" cx="60" cy="96.5" rx="50" ry="5" stroke="none"/>' +
+    '<path data-r="grass" stroke-width="2.6" d="M108 96c0-9 1.3-15.5 4.6-21M114 96c0-5.5.6-9.5 2.2-13M5 96l.6-3.6M9.4 96l.8-4"/>' +
+    '<path data-r="f1" d="M20 79C13 79 10.5 73 12.5 67C18 51 36 42 58 42C81 42 97 52 106.5 70C109 75 106 79 101 79Z"/>' +
+    '<path d="M30 50.4C38 46.6 47 45.2 58 45.2C72 45.2 84 49 93 56.4M16 66.5H103"/>' +
+    '<circle data-r="f3" cx="38" cy="80" r="16"/><circle data-r="f1" cx="38" cy="80" r="5.4"/>' +
+    '<circle data-r="f3" cx="92" cy="87" r="9"/><circle data-r="f1" cx="92" cy="87" r="3"/>' +
+    '<circle data-r="acc" cx="66" cy="53.4" r="2.8" stroke="none"/>' };
+  function speaker(x, y, w, h, r, dx, dy) {
+    var R = x + w, B = y + h, cx = x + w / 2, wy = n(y + h * 0.64), ty = n(y + h * 0.27), wr = w * 0.34;
+    return '<path data-r="f2" d="M' + (x + r) + ' ' + y + 'L' + (x + r + dx) + ' ' + (y - dy) + 'H' + (R - r + dx) + 'A' + r + ' ' + r + ' 0 0 1 ' + (R + dx) + ' ' + (y + r - dy) +
+        'V' + (B - r - dy) + 'A' + r + ' ' + r + ' 0 0 1 ' + (R - r + dx) + ' ' + (B - dy) + 'L' + (R - r) + ' ' + B + 'A' + r + ' ' + r + ' 0 0 0 ' + R + ' ' + (B - r) +
+        'V' + (y + r) + 'A' + r + ' ' + r + ' 0 0 0 ' + (R - r) + ' ' + y + 'Z"/>' +
+      '<rect data-r="f1" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '"/>' +
+      '<circle cx="' + cx + '" cy="' + wy + '" r="' + n(wr) + '"/><circle cx="' + cx + '" cy="' + wy + '" r="' + n(wr * 0.44) + '"/><circle cx="' + cx + '" cy="' + ty + '" r="' + n(wr * 0.38) + '"/>' +
+      '<circle cx="' + cx + '" cy="' + wy + '" r="' + n(wr * 0.15) + '" fill="currentColor" stroke="none"/><circle cx="' + cx + '" cy="' + ty + '" r="' + n(wr * 0.12) + '" fill="currentColor" stroke="none"/>';
+  }
+  function n(v) { return Math.round(v * 10) / 10; }
+  D.speaker = { sw: 2.4, body: '<ellipse data-r="sh" cx="62" cy="110" rx="36" ry="5" stroke="none"/>' + speaker(30, 18, 48, 90, 13, 9, 7) };
+  D.speakers = { sw: 2.2, body: '<ellipse data-r="sh" cx="60" cy="110" rx="52" ry="5" stroke="none"/>' + speaker(62, 26, 38, 78, 11, 7, 6) + speaker(14, 26, 38, 78, 11, 7, 6) };
+  D.purifier = { sw: 2.4, body: (function () {
+    var dots = '';
+    [82, 89, 96].forEach(function (yy, row) {
+      for (var i = -3; i <= 3; i++) {
+        var a = i * 0.36 + (row % 2 ? 0.18 : 0);
+        if (Math.abs(a) > 1.2) continue;
+        dots += '<circle data-r="dot" cx="' + (60 + 26 * Math.sin(a)).toFixed(1) + '" cy="' + (yy + 8 * (1 - Math.cos(a)) * 0.9).toFixed(1) + '" r="1.5" stroke="none"/>';
+      }
+    });
+    return '<ellipse data-r="sh" cx="60" cy="108.5" rx="31" ry="5" stroke="none"/>' +
+      '<path data-r="f1" d="M34 32v68A26 8 0 0 0 86 100V32"/>' +
+      '<ellipse data-r="f2" cx="60" cy="32" rx="26" ry="8"/>' +
+      '<ellipse data-r="f3" stroke-width="2" cx="60" cy="32" rx="16" ry="4.6"/>' +
+      '<path data-r="accs" stroke-width="3" d="M53 56h14"/>' +
+      dots +
+      '<path data-r="air" stroke-width="2.6" d="M48 21.6C46.4 16.4 43 12.8 37.6 10.8M60 19.6V7M72 21.6C73.6 16.4 77 12.8 82.4 10.8"/>';
+  })() };
+  var CAR = {
+    body: 'M150 12 C96 12 70 25 60 52 C48 84 43 130 43 205 L43 300 C43 372 51 416 68 436 C82 452 218 452 232 436 C249 416 257 372 257 300 L257 205 C257 130 252 84 240 52 C230 25 204 12 150 12 Z',
+    hood: 'M92 30 C80 62 74 92 72 122 M208 30 C220 62 226 92 228 122',
+    lip: 'M118 18 C138 24 162 24 182 18',
+    wind: 'M78 132 C104 119 196 119 222 132 L210 180 C176 168 124 168 90 180 Z',
+    roof: 'M90 182 C124 171 176 171 210 182 L214 348 C180 359 120 359 86 348 Z',
+    sideL: 'M66 158 C60 214 60 296 68 352 L86 346 C79 294 79 212 86 166 Z',
+    sideR: 'M234 158 C240 214 240 296 232 352 L214 346 C221 294 221 212 214 166 Z',
+    doors: 'M43 236 L66 234 M234 234 L257 236 M43 306 L66 302 M234 302 L257 306',
+    rear: 'M84 358 C120 370 180 370 216 358 L224 402 C186 416 114 416 76 402 Z',
+    trunk: 'M70 414 C118 428 182 428 230 414',
+    lipR: 'M108 446 C136 450 164 450 192 446',
+    mirrorL: 'M52 164 L20 178 C12 181 9 170 17 165 L48 150 Z',
+    mirrorR: 'M248 164 L280 178 C288 181 291 170 283 165 L252 150 Z',
+    lamps: 'M78 44 C85 36 93 31 103 28 M222 44 C215 36 207 31 197 28',
+    tails: 'M58 418 C64 430 74 438 86 442 M242 418 C236 430 226 438 214 442'
+  };
+  function p(d, r, sw) { return '<path' + (r ? ' data-r="' + r + '"' : '') + (sw ? ' stroke-width="' + sw + '"' : '') + ' d="' + d + '"/>'; }
+  D.car = { sw: 3.6, body:
+    p(CAR.mirrorL, 'f2') + p(CAR.mirrorR, 'f2') + p(CAR.body, 'f1') + p(CAR.hood, '', 2.6) + p(CAR.lip, '', 2.6) +
+    p(CAR.wind, 'gl') + p(CAR.roof, 'f1') + p(CAR.sideL, 'gl') + p(CAR.sideR, 'gl') + p(CAR.doors, '', 2.6) + p(CAR.rear, 'gl') +
+    p(CAR.trunk, '', 2.6) + p(CAR.lipR, '', 2.6) + p(CAR.lamps, 'lamp', 5) + p(CAR.tails, 'tail', 5) };
+
+  var KINDS = ['car', 'vacuum', 'mower', 'speaker', 'speakers', 'purifier'];
+  var LINE = ' fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="';
+
+  function svg(kind) {
+    var d = D[kind]; if (!d) return '';
+    var body = d.body.replace(/ data-r="(\w+)"/g, ' class="wdsi-$1"');
+    if (kind === 'car') return '<svg viewBox="0 0 300 460" aria-label="car"><g class="wdsi"' + LINE + d.sw + '">' + body + '</g></svg>';
+    return '<svg class="wdsi" viewBox="0 0 120 120" aria-hidden="true" focusable="false"' + LINE + d.sw + '">' + body + '</svg>';
+  }
+  var DEF = { ink: '#8b939c', glass: '#1d2228', acc: '#2E7D57', accs: '#1F7A78', air: '#1F7A78', grass: '#2E7D57', lamp: '#B96F12', tail: '#B0453F' };
+  function standalone(kind, colours) {
+    var d = D[kind]; if (!d) return '';
+    var c = {}, k; for (k in DEF) c[k] = (colours && colours[k]) || DEF[k];
+    var A = { f1: 'fill="' + c.ink + '" fill-opacity=".07"', f2: 'fill="' + c.ink + '" fill-opacity=".16"', f3: 'fill="' + c.ink + '" fill-opacity=".3"',
+      gl: 'fill="' + c.glass + '" fill-opacity=".85"', sh: 'fill="#000" fill-opacity=".12"', dot: 'fill="' + c.ink + '" fill-opacity=".55"',
+      acc: 'fill="' + c.acc + '"', accs: 'stroke="' + c.accs + '"', air: 'stroke="' + c.air + '"', grass: 'stroke="' + c.grass + '"',
+      lamp: 'stroke="' + c.lamp + '"', tail: 'stroke="' + c.tail + '"' };
+    var body = d.body.replace(/ data-r="(\w+)"/g, function (m, r) { return A[r] ? ' ' + A[r] : ''; });
+    var vb = kind === 'car' ? '0 0 300 460' : '0 0 120 120';
+    var out = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '"' + (kind === 'car' ? ' aria-label="car"' : ' aria-hidden="true"') + LINE + d.sw + '">' + body + '</svg>';
+    return out.replace(/currentColor/g, c.ink);
+  }
+  function kindOf(id, attrs, dc) {
+    var dom = String(id || '').split('.')[0], obj = String(id || '').split('.')[1] || '', a = attrs || {};
+    if (dom === 'vacuum') return 'vacuum';
+    if (dom === 'lawn_mower') return 'mower';
+    if (dom === 'fan' || dom === 'humidifier' || dom === 'air_purifier') return 'purifier';
+    if (dom === 'media_player') {
+      if (dc === 'tv' || a.device_class === 'tv' || /(^|_)(tv|television)(_|$)/.test(obj)) return '';
+      var g = a.group_members;
+      if (a.mass_player_type === 'group' || (Array.isArray(g) && g.length > 1 && g[0] === id)) return 'speakers';
+      return 'speaker';
+    }
+    return '';
+  }
+  function art(html, kind) {
+    var s = kind ? svg(kind) : '';
+    if (!s) return html;
+    return String(html).replace(/<div class="art">(?!<img)[\s\S]*?<\/div>/, function () { return '<div class="art">' + s + '</div>'; });
+  }
+  function hero(kind) { var s = svg(kind); return s ? '<div class="wdimg-hero wdsi-hero">' + s + '</div>' : ''; }
+
+  return { KINDS: KINDS, svg: svg, standalone: standalone, kindOf: kindOf, art: art, hero: hero };
+})();
+</script>
+<script>(function (root) {
+  'use strict';
+
+  var GUIDE = [[0.03, 0.155, 'w'], [0.97, 0.155, 'w'], [0.03, 0.845, 'w'], [0.97, 0.845, 'w'], [0.115, 0.44, 'd'], [0.115, 0.63, 'd'], [0.885, 0.44, 'd'], [0.885, 0.63, 'd'], [0.5, 0.035, 'd'], [0.5, 0.965, 'd']];
+  function baseXY(i, rot) {
+    var u = GUIDE[i][0], v = GUIDE[i][1], AH = 0.86, AW = 0.86 * 300 / 460, nu = u, nv = v, W = AW, H = AH;
+    if (rot === 90) { nu = 1 - v; nv = u; W = AH; H = AW; } else if (rot === 180) { nu = 1 - u; nv = 1 - v; } else if (rot === 270) { nu = v; nv = 1 - u; W = AH; H = AW; }
+    return [50 + (nu - 0.5) * W * 100, 50 + (nv - 0.5) * H * 100];
+  }
+  function box0(rot) {
+    var p = GUIDE.map(function (g, i) { return baseXY(i, rot); }), x = p.map(function (q) { return q[0]; }), y = p.map(function (q) { return q[1]; });
+    return { l: Math.min.apply(null, x), r: Math.max.apply(null, x), t: Math.min.apply(null, y), b: Math.max.apply(null, y) };
+  }
+  function markXY(i, rot, mk) {
+    var b = box0(rot), cx = (b.l + b.r) / 2, cy = (b.t + b.b) / 2, p = baseXY(i, rot), o = (mk.ind && mk.ind[i]) || [0, 0];
+    var cl = function (v) { return Math.max(3, Math.min(97, v)); };
+    return [cl(cx + mk.dx + (p[0] - cx) * mk.sx + o[0]), cl(cy + mk.dy + (p[1] - cy) * mk.sy + o[1])];
+  }
+  function markBox(rot, mk) {
+    var b = box0(rot), cx = (b.l + b.r) / 2, cy = (b.t + b.b) / 2, hw = (b.r - b.l) / 2 + 5, hh = (b.b - b.t) / 2 + 5;
+    return { l: cx + mk.dx - hw * mk.sx, r: cx + mk.dx + hw * mk.sx, t: cy + mk.dy - hh * mk.sy, b: cy + mk.dy + hh * mk.sy, cx: cx + mk.dx, cy: cy + mk.dy, hw0: hw, hh0: hh };
+  }
+
+  var SRC = /^data:image\/(webp|jpeg|png|gif);base64,[A-Za-z0-9+/]+=*$/;
+  function srcOk(v) { return typeof v === 'string' && SRC.test(v); }
+  function num(v, lo, hi, d) { v = typeof v === 'number' ? v : NaN; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; }
+  function blank() { return { f: 'contain', x: 50, y: 50, z: 1, fr: 90, nm: false, mk: { dx: 0, dy: 0, sx: 1, sy: 1, ind: {} } }; }
+  function parse(v) {
+    var o = v;
+    if (typeof v === 'string') { try { o = JSON.parse(v); } catch (e) { return null; } }
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+    var mk = o.mk && typeof o.mk === 'object' && !Array.isArray(o.mk) ? o.mk : {}, ind = {};
+    if (mk.ind && typeof mk.ind === 'object' && !Array.isArray(mk.ind)) Object.keys(mk.ind).forEach(function (k) {
+      var q = mk.ind[k]; if (/^\d$/.test(k) && +k < GUIDE.length && Array.isArray(q)) ind[k] = [num(q[0], -100, 100, 0), num(q[1], -100, 100, 0)];
+    });
+    return { f: o.f === 'cover' ? 'cover' : 'contain', x: num(o.x, -50, 150, 50), y: num(o.y, -50, 150, 50), z: num(o.z, 0.5, 3, 1),
+      fr: [0, 90, 180, 270].indexOf(o.fr) > -1 ? o.fr : 90, nm: o.nm === true,
+      mk: { dx: num(mk.dx, -100, 100, 0), dy: num(mk.dy, -100, 100, 0), sx: num(mk.sx, 0.3, 3, 1), sy: num(mk.sy, 0.3, 3, 1), ind: ind } };
+  }
+  function r1(v) { return Math.round(v * 10) / 10; }
+  function serial(p, car) {
+    var o = { f: p.f, x: r1(p.x), y: r1(p.y), z: Math.round(p.z * 100) / 100 };
+    if (car) { o.fr = p.fr; o.nm = p.nm; o.mk = { dx: r1(p.mk.dx), dy: r1(p.mk.dy), sx: Math.round(p.mk.sx * 100) / 100, sy: Math.round(p.mk.sy * 100) / 100, ind: {} };
+      Object.keys(p.mk.ind).forEach(function (k) { o.mk.ind[k] = [r1(p.mk.ind[k][0]), r1(p.mk.ind[k][1])]; }); }
+    return JSON.stringify(o);
+  }
+  function style(p) {
+    return 'object-fit:' + p.f + '!important;object-position:50% 50%!important;transform:translate(' + (50 - p.x).toFixed(1) + '%,' + (50 - p.y).toFixed(1) + '%) scale(' + p.z.toFixed(2) + ');transform-origin:50% 50%';
+  }
+  function aspect(scope, id) {
+    if (scope === 'car') return 1;
+    var d = String(id || '').split('.')[0];
+    return d === 'vacuum' || d === 'lawn_mower' ? 8 / 7 : d === 'fan' || d === 'humidifier' || d === 'air_purifier' ? 2.6 : 1;
+  }
+  function at(q) { return 'left:' + q[0].toFixed(1) + '%;top:' + q[1].toFixed(1) + '%'; }
+  function carStage(h, p) {
+    if (!p || typeof h !== 'string' || h.indexOf('<div id="carph">') < 0) return h;
+    var i = 0, j = 4;
+    h = h.replace('<div id="carph">', '<div id="carph" class="phown' + (p.nm ? ' nomk' : '') + '">');
+    h = h.replace(/(<span class="tyrechip[^"]*" style=")[^"]*(")/g, function (m, a, b) { return i < 4 ? a + at(markXY(i++, p.fr, p.mk)) + b : m; });
+    return h.replace(/(<span class="cdot[^"]*" style=")[^"]*(")/g, function (m, a, b) { return j < GUIDE.length ? a + at(markXY(j++, p.fr, p.mk)) + b : m; });
+  }
+
+  var S = null, AFTER = [];
+  function T_(k) { try { return t(k); } catch (e) { return k; } }
+  function F_(k, o) { try { return fmt(k, o); } catch (e) { return k; } }
+  function E_(s) { try { return esc(s); } catch (e) { return String(s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); } }
+  function I_(n) { try { return ic(n); } catch (e) { return ''; } }
+  var SV = function (p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>'; };
+  var IC = {
+    move: SV('<path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>'),
+    turn: SV('<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>'),
+    center: SV('<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>'),
+    cam: SV('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>')
+  };
+  function busy() { return !!S; }
+  function afterClose(fn) { if (!S) return fn(); AFTER.push(fn); }
+  function finish() { S = null; var l = AFTER; AFTER = []; l.forEach(function (f) { try { f(); } catch (e) {} }); }
+  function key() { return S.scope + ':' + S.id; }
+  function name() {
+    try { if (S.scope === 'car') return (WDP.car && WDP.car.name) || T_('ui.photo_of_car'); } catch (e) {}
+    try { return ename(S.id); } catch (e) { return S.id; }
+  }
+  function html() {
+    var car = S.scope === 'car', b = function (attr, label, cls, icon) { return '<button type="button" class="' + (cls || 'pill') + '" ' + attr + '>' + (icon || '') + E_(T_(label)) + '</button>'; };
+    return '<div class="shead"><h3>' + E_(F_('ph.title', { d: name() })) + '</h3><button type="button" class="rbtn" data-pp="cancel" aria-label="' + E_(T_('ph.cancel')) + '">' + I_('x') + '</button></div>'
+      + '<div class="sbody ppsheet"><p class="ppsub">' + E_(T_(car ? 'ph.intro_car' : 'ph.intro')) + '</p>'
+      + '<div class="ppfr" data-ppfr tabindex="0" role="application" aria-label="' + E_(T_('ph.hint')) + '" style="aspect-ratio:' + aspect(S.scope, S.id).toFixed(3) + '"><div class="gdl"></div><div class="gd"></div><span class="hint">' + IC.move + E_(T_('ph.hint')) + '</span></div>'
+      + '<div class="slabel">' + E_(T_('ph.size')) + '</div><div class="srow"><div class="stepper"><button type="button" data-ppz="-10" aria-label="' + E_(T_('ph.smaller')) + '">−</button>'
+      + '<span class="sval" data-ppzv></span><button type="button" data-ppz="10" aria-label="' + E_(T_('ph.larger')) + '">+</button></div></div>'
+      + '<div class="slabel">' + E_(T_('ph.fit_t')) + '</div><div class="srow ppopts">' + b('data-ppf="contain"', 'ph.fit') + b('data-ppf="cover"', 'ph.fill') + '</div>'
+      + '<div class="slabel">' + E_(T_('ph.photo')) + '</div><div class="srow ppopts">' + b('data-ppf="turn"', 'ph.turn', 'ebtn', IC.turn) + b('data-ppf="center"', 'ph.center', 'ebtn', IC.center) + b('data-ppf="pick"', 'ph.other', 'ebtn', IC.cam) + '</div>'
+      + (car ? '<div class="slabel">' + E_(T_('ph.front')) + '</div><div class="srow ppopts">' + [[0, 'ph.up'], [90, 'ph.right'], [180, 'ph.down'], [270, 'ph.left']].map(function (r) { return b('data-ppr="' + r[0] + '"', r[1]); }).join('') + '</div>'
+        + '<div class="slabel">' + E_(T_('ph.marks_t')) + '</div><div class="srow ppopts">' + b('data-ppf="marks"', 'ph.marks_on') + b('data-ppf="mkreset"', 'ph.marks_reset', 'ebtn') + '</div>'
+        + '<div class="slabel">' + E_(T_('ph.drag_t')) + '</div><div class="srow ppopts">' + b('data-ppm="photo"', 'ph.photo') + b('data-ppm="marks"', 'ph.drag_marks') + b('data-ppm="one"', 'ph.drag_one') + '</div>' : '')
+      + '<div class="srow ppfoot">' + b('data-pp="cancel"', 'ph.cancel', 'ebtn') + '<span style="flex:1"></span>' + b('data-pp="ok"', 'ph.done', 'ebtn prim', I_('check')) + '</div></div>';
+  }
+  function draw() {
+    var sh = document.getElementById('sheet'), fr = sh && sh.querySelector('[data-ppfr]'); if (!fr || !S) return;
+    var p = S.p, car = S.scope === 'car', marks = car && !p.nm;
+    var img = fr.querySelector(':scope>img');
+    if (!img) { fr.insertAdjacentHTML('afterbegin', '<img alt="">'); img = fr.querySelector(':scope>img'); }
+    if (img.getAttribute('src') !== S.src) img.setAttribute('src', S.src);
+    img.setAttribute('style', style(p));
+    fr.dataset.mode = marks ? S.mode : 'photo';
+    var mb = markBox(p.fr, p.mk);
+    fr.querySelector('.gdl').innerHTML = !marks ? '' : GUIDE.map(function (q, k) { return '<i class="' + q[2] + '" data-ppk="' + k + '" style="' + at(markXY(k, p.fr, p.mk)) + '"></i>'; }).join('')
+      + (S.mode === 'marks' ? '<b class="mkbox" style="left:' + mb.l.toFixed(1) + '%;top:' + mb.t.toFixed(1) + '%;width:' + (mb.r - mb.l).toFixed(1) + '%;height:' + (mb.b - mb.t).toFixed(1) + '%">' + ['nw', 'ne', 'sw', 'se'].map(function (c) { return '<u data-pph="' + c + '" class="' + c + '"></u>'; }).join('') + '</b>' : '');
+    sh.querySelector('[data-ppzv]').textContent = Math.round(p.z * 100) + ' %';
+    var on = function (sel, f) { sh.querySelectorAll(sel).forEach(function (x) { var v = f(x); x.classList.toggle('on', v); x.setAttribute('aria-pressed', v ? 'true' : 'false'); }); };
+    on('[data-ppf=cover],[data-ppf=contain]', function (x) { return x.dataset.ppf === p.f; });
+    on('[data-ppf=marks]', function () { return !p.nm; });
+    on('[data-ppm]', function (x) { return x.dataset.ppm === S.mode; });
+    on('[data-ppr]', function (x) { return +x.dataset.ppr === p.fr; });
+  }
+  function turn(src, done) {
+    var im = new Image();
+    im.onload = function () {
+      try {
+        var cv = document.createElement('canvas'); cv.width = im.height; cv.height = im.width;
+        var c = cv.getContext('2d'); c.translate(cv.width, 0); c.rotate(Math.PI / 2); c.drawImage(im, 0, 0);
+        var out = cv.toDataURL('image/webp', 0.9); if (out.indexOf('data:image/webp') !== 0) out = cv.toDataURL('image/jpeg', 0.9);
+        done(out);
+      } catch (e) { done(null); }
+    };
+    im.onerror = function () { done(null); };
+    im.src = src;
+  }
+  function close(ok) {
+    if (!S) return;
+    var s = S, done = true;
+    if (ok) {
+      var ch = {}; ch['place:' + key()] = serial(s.p, s.scope === 'car'); if (s.src !== s.src0) ch[key()] = s.src;
+      try { done = wdImgSetMany(ch); } catch (e) { done = false; }
+      if (done) { try { toast(T_('ph.placed'), 'check'); } catch (e) {} }
+    }
+    if (!done) return;
+    try { closeSheet(); } catch (e) {}
+    finish();
+    try { renderPage(false); } catch (e) {}
+    if (s.back) { try { s.back(); } catch (e) {} }
+  }
+  function onClick(e) {
+    var b = e.target && e.target.closest && e.target.closest('button'); if (!b || !S) return;
+    var p = S.p, d = b.dataset;
+    if (d.pp) { e.preventDefault(); close(d.pp === 'ok'); return; }
+    if (d.ppz) { p.z = Math.max(0.5, Math.min(3, Math.round(p.z * 100 + +d.ppz) / 100)); draw(); return; }
+    if (d.ppm) { S.mode = d.ppm; if (S.mode !== 'photo') p.nm = false; draw(); return; }
+    if (d.ppr) { p.fr = +d.ppr; draw(); return; }
+    if (!d.ppf) return;
+    var k = d.ppf;
+    if (k === 'cover' || k === 'contain') p.f = k;
+    else if (k === 'center') { p.x = 50; p.y = 50; p.z = 1; }
+    else if (k === 'marks') p.nm = !p.nm;
+    else if (k === 'mkreset') p.mk = blank().mk;
+    else if (k === 'turn') { b.disabled = true; turn(S.src, function (u) { b.disabled = false; if (!S || !u) return; S.src = u; if (S.scope === 'car') p.fr = (p.fr + 90) % 360; draw(); }); return; }
+    else if (k === 'pick') { pick(function (u) { if (!S) return; S.src = u; S.p = blank(); if (S.scope === 'car') { S.p.fr = p.fr; } draw(); }); return; }
+    draw();
+  }
+  function pick(done) {
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.style.cssText = 'position:fixed;left:-9999px';
+    document.body.appendChild(inp);
+    inp.onchange = function () {
+      var f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      Promise.resolve().then(function () { return wdImgProcess(f); }).then(function (u) { if (srcOk(u)) done(u); }, function () { try { toast(T_('ui.photo_failed'), 'x'); } catch (e) {} });
+    };
+    inp.click();
+  }
+  function bind(fr) {
+    var pts = {}, st = null;
+    function dist() { var k = Object.keys(pts); if (k.length < 2) return 0; var a = pts[k[0]], b = pts[k[1]]; return Math.hypot(a[0] - b[0], a[1] - b[1]); }
+    function begin(pt) { var p = S.p; return { x: p.x, y: p.y, z: p.z, pt: pt, d: dist(), mode: fr.dataset.mode, mk: JSON.parse(JSON.stringify(p.mk)) }; }
+    fr.addEventListener('pointerdown', function (e) {
+      if (!S) return;
+      try { fr.setPointerCapture(e.pointerId); } catch (x) {}
+      pts[e.pointerId] = [e.clientX, e.clientY]; fr.classList.add('drag');
+      var h = e.target.closest('[data-pph]'), m = e.target.closest('[data-ppk]');
+      st = begin([e.clientX, e.clientY]); st.h = h && h.dataset.pph; st.m = m ? +m.dataset.ppk : null;
+      if (st.mode === 'one' && st.m == null) st.mode = 'none';
+    });
+    fr.addEventListener('pointermove', function (e) {
+      if (!S || !pts[e.pointerId] || !st) return; pts[e.pointerId] = [e.clientX, e.clientY];
+      var r = fr.getBoundingClientRect(), p = S.p, ddx = (e.clientX - st.pt[0]) / r.width * 100, ddy = (e.clientY - st.pt[1]) / r.height * 100;
+      if (st.mode === 'none') return;
+      if (st.mode === 'one') { var o = st.mk.ind[st.m] || [0, 0]; p.mk.ind[st.m] = [Math.max(-100, Math.min(100, o[0] + ddx)), Math.max(-100, Math.min(100, o[1] + ddy))]; }
+      else if (st.mode === 'marks') {
+        var b0 = markBox(p.fr, p.mk);
+        if (Object.keys(pts).length > 1) { var d2 = dist(); if (st.d) { p.mk.sx = Math.max(0.3, Math.min(3, st.mk.sx * d2 / st.d)); p.mk.sy = Math.max(0.3, Math.min(3, st.mk.sy * d2 / st.d)); } }
+        else if (st.h) { var px = (e.clientX - r.left) / r.width * 100, py = (e.clientY - r.top) / r.height * 100; p.mk.sx = Math.max(0.3, Math.min(3, Math.abs(px - b0.cx) / b0.hw0)); p.mk.sy = Math.max(0.3, Math.min(3, Math.abs(py - b0.cy) / b0.hh0)); }
+        else { p.mk.dx = Math.max(-100, Math.min(100, st.mk.dx + ddx)); p.mk.dy = Math.max(-100, Math.min(100, st.mk.dy + ddy)); }
+      } else if (Object.keys(pts).length > 1) { var d = dist(); if (st.d) p.z = Math.max(0.5, Math.min(3, st.z * d / st.d)); }
+      else { p.x = Math.max(-50, Math.min(150, st.x - ddx)); p.y = Math.max(-50, Math.min(150, st.y - ddy)); }
+      draw();
+    });
+    var up = function (e) { delete pts[e.pointerId]; var k = Object.keys(pts); if (!k.length) { fr.classList.remove('drag'); st = null; } else if (S) st = begin(pts[k[0]]); };
+    fr.addEventListener('pointerup', up); fr.addEventListener('pointercancel', up);
+    fr.addEventListener('wheel', function (e) { if (!S) return; e.preventDefault(); var p = S.p; p.z = Math.max(0.5, Math.min(3, p.z * (e.deltaY < 0 ? 1.06 : 1 / 1.06))); draw(); }, { passive: false });
+    fr.addEventListener('keydown', function (e) {
+      if (!S) return; var p = S.p, k = e.key, s = e.shiftKey ? 10 : 2;
+      if (k === 'ArrowLeft') p.x = Math.min(150, p.x + s); else if (k === 'ArrowRight') p.x = Math.max(-50, p.x - s);
+      else if (k === 'ArrowUp') p.y = Math.min(150, p.y + s); else if (k === 'ArrowDown') p.y = Math.max(-50, p.y - s);
+      else if (k === '+' || k === '=') p.z = Math.min(3, p.z + 0.05); else if (k === '-') p.z = Math.max(0.5, p.z - 0.05);
+      else return;
+      e.preventDefault(); draw();
+    });
+  }
+  function open(scope, id, o) {
+    o = o || {};
+    var src = o.src || (function () { try { return wdImgGet(scope, id); } catch (e) { return null; } })();
+    if (!srcOk(src)) return false;
+    var p = o.src ? null : (function () { try { return wdImgPlace(scope, id); } catch (e) { return null; } })();
+    S = { scope: scope, id: id, src: src, src0: o.src ? null : src, p: p ? parse(serial(p, true)) : blank(), mode: 'photo', back: o.back || null };
+    try { openSheet(html(), function () { close(false); }); } catch (e) { S = null; return false; }
+    var sh = document.getElementById('sheet');
+    sh.dataset.pop = 'wdplace'; sh.onclick = onClick;
+    bind(sh.querySelector('[data-ppfr]'));
+    draw();
+    return true;
+  }
+
+  var API = { GUIDE: GUIDE, baseXY: baseXY, box0: box0, markXY: markXY, markBox: markBox, srcOk: srcOk, parse: parse, serial: serial, style: style,
+    aspect: aspect, carStage: carStage, blank: blank, open: open, busy: busy, afterClose: afterClose, _: { state: function () { return S; }, draw: draw } };
+  root.WD_PHOTO = API;
+})(typeof window !== 'undefined' ? window : this);
+</script>
 <script>window.WD_ROBOT = (function () {
   'use strict';
 
@@ -12516,7 +12858,7 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
     var info = v.info.filter(has), sub = has(v.status) ? v.status : info[0];
     var own = (typeof wdImgGet === 'function' && wdImgGet('entity', id)) || null;
     var src = own || (c.img && WD_IMG[c.img]) || null;
-    var h = '<div class="rbx-top"><div class="rbx-img">' + (src ? '<img src="' + src + '" alt="">' : ic(mower ? 'mower' : 'vacuum')) + '</div>' +
+    var h = '<div class="rbx-top"><div class="rbx-img">' + (src ? '<img src="' + src + '" alt=""' + (own && typeof wdImgAttr === 'function' ? wdImgAttr('entity', id) : '') + '>' : (window.WD_STANDIN ? WD_STANDIN.svg(mower ? 'mower' : 'vacuum') : ic(mower ? 'mower' : 'vacuum'))) + '</div>' +
       '<div class="rbx-st"><b>' + esc(valOf(id, dev)) + '</b><span>' + esc(statusTxt || (sub ? valOf(sub, dev) : '')) + '</span>' +
       (bat != null ? '<div class="rbx-bat" style="--p:' + Math.round(bat) + '%;--bc:' + (bat < 20 ? 'var(--bad)' : bat < 50 ? 'var(--warn)' : 'var(--good)') + '">' + ic('battery') + '<i></i>' + Math.round(bat) + '%</div>' : '') + '</div></div>';
     var al = [];
@@ -16354,6 +16696,12 @@ window.WD_DEMO_EXT.push(function (msg) { return window.WD_DEMOHOUSE.ext(msg); })
     if (url) o[k] = url; else if (real && real[k]) o[k] = null; else delete o[k];
     return { key: IMG_DEMO, value: o, bytes: imgBytes(real) + imgBytes(imgOverlay({}, o)) };
   }
+  function imgChangeMany(real, demo, inDemo, ch) {
+    var r = { key: inDemo ? IMG_DEMO : IMG_REAL, value: Object.assign({}, inDemo ? demo : real), bytes: 0 };
+    Object.keys(ch || {}).forEach(function (k) { r = inDemo ? imgChange(real, r.value, true, k, ch[k]) : imgChange(r.value, demo, false, k, ch[k]); });
+    if (!r.bytes) r.bytes = inDemo ? imgBytes(real) + imgBytes(imgOverlay({}, r.value)) : imgBytes(r.value);
+    return r;
+  }
   function imgFromBackup(real, incoming) {
     var o = Object.assign({}, isObj(incoming) ? incoming : {});
     Object.keys(real || {}).forEach(function (k) { if (!(k in o)) o[k] = null; });
@@ -16406,6 +16754,7 @@ window.WD_DEMO_EXT.push(function (msg) { return window.WD_DEMOHOUSE.ext(msg); })
     return flagOn() ? imgOverlay({}, parseObj(get(IMG_DEMO)) || {}) : (parseObj(get(IMG_REAL)) || {});
   }
   function imgNext(k, url) { return imgChange(parseObj(get(IMG_REAL)) || {}, parseObj(get(IMG_DEMO)) || {}, flagOn(), k, url); }
+  function imgNextMany(ch) { return imgChangeMany(parseObj(get(IMG_REAL)) || {}, parseObj(get(IMG_DEMO)) || {}, flagOn(), ch); }
   function imgRestore(v) {
     if (!flagOn()) return { key: IMG_REAL, value: v };
     return { key: IMG_DEMO, value: JSON.stringify(imgFromBackup(parseObj(get(IMG_REAL)) || {}, parseObj(v))) };
@@ -16564,11 +16913,11 @@ window.WD_DEMO_EXT.push(function (msg) { return window.WD_DEMOHOUSE.ext(msg); })
 
   return { FLAG: FLAG, DEV_REAL: DEV_REAL, DEV_DEMO: DEV_DEMO, IMG_REAL: IMG_REAL, IMG_DEMO: IMG_DEMO, FROM: FROM,
            CLEAR: CLEAR, DEMO_ONLY: DEMO_ONLY, REAL_ONLY: REAL_ONLY,
-           enterPlan: enterPlan, exitPlan: exitPlan, imgOverlay: imgOverlay, imgChange: imgChange, imgFromBackup: imgFromBackup,
+           enterPlan: enterPlan, exitPlan: exitPlan, imgOverlay: imgOverlay, imgChange: imgChange, imgChangeMany: imgChangeMany, imgFromBackup: imgFromBackup,
            imgBytes: imgBytes, backupName: backupName, isDemoBackup: isDemoBackup, onFlag: onFlag, mayWrite: mayWrite, probeDelay: probeDelay,
            users: function () { return JSON.parse(JSON.stringify(USERS)); }, answer: answer,
            tabDemo: tabDemo, paused: function () { return PAUSED; },
-           imgView: imgView, imgNext: imgNext, imgRestore: imgRestore, imgForBackup: imgForBackup,
+           imgView: imgView, imgNext: imgNext, imgNextMany: imgNextMany, imgRestore: imgRestore, imgForBackup: imgForBackup,
            enter: enter, exit: exit, banner: banner, settingsHTML: settingsHTML,
            _probe: { once: probeOnce, answers: haAnswers } };
 })();
@@ -19201,6 +19550,75 @@ html .card .fitem{padding-right:44px;}
 .card .thermo .tfnc span{color:var(--ink3); font-weight:600;}
 .card .thermo .tfnc b{font-weight:700; color:var(--ink);}
 </style>
+<style>:root{--wdsi-glass:var(--ink); --wdsi-glass-o:.82; --wdsi-sho:.10;}
+:root[data-app="dark"]{--wdsi-glass:var(--bg); --wdsi-glass-o:.72; --wdsi-sho:.42;}
+.wdsi{color:var(--ink2); overflow:visible;}
+svg.wdsi{display:block;}
+.wdsi .wdsi-f1{fill:currentColor; fill-opacity:.07;}
+.wdsi .wdsi-f2{fill:currentColor; fill-opacity:.16;}
+.wdsi .wdsi-f3{fill:currentColor; fill-opacity:.30;}
+.wdsi .wdsi-gl{fill:var(--wdsi-glass); fill-opacity:var(--wdsi-glass-o);}
+.wdsi .wdsi-sh{fill:#000; fill-opacity:var(--wdsi-sho);}
+.wdsi .wdsi-dot{fill:currentColor; fill-opacity:.55;}
+.wdsi .wdsi-acc{fill:var(--good);}
+.wdsi .wdsi-accs{stroke:var(--teal);}
+.wdsi .wdsi-air{stroke:var(--teal);}
+.wdsi .wdsi-grass{stroke:var(--green);}
+.wdsi .wdsi-lamp{stroke:var(--amber);}
+.wdsi .wdsi-tail{stroke:var(--rose);}
+.rbx-img svg.wdsi, #roompop .rbx-img svg.wdsi{width:98px; height:98px;}
+#roompop .mpp .art svg.wdsi{width:80px; height:80px; opacity:1;}
+.wdimg-hero.wdsi-hero{display:grid; place-items:center; background:var(--surface2);}
+#roompop .rp.gsat .wdimg-hero.wdsi-hero{background:rgba(255,255,255,.06);}
+:root:not([data-app="dark"]) #roompop .rp.gsat .wdimg-hero.wdsi-hero{background:var(--surface2);}
+.wdimg-hero.wdsi-hero svg.wdsi{width:132px; height:132px;}
+</style>
+<style>
+.tile .tic.timg:has(img.wdph), .rbx-img:has(img.wdph), .wdimg-hero:has(img.wdph), .art:has(img.wdph), .wdimg-prev:has(img.wdph){overflow:hidden;}
+.tile .tic.timg:has(img.wdph){padding:0;}
+.tile .tic.timg img.wdph, .rbx-img img.wdph, .wdimg-hero img.wdph, .art img.wdph, .wdimg-prev img.wdph{display:block; width:100%; height:100%; max-width:none; max-height:none; filter:none;}
+
+#main #carwrap #carph.phown{position:relative; overflow:hidden; aspect-ratio:1; height:auto!important; max-height:none!important; align-self:flex-start; background:var(--surface2)!important;}
+#carph.phown .carart{position:absolute!important; inset:0!important; margin:0!important; width:100%!important; height:100%!important; aspect-ratio:auto!important; transform:none!important; border-radius:16px; overflow:hidden;}
+#carph.phown .carart svg{display:none;}
+#carph.phown .carart img{width:100%!important; height:100%!important; max-width:none!important; max-height:none!important; filter:none!important;}
+#carph.phown .tyrechip, #carph.phown .cdot{--crot:0deg;}
+#carph.phown.nomk .tyrechip, #carph.phown.nomk .cdot{display:none;}
+#carph.phown .rotbtn{display:none;}
+
+#sheet .ppsheet{display:flex; flex-direction:column; gap:4px;}
+#sheet .ppsub{margin:0; color:var(--ink2); font-size:calc(13px * var(--fs,1)); line-height:1.4;}
+#sheet .ppsheet .srow{flex-wrap:wrap; gap:8px;}
+#sheet .ppsheet .pill{cursor:pointer; min-height:44px;}
+#sheet .ppsheet .ebtn{min-height:44px;}
+#sheet .ppsheet .srow.ppopts{display:grid; grid-template-columns:repeat(auto-fit, minmax(118px, 1fr)); gap:8px;}
+#sheet .ppsheet .srow.ppopts > *{justify-content:center; width:100%;}
+#sheet .ppsheet .stepper button{min-width:44px; min-height:44px;}
+#sheet .ppsheet [data-ppzv]{min-width:64px; text-align:center; font-weight:700;}
+#sheet .ppfoot{position:sticky; bottom:-22px; z-index:5; background:var(--surface); border-top:1px solid var(--line); padding:12px 0 22px; margin:10px 0 -22px; box-shadow:0 22px 0 var(--surface); flex-wrap:nowrap!important;}
+.ppfr{position:relative; border-radius:16px; overflow:hidden; background:var(--surface2); border:1px solid var(--line); touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; width:min(100%, 42vh); max-height:46vh; margin:6px auto 4px;}
+.ppfr:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+.ppfr.drag{cursor:grabbing;}
+.ppfr > img{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+.ppfr .gd{position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(to right, rgba(255,255,255,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.35) 1px, transparent 1px); background-size:33.333% 33.333%; opacity:0; transition:opacity .15s; z-index:1;}
+.ppfr.drag .gd{opacity:1;}
+.ppfr .hint{position:absolute; left:10px; right:10px; margin-inline:auto; width:max-content; bottom:10px; display:inline-flex; gap:6px; align-items:center; justify-content:center; max-width:calc(100% - 20px); box-sizing:border-box; padding:6px 12px; border-radius:999px; background:rgba(0,0,0,.6); color:#fff; font-weight:700; font-size:calc(12px * var(--fs,1)); line-height:1.25; text-align:center; pointer-events:none; white-space:normal; z-index:3;}
+.ppfr .hint svg{width:15px; height:15px;}
+.ppfr .gdl{position:absolute; inset:0; pointer-events:none; z-index:2;}
+.ppfr .gdl i{position:absolute; transform:translate(-50%, -50%); border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px rgba(0,0,0,.35);}
+.ppfr .gdl i.w{width:26px; height:16px; border-radius:8px; background:rgba(34,160,90,.7);}
+.ppfr .gdl i.d{width:12px; height:12px; background:rgba(255,255,255,.55);}
+.ppfr .mkbox{position:absolute; z-index:3; border:2px dashed #fff; border-radius:12px; box-shadow:0 0 0 1px rgba(0,0,0,.35); pointer-events:auto; cursor:move; background:rgba(255,255,255,.06);}
+.ppfr .mkbox u{position:absolute; z-index:4; width:26px; height:26px; border-radius:8px; background:#fff; border:2px solid var(--accent); box-sizing:border-box; box-shadow:0 1px 6px rgba(0,0,0,.45); text-decoration:none; cursor:nwse-resize;}
+.ppfr .mkbox u.nw{left:-14px; top:-14px;}
+.ppfr .mkbox u.ne{right:-14px; top:-14px; cursor:nesw-resize;}
+.ppfr .mkbox u.sw{left:-14px; bottom:-14px; cursor:nesw-resize;}
+.ppfr .mkbox u.se{right:-14px; bottom:-14px;}
+.ppfr[data-mode=one] .gdl i{pointer-events:auto; cursor:move; transform:translate(-50%, -50%) scale(1.35);}
+.wdimg-row .acts button svg{width:15px; height:15px; vertical-align:-2px; margin-right:4px;}
+.wdimg-hero{grid-template-rows:100%;}
+.stepper button:focus-visible{outline-offset:-3px;}
+</style>
 <style>#wdconfirm.wd-kp .box{max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); overflow:auto;}
 #wdconfirm.wd-kp p{margin-bottom:12px;}
 #wdconfirm .wd-code{margin:0 0 16px;}
@@ -20653,7 +21071,17 @@ body.edit #main #grid > .card.wd-wxc > .wx{cursor:default;}
 .wx[data-wxo="partly"] .wx-fx > i.a::before{animation:wx-x900 150s linear infinite; opacity:.62;}
 .wx[data-wxo="clouds"] .wx-fx > i.a::before{animation:wx-x900 120s linear infinite; opacity:.7;}
 .wx[data-wxo="clouds"] .wx-fx > i.b::before{top:8%; right:auto; width:calc(100% + 1100px); background-image:var(--wxt-cloud2); background-repeat:repeat-x; background-size:1100px 100%; animation:wx-x1100 190s linear infinite; opacity:.45;}
-.wx[data-wxo="thunder"] .wx-fx > i.a::before{animation:wx-x900 70s linear infinite; opacity:.4;}
+.wx[data-wxk="thunder"] .wx-fx > i.a{animation:wx-gust 6s ease-in-out infinite;}
+.wx[data-wxk="thunder"] .wx-fx > i.a::before{animation:wx-x900 34s linear infinite; opacity:.62;}
+.wx[data-wxk="thunder"] .wx-fx > i.b, .wx[data-wxk="exceptional"] .wx-fx > i.a, .wx[data-wxk="exceptional"] .wx-fx > i.b{display:block; bottom:auto; height:min(100%, 320px);}
+.wx[data-wxk="thunder"] .wx-fx > i.b::before, .wx[data-wxk="exceptional"] .wx-fx > i.b::before{
+  top:8%; right:auto; width:calc(100% + 1100px); background-image:var(--wxt-cloud2); background-repeat:repeat-x; background-size:1100px 100%; animation:wx-x1100 52s linear infinite; opacity:.42;}
+.wx[data-wxk="exceptional"] .wx-fx > i.a::before{
+  top:0; right:auto; width:calc(100% + 900px); background-image:var(--wxt-cloud); background-repeat:repeat-x; background-size:900px 100%; animation:wx-x900 40s linear infinite; opacity:.6;}
+.wx[data-wxk="thunder"] .wx-fx > .wx-fl{animation:wx-strike 3s linear infinite;}
+.wx[data-wxk="exceptional"] .wx-fx > i.d{display:block; opacity:.5; background:radial-gradient(ellipse at center, rgba(255,160,60,0) 46%, rgba(255,160,60,.9) 100%); animation:wx-glow 3.6s ease-in-out infinite alternate;}
+@keyframes wx-strike{0%, 10%{opacity:0} 10.8%{opacity:.8} 12.5%{opacity:.18} 17%{opacity:.74} 19%{opacity:.35} 26%{opacity:0} 100%{opacity:0}}
+@keyframes wx-glow{from{opacity:.25} to{opacity:.9}}
 .wx[data-wxt="night"][data-wxo="partly"] .wx-fx > i.a::before, .wx[data-wxt="night"][data-wxo="clouds"] .wx-fx > i.a::before, .wx[data-wxt="night"][data-wxo="wind"] .wx-fx > i.a::before{opacity:.3;}
 .wx[data-wxt="night"][data-wxo="clouds"] .wx-fx > i.b::before{opacity:.22;}
 .wx[data-wxo="wind"] .wx-fx > i.a{animation:wx-gust 6s ease-in-out infinite;}
@@ -21439,6 +21867,7 @@ background:radial-gradient(60% 70% at 50% 0%, var(--glow,rgba(255,140,60,.28)), 
 background:radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--ac,#6FD2C0) 30%, transparent), rgba(255,255,255,.04)); border:1px solid rgba(255,255,255,.14);}
 #roompop .gair .core b{font-family:var(--disp); font-size:calc(34px * var(--fs,1)); line-height:1; color:#fff; font-variant-numeric:tabular-nums;}
 #roompop .gair .core span{display:block; margin-top:3px; font-size:calc(10.5px * var(--fs,1)); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:rgba(237,239,234,.5);}
+#roompop .gair .core span i.u{font-style:normal; text-transform:none; letter-spacing:.02em;}
 #roompop .gair u{position:absolute; bottom:6px; width:4px; height:4px; border-radius:50%; background:var(--ac,#6FD2C0); opacity:0;}
 #roompop .gair.on u{animation:gfloat 4s linear infinite;}
 @keyframes gfloat{0%{transform:translateY(0) scale(.6); opacity:0;} 15%{opacity:.75;} 100%{transform:translateY(-170px) scale(1.1); opacity:0;}}
@@ -22584,6 +23013,111 @@ function ic(n, cls){ return '<svg viewBox="0 0 24 24" fill="none" stroke="curren
 
 const T = {
 fr:{
+'dsc.top_t':'Découvrir {p}',
+'dsc.top_p':'Les cartes ci-dessous sont celles du tableau de bord, avec la maison de démo. Touchez ce que vous voulez : les thermostats, le lecteur, les robots, les portails, la météo. À côté de certaines cartes, vous trouverez des options à essayer.',
+'dsc.s_looks':'Apparence',
+'dsc.p_looks':'Le style, le thème, les couleurs, la langue et la taille du texte.',
+'dsc.s_motion':'Animations',
+'dsc.p_motion':'Des fenêtres qui naissent de leur carte ou pivotent au centre de l’écran, et le niveau d’animation de l’écran. Le réglage est propre à chaque écran : essayez-le sur les cartes à côté.',
+'dsc.s_resize':'Taille des cartes',
+'dsc.p_resize':'Chaque carte peut être plus large ou plus étroite, plus haute ou plus basse, sur chaque écran.',
+'dsc.s_climate':'Climat et air',
+'dsc.p_climate':'Les thermostats pour le chauffage et la climatisation, la qualité de l’air, le purificateur et l’humidificateur.',
+'dsc.s_media':'Musique et enceintes',
+'dsc.p_media':'Le lecteur de la page Médias, avec la pochette, la file d’attente et le volume de chaque enceinte ; les enceintes de la pièce et les groupes.',
+'dsc.s_gates':'Portails, garage et volets',
+'dsc.p_gates':'Les cartes du portail, du garage et du volet, avec tous les types d’ouverture : choisissez-en un sous une carte et la carte se dessine ainsi.',
+'dsc.s_robots':'Robots',
+'dsc.p_robots':'Le robot aspirateur et le robot tondeuse, avec leur fenêtre : l’état, la batterie, les alertes, les commandes, les consommables et le plan. Avec le bouton appareil photo de la carte, vous y mettez votre photo.',
+'dsc.s_car':'La voiture',
+'dsc.p_car':'La carte de la voiture avec ses pneus, ses portières, sa batterie, son autonomie et sa climatisation. Avec votre photo, les roues et les portières se placent par-dessus.',
+'dsc.s_weather':'Météo',
+'dsc.p_weather':'La carte météo du tableau de bord, dans chacune de ses 17 conditions, sur 7 paysages, de jour comme de nuit.',
+'dsc.s_energy':'Énergie',
+'dsc.p_energy':'L’énergie en ce moment, les coûts, l’historique par jour et par mois, la puissance d’aujourd’hui avec la prévision solaire.',
+'dsc.looks_t':'Styles',
+'dsc.looks_sub':'et le thème',
+'dsc.looks_note':'Le changement s’applique à toute la démo. Dans le tableau de bord, le style est lié au tableau de bord, et le thème se choisit sur chaque écran.',
+'dsc.colours_t':'Couleurs',
+'dsc.colours_sub':'Palette : {p}',
+'dsc.colours_note':'13 palettes prêtes à l’emploi ou votre propre couleur, pour chaque tableau de bord.',
+'dsc.hue':'Teinte',
+'dsc.langs_t':'12 langues',
+'dsc.per_screen':'sur chaque écran',
+'dsc.langs_note':'Toute la démo passe immédiatement à la langue choisie.',
+'dsc.text_apply':'Appliquer à toute la démo',
+'dsc.text_reset':'Revenir à 100 %',
+'dsc.text_note':'Grand sur la tablette de l’entrée, normal sur le téléphone. La température principale des cartes peut aussi être agrandie séparément, jusqu’à 200 %.',
+'dsc.motion_t':'Comment s’ouvrent les fenêtres',
+'dsc.motion_note':'Essayez sur les cartes à côté : touchez la pièce pour ouvrir sa fenêtre, ou glissez le doigt sur la lampe, le volet, l’enceinte ou le ventilateur pour les régler. En mode « {lively} », la fenêtre naît de sa carte (sur un téléphone, elle monte du bas) ; en mode « {classic} », elle pivote au centre de l’écran. {calm} : les animations en boucle se mettent en pause une minute après un contact ; {off} : les fenêtres apparaissent simplement. Dans le tableau de bord : Paramètres › Cet appareil.',
+'dsc.drag_t':'Glissez sur une tuile ({lively})',
+'dsc.resize_big':'En mode édition, vous pouvez modifier la taille des cartes comme vous le souhaitez.',
+'dsc.resize_note':'Faites glisser une carte par son coin, ou choisissez sa largeur et sa hauteur dans ses réglages, pour chaque écran.',
+'dsc.gate_t':'Comment s’ouvre le portail',
+'dsc.garage_t':'Comment s’ouvre le garage',
+'dsc.blind_t':'Comment se ferme le volet',
+'dsc.n_ways':'{n} façons',
+'dsc.design_t':'Dessins',
+'dsc.design_sub':'pour tout le tableau de bord',
+'dsc.design_p':'Cinq façons de dessiner les portails, le garage et les volets. Le dessin choisi s’applique à toutes les cartes de cette section.',
+'dsc.design_note':'Sur chaque carte, « {open} », « {close} » et l’arrêt font bouger le dessin comme chez vous.',
+'dsc.tiles_t':'Sur leurs tuiles',
+'dsc.photos_t':'Vos photos',
+'dsc.photos_sub':'sur les appareils',
+'dsc.photos_p':'La voiture, les robots, les enceintes et le purificateur peuvent afficher votre photo. Une fois la photo choisie, « {place} » permet de la déplacer, de l’agrandir et de la faire pivoter ; pour la voiture, vous alignez aussi les roues et les portières.',
+'dsc.photos_note':'Le bouton appareil photo de la carte ouvre ses réglages, comme dans le tableau de bord. Les photos choisies ici restent uniquement dans ce navigateur.',
+'dsc.dev_car':'Voiture',
+'dsc.dev_vacuum':'Le robot aspirateur',
+'dsc.dev_mower':'Le robot tondeuse',
+'dsc.dev_speaker':'L’enceinte',
+'dsc.dev_purifier':'Le purificateur',
+'dsc.wm_device':'Ajouter une photo de votre appareil',
+'dsc.wm_vehicle':'Ajouter une photo de votre véhicule',
+'dsc.map_wm':'Le vrai plan de votre maison, depuis l’app du robot',
+'dsc.map_wm2':'pris en charge en particulier par Roborock',
+'dsc.photo_of':'Photo : {d}',
+'dsc.wx_t':'Essayez la météo',
+'dsc.wx_sub':'sur la carte météo',
+'dsc.wx_p':'C’est la carte météo du tableau de bord. La pluie, la neige, le brouillard et les éclairs se dessinent par-dessus l’image, selon l’intensité de la pluie ou de la neige.',
+'dsc.wx_kind':'Météo extérieure',
+'dsc.wx_time':'Moment de la journée',
+'dsc.wx_day':'Jour',
+'dsc.wx_night':'Nuit',
+'dsc.wx_note':'Dans le tableau de bord, le paysage se choisit tout seul d’après l’altitude de la maison dans Home Assistant, et la météo d’après le temps qu’il fait en ce moment.',
+'ph.place':'Placer la photo',
+'ph.title':'Placer la photo · {d}',
+'ph.intro_car':'Voici comment elle apparaît sur la carte de la voiture. Placez la voiture sous les repères : les verts sont les roues, les blancs les portières, le capot et le coffre.',
+'ph.intro':'Voici comment elle apparaît sur sa tuile et dans sa fenêtre.',
+'ph.hint':'Glissez pour la déplacer, pincez pour l’agrandir',
+'ph.size':'Taille',
+'ph.smaller':'Plus petite',
+'ph.larger':'Plus grande',
+'ph.fit_t':'Cadrage',
+'ph.fit':'Ajuster',
+'ph.fill':'Remplir',
+'ph.photo':'Photo',
+'ph.turn':'Pivoter',
+'ph.center':'Centrer',
+'ph.other':'Autre photo',
+'ph.front':'Avant de la voiture',
+'ph.up':'Haut',
+'ph.right':'Droite',
+'ph.down':'Bas',
+'ph.left':'Gauche',
+'ph.marks_t':'Roues et portières',
+'ph.marks_on':'Sur la photo',
+'ph.marks_reset':'Les remettre en place',
+'ph.drag_t':'Ce que vous déplacez en glissant',
+'ph.drag_marks':'Les repères, ensemble',
+'ph.drag_one':'Un par un',
+'ph.cancel':'Annuler',
+'ph.done':'Terminé',
+'ph.placed':'Photo placée',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'pivotée de {d}°',
+'ph.kept':'La photo et la façon dont vous l’avez placée sont conservées dans le tableau de bord et dans votre sauvegarde.',
+'ph.cfg_title':'Réglages de la carte · {c}',
+'nav_discover':'Découvrir',
 'lic.m_welcome_t':'Bienvenue dans Nucleum Hub',
 'lic.m_welcome_p':'Choisissez comment commencer. L’essai gratuit n’est accordé qu’une fois par maison.',
 'lic.w_trial_t':'Essai gratuit, 3 jours',
@@ -24061,7 +24595,7 @@ fr:{
 'card_height':'Hauteur min.',
 'card_entities':'Entités',
 'add_entity':'Ajouter une entité',
-'search_ent':'Rechercher parmi 1 309 entités…',
+'search_ent':'Rechercher parmi {x}…',
 'no_results':'Aucun résultat. Essayez un autre mot.',
 'del_card':'Supprimer la carte',
 'save':'Enregistrer',
@@ -24248,6 +24782,111 @@ fr:{
 'tap_toggle':'En direct · connecté à Home Assistant',
 },
 de:{
+'dsc.top_t':'{p} entdecken',
+'dsc.top_p':'Die Karten unten sind dieselben wie im Dashboard, mit dem Demohaus. Tippe auf alles: die Thermostate, den Player, die Roboter, die Tore, das Wetter. Neben einigen Karten findest du Optionen zum Ausprobieren.',
+'dsc.s_looks':'Wie es aussieht',
+'dsc.p_looks':'Der Stil, hell oder dunkel, die Farben, die Sprache und die Textgröße.',
+'dsc.s_motion':'Wie es sich bewegt',
+'dsc.p_motion':'Fenster, die aus ihrer Karte wachsen oder sich in der Bildschirmmitte aufdrehen, und wie viel Bewegung der Bildschirm zeigt. Die Einstellung gilt pro Bildschirm: Probier sie an den Karten daneben aus.',
+'dsc.s_resize':'Kartengrößen',
+'dsc.p_resize':'Jede Karte kann breiter oder schmaler, höher oder niedriger sein, auf jedem Bildschirm.',
+'dsc.s_climate':'Klima und Luft',
+'dsc.p_climate':'Thermostate für Heizung und Klimaanlage, die Luftqualität, der Luftreiniger und der Luftbefeuchter.',
+'dsc.s_media':'Musik und Lautsprecher',
+'dsc.p_media':'Der Player der Seite Medien, mit Cover, Warteschlange und der Lautstärke jedes Lautsprechers; die Lautsprecher im Raum und die Gruppen.',
+'dsc.s_gates':'Tore, Garage und Rollläden',
+'dsc.p_gates':'Die Karten für Tor, Garage und Rollladen, mit allen Öffnungsarten: Wähle eine unter einer Karte, und die Karte wird so gezeichnet.',
+'dsc.s_robots':'Roboter',
+'dsc.p_robots':'Der Saugroboter und der Mähroboter, mit ihrem Fenster: Status, Akku, Warnungen, Steuerung, Verschleißteile und Karte. Über das Kamerasymbol auf einer Karte setzt du dein Foto ein.',
+'dsc.s_car':'Das Auto',
+'dsc.p_car':'Die Autokarte mit Reifen, Türen, Batterie und Reichweite, dazu die Klimaanlage. Mit deinem Foto werden Reifen und Türen passend darübergelegt.',
+'dsc.s_weather':'Wetter',
+'dsc.p_weather':'Die Wetterkarte des Dashboards, in jeder ihrer 17 Wetterlagen, in 7 Landschaften, bei Tag und bei Nacht.',
+'dsc.s_energy':'Energie',
+'dsc.p_energy':'Die Energie im Moment, die Kosten, der Verlauf nach Tagen und Monaten, die heutige Leistung mit der Solarprognose.',
+'dsc.looks_t':'Stile',
+'dsc.looks_sub':'und hell oder dunkel',
+'dsc.looks_note':'Gilt für die ganze Demo. Im Dashboard gehört der Stil zum jeweiligen Dashboard, und hell oder dunkel wählst du auf jedem Bildschirm.',
+'dsc.colours_t':'Farben',
+'dsc.colours_sub':'Palette: {p}',
+'dsc.colours_note':'13 fertige Paletten oder deine eigene Farbe, für jedes Dashboard.',
+'dsc.hue':'Farbton',
+'dsc.langs_t':'12 Sprachen',
+'dsc.per_screen':'auf jedem Bildschirm',
+'dsc.langs_note':'Die ganze Demo wechselt sofort in die gewählte Sprache.',
+'dsc.text_apply':'Auf die ganze Demo anwenden',
+'dsc.text_reset':'Zurück auf 100 %',
+'dsc.text_note':'Groß auf dem Tablet im Flur, normal auf dem Handy. Auch die Haupttemperatur der Karten lässt sich separat vergrößern, bis 200 %.',
+'dsc.motion_t':'Wie sich Fenster öffnen',
+'dsc.motion_note':'Probier es an den Karten daneben aus: Tippe auf den Raum, um sein Fenster zu öffnen, oder zieh mit dem Finger über Lampe, Rollladen, Lautsprecher oder Ventilator, um sie einzustellen. Bei „{lively}“ wächst das Fenster aus der Karte (auf dem Handy gleitet es von unten hoch); bei „{classic}“ dreht es sich in der Bildschirmmitte auf. {calm}: Animationen in Schleife kommen eine Minute nach einer Berührung zur Ruhe; {off}: Fenster erscheinen einfach. Im Dashboard unter Einstellungen › Dieses Gerät.',
+'dsc.drag_t':'Über eine Kachel ziehen ({lively})',
+'dsc.resize_big':'Im Bearbeitungsmodus kannst du die Größe der Karten nach Belieben ändern.',
+'dsc.resize_note':'Zieh eine Karte an ihrer Ecke oder wähle Breite und Höhe in ihren Einstellungen, für jeden Bildschirm.',
+'dsc.gate_t':'Wie sich das Tor öffnet',
+'dsc.garage_t':'Wie sich die Garage öffnet',
+'dsc.blind_t':'Wie sich der Rollladen schließt',
+'dsc.n_ways':'{n} Arten',
+'dsc.design_t':'Zeichnungen',
+'dsc.design_sub':'für das ganze Dashboard',
+'dsc.design_p':'Fünf Arten, Tore, Garage und Rollläden zu zeichnen. Die Wahl gilt für alle Karten in diesem Bereich.',
+'dsc.design_note':'Auf jeder Karte bewegen „{open}“, „{close}“ und Stopp die Zeichnung wie bei dir zu Hause.',
+'dsc.tiles_t':'Auf ihren Kacheln',
+'dsc.photos_t':'Deine Fotos',
+'dsc.photos_sub':'auf Geräten',
+'dsc.photos_p':'Auto, Roboter, Lautsprecher und Luftreiniger können dein Foto bekommen. Sobald du es gewählt hast, kannst du es mit „{place}“ verschieben, vergrößern und drehen; beim Auto passt du auch Reifen und Türen an.',
+'dsc.photos_note':'Das Kamerasymbol auf einer Karte öffnet die Karteneinstellungen, wie im Dashboard. Hier gewählte Fotos bleiben nur in diesem Browser.',
+'dsc.dev_car':'Auto',
+'dsc.dev_vacuum':'Saugroboter',
+'dsc.dev_mower':'Mähroboter',
+'dsc.dev_speaker':'Lautsprecher',
+'dsc.dev_purifier':'Luftreiniger',
+'dsc.wm_device':'Foto deines Geräts hinzufügen',
+'dsc.wm_vehicle':'Foto deines Fahrzeugs hinzufügen',
+'dsc.map_wm':'Die echte Karte deines Zuhauses, aus der App des Roboters',
+'dsc.map_wm2':'besonders von Roborock unterstützt',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Wetter ausprobieren',
+'dsc.wx_sub':'auf der Wetterkarte',
+'dsc.wx_p':'Das ist die Wetterkarte des Dashboards. Regen, Schnee, Nebel und Blitze werden über das Bild gezeichnet, so stark, wie es regnet oder schneit.',
+'dsc.wx_kind':'Wetter draußen',
+'dsc.wx_time':'Tageszeit',
+'dsc.wx_day':'Tag',
+'dsc.wx_night':'Nacht',
+'dsc.wx_note':'Im Dashboard folgt die Landschaft von selbst der Höhe des Hauses in Home Assistant, das Wetter dem aktuellen Wetterzustand.',
+'ph.place':'Foto ausrichten',
+'ph.title':'Foto ausrichten · {d}',
+'ph.intro_car':'So sieht es auf der Autokarte aus. Schieb das Auto unter die Markierungen: Die grünen sind die Reifen, die weißen die Türen, die Motorhaube und der Kofferraum.',
+'ph.intro':'So sieht es auf der Kachel und im Fenster des Geräts aus.',
+'ph.hint':'Ziehen zum Verschieben, mit zwei Fingern zoomen',
+'ph.size':'Größe',
+'ph.smaller':'Kleiner',
+'ph.larger':'Größer',
+'ph.fit_t':'Wie es sitzt',
+'ph.fit':'Einpassen',
+'ph.fill':'Füllen',
+'ph.photo':'Foto',
+'ph.turn':'Drehen',
+'ph.center':'Zentrieren',
+'ph.other':'Anderes Foto',
+'ph.front':'Front des Autos',
+'ph.up':'Oben',
+'ph.right':'Rechts',
+'ph.down':'Unten',
+'ph.left':'Links',
+'ph.marks_t':'Reifen und Türen',
+'ph.marks_on':'Über dem Foto',
+'ph.marks_reset':'Zurücksetzen',
+'ph.drag_t':'Was du beim Ziehen verschiebst',
+'ph.drag_marks':'Alle Markierungen zusammen',
+'ph.drag_one':'Einzeln verschieben',
+'ph.cancel':'Abbrechen',
+'ph.done':'Fertig',
+'ph.placed':'Foto ausgerichtet',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'um {d}° gedreht',
+'ph.kept':'Das Foto und wie du es ausgerichtet hast, bleiben im Dashboard und im Backup erhalten.',
+'ph.cfg_title':'Karteneinstellungen · {c}',
+'nav_discover':'Entdecken',
 'lic.m_welcome_t':'Willkommen bei Nucleum Hub',
 'lic.m_welcome_p':'Wähle, wie du startest. Die kostenlose Testphase gibt es einmal pro Zuhause.',
 'lic.w_trial_t':'Kostenlose Testphase, 3 Tage',
@@ -25725,7 +26364,7 @@ de:{
 'card_height':'Mindesthöhe',
 'card_entities':'Entitäten',
 'add_entity':'Entität hinzufügen',
-'search_ent':'1.309 Entitäten durchsuchen…',
+'search_ent':'{x} durchsuchen…',
 'no_results':'Keine Treffer. Probiere einen anderen Begriff.',
 'del_card':'Karte entfernen',
 'save':'Speichern',
@@ -25912,6 +26551,112 @@ de:{
 'tap_toggle':'Live · mit Home Assistant verbunden',
 },
 en:{
+'dsc.top_t':'Discover {p}',
+'dsc.top_p':'The cards below are the dashboard’s own, with the demo home. Tap anything: the thermostats, the player, the robots, the gates, the weather. Next to some cards are the choices you can try.',
+'dsc.s_looks':'How it looks',
+'dsc.p_looks':'The look, the theme, the colours, the language and the text size.',
+'dsc.s_motion':'How it moves',
+'dsc.p_motion':'Windows that grow from their card or turn over in the middle of the screen, and how much the screen moves. It is set per screen: try it on the cards next to it.',
+'dsc.s_resize':'Card sizes',
+'dsc.p_resize':'Every card can be wider or narrower, taller or shorter, on each screen.',
+'dsc.s_climate':'Climate and air',
+'dsc.p_climate':'Thermostats for heating and air conditioning, air quality, the purifier and the humidifier.',
+'dsc.s_media':'Music and speakers',
+'dsc.p_media':'The Media page’s player, with the cover, the queue and each speaker’s volume; the room’s speakers and the groups.',
+'dsc.s_gates':'Gates, garage and blinds',
+'dsc.p_gates':'The gate, garage and blind cards, with every way of opening: pick one under a card and the card is drawn that way.',
+'dsc.s_robots':'Robots',
+'dsc.p_robots':'The robot vacuum and the lawn mower, with their window: status, battery, alerts, controls, consumables and the map. The camera on a card puts your photo on it.',
+'dsc.s_car':'The car',
+'dsc.p_car':'The car card with its tyres, doors, battery and range, and its climate. With your photo, the tyres and doors are placed over it.',
+'dsc.s_weather':'Weather',
+'dsc.p_weather':'The dashboard’s weather card, in any of its 17 kinds of weather, on 7 landscapes, by day and by night.',
+'dsc.s_energy':'Energy',
+'dsc.p_energy':'Energy right now, the costs, the history by day and by month, today’s power with the solar forecast.',
+'dsc.looks_t':'Looks',
+'dsc.looks_sub':'and the theme',
+'dsc.looks_note':'It changes across the whole demo. In the dashboard, the look belongs to the dashboard and the theme is chosen on each screen.',
+'dsc.colours_t':'Colours',
+'dsc.colours_sub':'Palette: {p}',
+'dsc.colours_note':'13 ready-made palettes or your own colour, for each dashboard.',
+'dsc.hue':'Hue',
+'dsc.langs_t':'12 languages',
+'dsc.per_screen':'on each screen',
+'dsc.langs_note':'The whole demo switches to the language you pick, at once.',
+'dsc.text_apply':'Apply to the whole demo',
+'dsc.text_reset':'Back to 100 %',
+'dsc.text_note':'Large on the hall tablet, normal on the phone. The cards’ main temperature can be enlarged separately too, up to 200 %.',
+'dsc.motion_t':'How windows open',
+'dsc.motion_note':'Try it on the cards next to it: tap the room to open its window, or drag a finger across the lamp, the blind, the speaker or the fan to set them. In “{lively}” the window grows from its card (on a phone it slides up from the bottom); in “{classic}” it turns over in the middle of the screen. {calm}: repeating animations rest a minute after a touch; {off}: windows just appear. In the dashboard, in Settings › This device.',
+'dsc.drag_t':'Drag across a tile ({lively})',
+'dsc.resize_big':'In edit mode you can resize the cards however you like.',
+'dsc.resize_note':'Drag a card by its corner, or pick its width and height in its settings, for each screen.',
+'dsc.gate_t':'How the gate opens',
+'dsc.garage_t':'How the garage opens',
+'dsc.blind_t':'How the blind closes',
+'dsc.n_ways':'{n} ways',
+'dsc.design_t':'Drawings',
+'dsc.design_sub':'for the whole dashboard',
+'dsc.design_p':'Five ways to draw the gates, the garage and the blinds. They change on every card in this section.',
+'dsc.design_note':'On each card, “{open}”, “{close}” and stop move the drawing as they would at home.',
+'dsc.tiles_t':'On their tiles',
+'dsc.photos_t':'Your photos',
+'dsc.photos_sub':'on devices',
+'dsc.photos_p':'The car, the robots, the speakers and the purifier can have your photo. Once you pick it, “{place}” moves, enlarges and turns it; on the car you also line up the tyres and doors.',
+'dsc.photos_note':'The camera button on a card opens the card’s settings, as in the dashboard. Photos picked here stay in this browser only.',
+'dsc.dev_car':'Car',
+'dsc.dev_vacuum':'Robot vacuum',
+'dsc.dev_mower':'Lawn mower',
+'dsc.dev_speaker':'Speaker',
+'dsc.dev_purifier':'Purifier',
+'dsc.wm_device':'Add a photo of your device',
+'dsc.wm_vehicle':'Add a photo of your vehicle',
+'dsc.map_wm':'The real map of your home, from the robot’s app',
+'dsc.map_wm2':'especially supported by Roborock',
+'dsc.photo_of':'Photo: {d}',
+'dsc.wx_t':'Try the weather',
+'dsc.wx_sub':'on the weather card',
+'dsc.wx_p':'This is the dashboard’s weather card. Rain, snow, fog and lightning are drawn over the picture, as hard as it rains or snows.',
+'dsc.wx_kind':'Weather outside',
+'dsc.wx_time':'Time of day',
+'dsc.wx_day':'Day',
+'dsc.wx_night':'Night',
+'dsc.wx_note':'In the dashboard, the landscape follows the home’s altitude in Home Assistant, and the weather its current state.',
+'ph.place':'Place the photo',
+'ph.title':'Place the photo · {d}',
+'ph.intro_car':'This is how it shows on the car card. Put the car under the marks: the green ones are the tyres, the white ones the doors, bonnet and boot.',
+'ph.intro':'This is how it shows on its tile and in its window.',
+'ph.hint':'Drag to move it, pinch to zoom',
+'ph.size':'Size',
+'ph.smaller':'Smaller',
+'ph.larger':'Larger',
+'ph.fit_t':'How it sits',
+'ph.fit':'Fit',
+'ph.fill':'Fill',
+'ph.photo':'Photo',
+'ph.turn':'Rotate',
+'ph.center':'Centre',
+'ph.other':'Another photo',
+'ph.front':'Front of the car',
+'ph.up':'Up',
+'ph.right':'Right',
+'ph.down':'Down',
+'ph.left':'Left',
+'ph.marks_t':'Tyres and doors',
+'ph.marks_on':'Over the photo',
+'ph.marks_reset':'Put them back',
+'ph.drag_t':'What a drag moves',
+'ph.drag_marks':'The marks, together',
+'ph.drag_one':'Move one by one',
+'ph.cancel':'Cancel',
+'ph.done':'Done',
+'ph.placed':'Photo placed',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'rotated {d}°',
+'ph.kept':'The photo and the way you placed it are kept in the dashboard and in the backup.',
+'ph.cfg_title':'Card settings · {c}',
+'nav_discover':'Discover',
+'search_ent':'Search {x}…',
 'lic.m_welcome_t':'Welcome to Nucleum Hub',
 'lic.m_welcome_p':'Choose how to start. The free trial is given once per home.',
 'lic.w_trial_t':'Free trial, 3 days',
@@ -27339,7 +28084,7 @@ heat:'Heat', cool:'Cool', auto:'Auto', dry:'Dry', fan_only:'Fan', standby:'Stand
 target:'Target', current:'Now', humidity:'Humidity', all_off:'All off', all_on:'All on', run:'Run', start:'Start', stop:'Stop', doneb:'Done',
 edit:'Edit', edit_msg:'Edit mode — drag cards, resize, or tap ⚙ to change entities.', reset:'Reset layout', done_edit:'Done',
 add_card:'Add card', card_title:'Card title', card_icon:'Icon', card_width:'Width', card_height:'Min height', card_entities:'Entities',
-add_entity:'Add entity', search_ent:'Search 1,309 entities…', no_results:'No matches. Try another word.',
+add_entity:'Add entity', no_results:'No matches. Try another word.',
 del_card:'Remove card', save:'Save', cancel:'Cancel', auto_h:'Auto', results:'results', more_results:'more — refine your search',
 layout_saved:'Layout saved', layout_reset:'Layout restored to default',
 sim:'Simulated', would_call:'would call', turned_on:'turned on', turned_off:'turned off',
@@ -27387,6 +28132,112 @@ choose_type:'What kind of card?', type_tiles:'Entity tiles', type_stats:'Big num
 washer_done:'done at', dish_prog:'Program', move_hint:'Drag to move', tap_toggle:'Live · connected to Home Assistant',
 },
 ro:{
+'dsc.top_t':'Descoperă {p}',
+'dsc.top_p':'Cardurile de mai jos sunt cele ale dashboard-ului, cu casa din demo. Atinge orice: termostatele, playerul, roboții, porțile, vremea. Lângă unele carduri ai ce se poate alege, ca să încerci.',
+'dsc.s_looks':'Cum arată',
+'dsc.p_looks':'Aspectul, tema, culorile, limba și mărimea textului.',
+'dsc.s_motion':'Cum se mișcă',
+'dsc.p_motion':'Ferestrele care cresc din cardul lor sau se întorc în mijlocul ecranului, și câtă mișcare are ecranul. Setarea e a fiecărui ecran: alături ai carduri pe care s-o încerci.',
+'dsc.s_resize':'Mărimea cardurilor',
+'dsc.p_resize':'Fiecare card poate fi mai lat sau mai îngust, mai înalt sau mai scund, pe fiecare ecran.',
+'dsc.s_climate':'Climă și aer',
+'dsc.p_climate':'Termostatele cu încălzire și aer condiționat, calitatea aerului, purificatorul și umidificatorul.',
+'dsc.s_media':'Muzică și boxe',
+'dsc.p_media':'Playerul paginii Media, cu coperta, coada și volumul fiecărei boxe; boxele din cameră și grupurile.',
+'dsc.s_gates':'Porți, garaj și jaluzele',
+'dsc.p_gates':'Cardurile porții, garajului și jaluzelei, cu toate felurile de deschidere: alegi unul sub card și cardul se desenează așa.',
+'dsc.s_robots':'Roboți',
+'dsc.p_robots':'Robotul de curățenie și cel de tuns, cu fereastra lor: starea, bateria, alertele, comenzile, consumabilele și harta. Aparatul foto de pe card pune poza ta.',
+'dsc.s_car':'Mașina',
+'dsc.p_car':'Cardul mașinii cu roțile, ușile, bateria și autonomia, și climatizarea ei. Cu poza ta, roțile și ușile se potrivesc peste poză.',
+'dsc.s_weather':'Vremea',
+'dsc.p_weather':'Cardul de vreme al dashboard-ului, în oricare din cele 17 vremi, pe 7 peisaje, ziua și noaptea.',
+'dsc.s_energy':'Energie',
+'dsc.p_energy':'Energia de acum, costurile, istoricul pe zile și pe luni, puterea de azi cu prognoza solară.',
+'dsc.looks_t':'Aspecte',
+'dsc.looks_sub':'și tema',
+'dsc.looks_note':'Se schimbă pe tot demo-ul. În dashboard, aspectul ține de dashboard, iar tema se alege pe fiecare ecran.',
+'dsc.colours_t':'Culori',
+'dsc.colours_sub':'Paleta: {p}',
+'dsc.colours_note':'13 palete gata făcute sau culoarea ta, pentru fiecare dashboard.',
+'dsc.hue':'Nuanța',
+'dsc.langs_t':'12 limbi',
+'dsc.per_screen':'pe fiecare ecran',
+'dsc.langs_note':'Tot demo-ul trece pe limba aleasă, pe loc.',
+'dsc.text_apply':'Pune pe tot demo-ul',
+'dsc.text_reset':'Înapoi la 100 %',
+'dsc.text_note':'Mare pe tableta din hol, normal pe telefon. Și temperatura principală a cardurilor se poate mări separat, până la 200 %.',
+'dsc.motion_t':'Cum se deschid ferestrele',
+'dsc.motion_note':'Încearcă pe cardurile de alături: atinge camera ca să-i deschizi fereastra, sau trage cu degetul peste lampă, jaluzea, boxă ori ventilator ca să le reglezi. În „{lively}”, fereastra crește din card (pe telefon urcă de jos); în „{classic}”, se întoarce în mijlocul ecranului. {calm}: animațiile care se repetă se odihnesc la un minut după o atingere; {off}: ferestrele doar apar. În dashboard, în Setări › Acest dispozitiv.',
+'dsc.drag_t':'Trage peste o dală ({lively})',
+'dsc.resize_big':'În modul de editare puteți modifica dimensiunile cardurilor după cum doriți.',
+'dsc.resize_note':'Trageți de colțul unui card, sau alegeți lățimea și înălțimea în setările lui, pentru fiecare ecran.',
+'dsc.gate_t':'Cum se deschide poarta',
+'dsc.garage_t':'Cum se deschide garajul',
+'dsc.blind_t':'Cum se închide jaluzeaua',
+'dsc.n_ways':'{n} feluri',
+'dsc.design_t':'Desenele',
+'dsc.design_sub':'pentru tot dashboard-ul',
+'dsc.design_p':'Cinci feluri de a desena porțile, garajul și jaluzelele. Se schimbă pe toate cardurile din această secțiune.',
+'dsc.design_note':'Pe fiecare card, „{open}”, „{close}” și oprirea mișcă desenul ca la tine acasă.',
+'dsc.tiles_t':'Pe dalele lor',
+'dsc.photos_t':'Pozele tale',
+'dsc.photos_sub':'pe dispozitive',
+'dsc.photos_p':'Mașina, roboții, boxele și purificatorul pot avea poza ta. După ce o alegi, „{place}” o mută, o mărește și o întoarce; la mașină potrivești și roțile și ușile.',
+'dsc.photos_note':'Butonul cu aparatul foto de pe card deschide setările cardului, ca în dashboard. Pozele alese aici rămân doar în acest browser.',
+'dsc.dev_car':'Mașina',
+'dsc.dev_vacuum':'Robotul de curățenie',
+'dsc.dev_mower':'Robotul de tuns',
+'dsc.dev_speaker':'Boxa',
+'dsc.dev_purifier':'Purificatorul',
+'dsc.wm_device':'Adaugă poza dispozitivului tău',
+'dsc.wm_vehicle':'Adaugă poza vehiculului tău',
+'dsc.map_wm':'Harta reală a casei, adusă din aplicația robotului',
+'dsc.map_wm2':'suportat în mod special de Roborock',
+'dsc.photo_of':'Poza: {d}',
+'dsc.wx_t':'Încearcă vremea',
+'dsc.wx_sub':'pe cardul de vreme',
+'dsc.wx_p':'E cardul de vreme al dashboard-ului. Ploaia, ninsoarea, ceața și fulgerele se desenează peste poză, cât de tare plouă sau ninge.',
+'dsc.wx_kind':'Vremea de afară',
+'dsc.wx_time':'Ora',
+'dsc.wx_day':'Zi',
+'dsc.wx_night':'Noapte',
+'dsc.wx_note':'În dashboard, peisajul vine singur după altitudinea casei din Home Assistant, iar vremea după starea ei de acum.',
+'ph.place':'Așază poza',
+'ph.title':'Așază poza · {d}',
+'ph.intro_car':'Așa apare pe cardul mașinii. Pune mașina sub semne: cele verzi sunt roțile, cele albe ușile, capota și portbagajul.',
+'ph.intro':'Așa apare pe dală și în fereastra lui.',
+'ph.hint':'Trage ca s-o muți, ciupește ca s-o mărești',
+'ph.size':'Mărimea',
+'ph.smaller':'Mai mică',
+'ph.larger':'Mai mare',
+'ph.fit_t':'Cum stă',
+'ph.fit':'Încape',
+'ph.fill':'Umple',
+'ph.photo':'Poza',
+'ph.turn':'Întoarce',
+'ph.center':'Centrează',
+'ph.other':'Altă poză',
+'ph.front':'Fața mașinii',
+'ph.up':'Sus',
+'ph.right':'Dreapta',
+'ph.down':'Jos',
+'ph.left':'Stânga',
+'ph.marks_t':'Roțile și ușile',
+'ph.marks_on':'Peste poză',
+'ph.marks_reset':'Pune-le înapoi',
+'ph.drag_t':'Ce muți când tragi',
+'ph.drag_marks':'Semnele, împreună',
+'ph.drag_one':'Mută individual',
+'ph.cancel':'Renunță',
+'ph.done':'Gata',
+'ph.placed':'Poza e așezată',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'întoarsă {d}°',
+'ph.kept':'Poza și felul în care ai așezat-o se păstrează în dashboard și în backup.',
+'ph.cfg_title':'Setările cardului · {c}',
+'nav_discover':'Descoperă',
+'search_ent':'Caută în {x}…',
 'lic.m_welcome_t':'Bine ai venit în Nucleum Hub',
 'lic.m_welcome_p':'Alege cum începi. Încercarea gratuită se dă o singură dată pe casă.',
 'lic.w_trial_t':'Încercare gratuită 3 zile',
@@ -28814,7 +29665,7 @@ heat:'Încălzire', cool:'Răcire', auto:'Auto', dry:'Dezumidif.', fan_only:'Ven
 target:'Țintă', current:'Acum', humidity:'Umiditate', all_off:'Stinge tot', all_on:'Aprinde tot', run:'Rulează', start:'Start', stop:'Stop', doneb:'Gata',
 edit:'Editare', edit_msg:'Mod editare — trage cardurile, redimensionează sau apasă ⚙ pentru entități.', reset:'Resetează layout', done_edit:'Gata',
 add_card:'Adaugă card', card_title:'Titlu card', card_icon:'Pictogramă', card_width:'Lățime', card_height:'Înălțime min.', card_entities:'Entități',
-add_entity:'Adaugă entitate', search_ent:'Caută în 1.309 entități…', no_results:'Nimic găsit. Încearcă alt cuvânt.',
+add_entity:'Adaugă entitate', no_results:'Nimic găsit. Încearcă alt cuvânt.',
 del_card:'Șterge cardul', save:'Salvează', cancel:'Renunță', auto_h:'Auto', results:'rezultate', more_results:'în plus — rafinează căutarea',
 layout_saved:'Layout salvat', layout_reset:'Layout readus la implicit',
 sim:'Simulat', would_call:'ar apela', turned_on:'pornit', turned_off:'oprit',
@@ -28862,6 +29713,111 @@ choose_type:'Ce fel de card?', type_tiles:'Tile-uri cu entități', type_stats:'
 washer_done:'gata la', dish_prog:'Program', move_hint:'Trage pentru a muta', tap_toggle:'Live · conectat la Home Assistant',
 },
 nl:{
+'dsc.top_t':'Ontdek {p}',
+'dsc.top_p':'De kaarten hieronder zijn die van het dashboard, met het demohuis. Tik op alles wat je wilt: de thermostaten, de speler, de robots, de poorten, het weer. Naast sommige kaarten staan keuzes die je kunt uitproberen.',
+'dsc.s_looks':'Hoe het eruitziet',
+'dsc.p_looks':'De stijl, licht of donker, de kleuren, de taal en de tekstgrootte.',
+'dsc.s_motion':'Hoe het beweegt',
+'dsc.p_motion':'Vensters die uit hun kaart groeien of in het midden van het scherm opendraaien, en hoeveel er op het scherm beweegt. Dit stel je per scherm in: probeer het op de kaarten ernaast.',
+'dsc.s_resize':'Kaartformaten',
+'dsc.p_resize':'Elke kaart kan breder of smaller, hoger of lager zijn, op elk scherm.',
+'dsc.s_climate':'Klimaat en lucht',
+'dsc.p_climate':'Thermostaten voor verwarming en airco, de luchtkwaliteit, de luchtreiniger en de luchtbevochtiger.',
+'dsc.s_media':'Muziek en speakers',
+'dsc.p_media':'De speler van de pagina Media, met de albumhoes, de wachtrij en het volume van elke speaker; de speakers in de kamer en de groepen.',
+'dsc.s_gates':'Poorten, garage en rolluiken',
+'dsc.p_gates':'De kaarten voor poort, garage en rolluik, met alle manieren waarop ze opengaan: kies er een onder een kaart en de kaart wordt zo getekend.',
+'dsc.s_robots':'Robots',
+'dsc.p_robots':'De robotstofzuiger en de robotmaaier, met hun venster: status, batterij, waarschuwingen, bediening, verbruiksartikelen en de plattegrond. Met de cameraknop op een kaart zet je je eigen foto erop.',
+'dsc.s_car':'De auto',
+'dsc.p_car':'De autokaart met de banden, de deuren, de accu en de actieradius, en de klimaatregeling. Met je eigen foto komen de banden en deuren over de foto te liggen.',
+'dsc.s_weather':'Weer',
+'dsc.p_weather':'De weerkaart van het dashboard, in elk van de 17 soorten weer, op 7 landschappen, overdag en ’s nachts.',
+'dsc.s_energy':'Energie',
+'dsc.p_energy':'De energie op dit moment, de kosten, de geschiedenis per dag en per maand, het vermogen van vandaag met de zonneverwachting.',
+'dsc.looks_t':'Stijlen',
+'dsc.looks_sub':'en licht of donker',
+'dsc.looks_note':'Dit verandert in de hele demo. In het dashboard hoort de stijl bij het dashboard en kies je licht of donker per scherm.',
+'dsc.colours_t':'Kleuren',
+'dsc.colours_sub':'Palet: {p}',
+'dsc.colours_note':'13 kant-en-klare paletten of je eigen kleur, voor elk dashboard.',
+'dsc.hue':'Tint',
+'dsc.langs_t':'12 talen',
+'dsc.per_screen':'op elk scherm',
+'dsc.langs_note':'De hele demo schakelt meteen over naar de taal die je kiest.',
+'dsc.text_apply':'Toepassen op de hele demo',
+'dsc.text_reset':'Terug naar 100%',
+'dsc.text_note':'Groot op de tablet in de hal, normaal op de telefoon. Ook de hoofdtemperatuur van de kaarten kun je apart vergroten, tot 200%.',
+'dsc.motion_t':'Hoe vensters opengaan',
+'dsc.motion_note':'Probeer het op de kaarten ernaast: tik op de kamer om het venster te openen, of sleep met je vinger over de lamp, het rolluik, de speaker of de ventilator om ze in te stellen. Bij “{lively}” groeit het venster uit de kaart (op een telefoon schuift het van onderen omhoog); bij “{classic}” draait het open in het midden van het scherm. {calm}: herhalende animaties komen een minuut na een aanraking tot rust; {off}: vensters verschijnen gewoon. In het dashboard: Instellingen › Dit apparaat.',
+'dsc.drag_t':'Sleep over een tegel ({lively})',
+'dsc.resize_big':'In de bewerkmodus kun je de kaarten zo groot of klein maken als je wilt.',
+'dsc.resize_note':'Sleep een kaart aan haar hoek, of kies breedte en hoogte in haar instellingen, voor elk scherm.',
+'dsc.gate_t':'Hoe de poort opengaat',
+'dsc.garage_t':'Hoe de garagedeur opengaat',
+'dsc.blind_t':'Hoe het rolluik sluit',
+'dsc.n_ways':'{n} manieren',
+'dsc.design_t':'Tekeningen',
+'dsc.design_sub':'voor het hele dashboard',
+'dsc.design_p':'Vijf manieren om de poorten, de garage en de rolluiken te tekenen. Ze veranderen op alle kaarten in dit deel.',
+'dsc.design_note':'Op elke kaart sturen “{open}”, “{close}” en de stopknop de tekening aan, net als bij jou thuis.',
+'dsc.tiles_t':'Op hun tegels',
+'dsc.photos_t':'Je eigen foto’s',
+'dsc.photos_sub':'op apparaten',
+'dsc.photos_p':'De auto, de robots, de speakers en de luchtreiniger kunnen je eigen foto krijgen. Als je er een hebt gekozen, kun je hem met “{place}” verplaatsen, vergroten en draaien; bij de auto zet je ook de banden en deuren op hun plek.',
+'dsc.photos_note':'De cameraknop op een kaart opent de instellingen van de kaart, net als in het dashboard. Foto’s die je hier kiest, blijven alleen in deze browser.',
+'dsc.dev_car':'Auto',
+'dsc.dev_vacuum':'Robotstofzuiger',
+'dsc.dev_mower':'Robotmaaier',
+'dsc.dev_speaker':'Speaker',
+'dsc.dev_purifier':'Luchtreiniger',
+'dsc.wm_device':'Foto van je apparaat toevoegen',
+'dsc.wm_vehicle':'Foto van je voertuig toevoegen',
+'dsc.map_wm':'De echte kaart van je huis, uit de app van de robot',
+'dsc.map_wm2':'vooral ondersteund door Roborock',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Probeer het weer',
+'dsc.wx_sub':'op de weerkaart',
+'dsc.wx_p':'Dit is de weerkaart van het dashboard. Regen, sneeuw, mist en bliksem worden over de afbeelding getekend, net zo hard als het regent of sneeuwt.',
+'dsc.wx_kind':'Het weer buiten',
+'dsc.wx_time':'Tijdstip',
+'dsc.wx_day':'Dag',
+'dsc.wx_night':'Nacht',
+'dsc.wx_note':'In het dashboard volgt het landschap de hoogte van het huis in Home Assistant, en het weer de huidige toestand.',
+'ph.place':'Foto positioneren',
+'ph.title':'Foto positioneren · {d}',
+'ph.intro_car':'Zo ziet de foto eruit op de autokaart. Zet de auto onder de markeringen: de groene zijn de banden, de witte de deuren, de motorkap en de kofferbak.',
+'ph.intro':'Zo ziet de foto eruit op de tegel en in het venster.',
+'ph.hint':'Sleep om te verplaatsen, knijp om te zoomen',
+'ph.size':'Grootte',
+'ph.smaller':'Kleiner',
+'ph.larger':'Groter',
+'ph.fit_t':'Hoe de foto past',
+'ph.fit':'Passend',
+'ph.fill':'Vullen',
+'ph.photo':'Foto',
+'ph.turn':'Draaien',
+'ph.center':'Centreren',
+'ph.other':'Andere foto',
+'ph.front':'Voorkant van de auto',
+'ph.up':'Boven',
+'ph.right':'Rechts',
+'ph.down':'Onder',
+'ph.left':'Links',
+'ph.marks_t':'Banden en deuren',
+'ph.marks_on':'Over de foto',
+'ph.marks_reset':'Terugzetten',
+'ph.drag_t':'Wat slepen verplaatst',
+'ph.drag_marks':'Alle markeringen samen',
+'ph.drag_one':'Eén voor één',
+'ph.cancel':'Annuleren',
+'ph.done':'Klaar',
+'ph.placed':'Foto gepositioneerd',
+'ph.how':'{fit} · {z}%',
+'ph.turned':'{d}° gedraaid',
+'ph.kept':'De foto en hoe je hem hebt gepositioneerd, worden bewaard in het dashboard en in de back-up.',
+'ph.cfg_title':'Kaartinstellingen · {c}',
+'nav_discover':'Ontdek',
 'lic.m_welcome_t':'Welkom bij Nucleum Hub',
 'lic.m_welcome_p':'Kies hoe je begint. De gratis proefperiode krijg je één keer per huis.',
 'lic.w_trial_t':'Gratis proefperiode, 3 dagen',
@@ -30339,7 +31295,7 @@ nl:{
 'card_height':'Min. hoogte',
 'card_entities':'Entiteiten',
 'add_entity':'Entiteit toevoegen',
-'search_ent':'Zoek in 1.309 entiteiten…',
+'search_ent':'Zoek in {x}…',
 'no_results':'Geen resultaten. Probeer een ander woord.',
 'del_card':'Kaart verwijderen',
 'save':'Opslaan',
@@ -30526,6 +31482,111 @@ nl:{
 'tap_toggle':'Live · verbonden met Home Assistant',
 },
 es:{
+'dsc.top_t':'Descubre {p}',
+'dsc.top_p':'Las tarjetas de abajo son las del propio panel, con la casa de demostración. Toca lo que quieras: los termostatos, el reproductor, los robots, los portones, el tiempo. Junto a algunas tarjetas tienes opciones para probar.',
+'dsc.s_looks':'Cómo se ve',
+'dsc.p_looks':'El estilo, el tema, los colores, el idioma y el tamaño del texto.',
+'dsc.s_motion':'Cómo se mueve',
+'dsc.p_motion':'Las ventanas que crecen desde su tarjeta o giran en el centro de la pantalla, y cuánto se mueve la pantalla. Se ajusta en cada pantalla: pruébalo en las tarjetas de al lado.',
+'dsc.s_resize':'Tamaño de las tarjetas',
+'dsc.p_resize':'Cada tarjeta puede ser más ancha o más estrecha, más alta o más baja, en cada pantalla.',
+'dsc.s_climate':'Clima y aire',
+'dsc.p_climate':'Los termostatos de calefacción y aire acondicionado, la calidad del aire, el purificador y el humidificador.',
+'dsc.s_media':'Música y altavoces',
+'dsc.p_media':'El reproductor de la página Multimedia, con la portada, la cola y el volumen de cada altavoz; los altavoces de la habitación y los grupos.',
+'dsc.s_gates':'Portones, garaje y persianas',
+'dsc.p_gates':'Las tarjetas del portón, el garaje y la persiana, con todas las formas de apertura: elige una debajo de una tarjeta y esta se dibuja así.',
+'dsc.s_robots':'Robots',
+'dsc.p_robots':'El robot aspirador y el robot cortacésped, con su ventana: estado, batería, alertas, controles, consumibles y el mapa. Con el botón de la cámara de la tarjeta pones tu foto.',
+'dsc.s_car':'El coche',
+'dsc.p_car':'La tarjeta del coche con las ruedas, las puertas, la batería y la autonomía, y su climatización. Con tu foto, las ruedas y las puertas se colocan sobre ella.',
+'dsc.s_weather':'El tiempo',
+'dsc.p_weather':'La tarjeta del tiempo del panel, con cualquiera de sus 17 tipos de tiempo, en 7 paisajes, de día y de noche.',
+'dsc.s_energy':'Energía',
+'dsc.p_energy':'La energía en este momento, los costes, el historial por días y por meses, y la potencia de hoy con la previsión solar.',
+'dsc.looks_t':'Estilos',
+'dsc.looks_sub':'y el tema',
+'dsc.looks_note':'Cambia en toda la demo. En el panel, el estilo es propio de cada panel y el tema se elige en cada pantalla.',
+'dsc.colours_t':'Colores',
+'dsc.colours_sub':'Paleta: {p}',
+'dsc.colours_note':'13 paletas predefinidas o tu propio color, para cada panel.',
+'dsc.hue':'Tono',
+'dsc.langs_t':'12 idiomas',
+'dsc.per_screen':'en cada pantalla',
+'dsc.langs_note':'Toda la demo cambia al idioma que elijas, al instante.',
+'dsc.text_apply':'Aplicar a toda la demo',
+'dsc.text_reset':'Volver al 100 %',
+'dsc.text_note':'Grande en la tableta del recibidor, normal en el móvil. La temperatura principal de las tarjetas también se puede agrandar por separado, hasta el 200 %.',
+'dsc.motion_t':'Cómo se abren las ventanas',
+'dsc.motion_note':'Pruébalo en las tarjetas de al lado: toca la habitación para abrir su ventana, o desliza el dedo sobre la lámpara, la persiana, el altavoz o el ventilador para ajustarlos. En «{lively}», la ventana crece desde la tarjeta (en el móvil sube desde abajo); en «{classic}», gira en el centro de la pantalla. {calm}: las animaciones que se repiten se detienen un minuto después de tocar la pantalla; {off}: las ventanas simplemente aparecen. En el panel, en Ajustes › Este dispositivo.',
+'dsc.drag_t':'Desliza sobre un mosaico ({lively})',
+'dsc.resize_big':'En el modo de edición puedes cambiar el tamaño de las tarjetas como quieras.',
+'dsc.resize_note':'Arrastra una tarjeta por su esquina o elige su ancho y alto en sus ajustes, para cada pantalla.',
+'dsc.gate_t':'Cómo se abre el portón',
+'dsc.garage_t':'Cómo se abre el garaje',
+'dsc.blind_t':'Cómo se cierra la persiana',
+'dsc.n_ways':'{n} formas',
+'dsc.design_t':'Dibujos',
+'dsc.design_sub':'para todo el panel',
+'dsc.design_p':'Cinco formas de dibujar los portones, el garaje y las persianas. Cambian en todas las tarjetas de esta sección.',
+'dsc.design_note':'En cada tarjeta, «{open}», «{close}» y el botón de detener mueven el dibujo como lo harían en tu casa.',
+'dsc.tiles_t':'En sus mosaicos',
+'dsc.photos_t':'Tus fotos',
+'dsc.photos_sub':'en los dispositivos',
+'dsc.photos_p':'El coche, los robots, los altavoces y el purificador pueden tener tu foto. Una vez elegida, «{place}» la mueve, la agranda y la gira; en el coche también alineas las ruedas y las puertas.',
+'dsc.photos_note':'El botón de la cámara de cada tarjeta abre sus ajustes, como en el panel. Las fotos que elijas aquí se quedan solo en este navegador.',
+'dsc.dev_car':'Coche',
+'dsc.dev_vacuum':'Robot aspirador',
+'dsc.dev_mower':'Robot cortacésped',
+'dsc.dev_speaker':'Altavoz',
+'dsc.dev_purifier':'Purificador',
+'dsc.wm_device':'Añadir foto de tu dispositivo',
+'dsc.wm_vehicle':'Añadir foto de tu vehículo',
+'dsc.map_wm':'El mapa real de tu casa, desde la app del robot',
+'dsc.map_wm2':'con soporte especial de Roborock',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Prueba el tiempo',
+'dsc.wx_sub':'en la tarjeta del tiempo',
+'dsc.wx_p':'Es la tarjeta del tiempo del panel. La lluvia, la nieve, la niebla y los relámpagos se dibujan sobre la imagen, según lo fuerte que llueva o nieve.',
+'dsc.wx_kind':'Tiempo exterior',
+'dsc.wx_time':'Momento del día',
+'dsc.wx_day':'Día',
+'dsc.wx_night':'Noche',
+'dsc.wx_note':'En el panel, el paisaje se elige solo según la altitud de la casa en Home Assistant, y el tiempo según su estado actual.',
+'ph.place':'Colocar la foto',
+'ph.title':'Colocar la foto · {d}',
+'ph.intro_car':'Así se ve en la tarjeta del coche. Pon el coche bajo las marcas: las verdes son las ruedas; las blancas, las puertas, el capó y el maletero.',
+'ph.intro':'Así se ve en su mosaico y en su ventana.',
+'ph.hint':'Arrastra para moverla, pellizca para ampliarla',
+'ph.size':'Tamaño',
+'ph.smaller':'Más pequeña',
+'ph.larger':'Más grande',
+'ph.fit_t':'Cómo queda',
+'ph.fit':'Ajustar',
+'ph.fill':'Rellenar',
+'ph.photo':'Foto',
+'ph.turn':'Girar',
+'ph.center':'Centrar',
+'ph.other':'Otra foto',
+'ph.front':'Parte delantera del coche',
+'ph.up':'Arriba',
+'ph.right':'Derecha',
+'ph.down':'Abajo',
+'ph.left':'Izquierda',
+'ph.marks_t':'Ruedas y puertas',
+'ph.marks_on':'Sobre la foto',
+'ph.marks_reset':'Volver a colocarlas',
+'ph.drag_t':'Qué mueves al arrastrar',
+'ph.drag_marks':'Las marcas, juntas',
+'ph.drag_one':'Una a una',
+'ph.cancel':'Cancelar',
+'ph.done':'Hecho',
+'ph.placed':'Foto colocada',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'girada {d}°',
+'ph.kept':'La foto y cómo la colocaste se guardan en el panel y en la copia de seguridad.',
+'ph.cfg_title':'Ajustes de la tarjeta · {c}',
+'nav_discover':'Descubre',
 'lic.m_welcome_t':'Te damos la bienvenida a Nucleum Hub',
 'lic.m_welcome_p':'Elige cómo empezar. La prueba gratuita se da una sola vez por casa.',
 'lic.w_trial_t':'Prueba gratuita, 3 días',
@@ -32003,7 +33064,7 @@ es:{
 'card_height':'Alto mínimo',
 'card_entities':'Entidades',
 'add_entity':'Añadir entidad',
-'search_ent':'Buscar en 1309 entidades…',
+'search_ent':'Buscar en {x}…',
 'no_results':'Sin coincidencias. Prueba con otra palabra.',
 'del_card':'Quitar tarjeta',
 'save':'Guardar',
@@ -32190,6 +33251,111 @@ es:{
 'tap_toggle':'En vivo · conectado a Home Assistant',
 },
 it:{
+'dsc.top_t':'Scopri {p}',
+'dsc.top_p':'Le schede qui sotto sono quelle della plancia, con la casa demo. Tocca qualsiasi cosa: i termostati, il lettore, i robot, i cancelli, il meteo. Accanto ad alcune schede trovi le opzioni da provare.',
+'dsc.s_looks':'Come appare',
+'dsc.p_looks':'Lo stile, il tema, i colori, la lingua e la dimensione del testo.',
+'dsc.s_motion':'Come si muove',
+'dsc.p_motion':'Le finestre che nascono dalla loro scheda o ruotano al centro dello schermo, e quanto si muove lo schermo. Si imposta per ogni schermo: provalo sulle schede qui accanto.',
+'dsc.s_resize':'Dimensioni delle schede',
+'dsc.p_resize':'Ogni scheda può essere più larga o più stretta, più alta o più bassa, su ogni schermo.',
+'dsc.s_climate':'Clima e aria',
+'dsc.p_climate':'I termostati per riscaldamento e aria condizionata, la qualità dell’aria, il purificatore e l’umidificatore.',
+'dsc.s_media':'Musica e altoparlanti',
+'dsc.p_media':'Il lettore della pagina Media, con la copertina, la coda e il volume di ogni altoparlante; gli altoparlanti della stanza e i gruppi.',
+'dsc.s_gates':'Cancelli, garage e tapparelle',
+'dsc.p_gates':'Le schede del cancello, del garage e della tapparella, con tutti i tipi di apertura: scegline uno sotto una scheda e la scheda viene disegnata così.',
+'dsc.s_robots':'Robot',
+'dsc.p_robots':'Il robot aspirapolvere e il robot tosaerba, con la loro finestra: stato, batteria, avvisi, comandi, consumabili e mappa. Il pulsante con la fotocamera sulla scheda aggiunge la tua foto.',
+'dsc.s_car':'L’auto',
+'dsc.p_car':'La scheda dell’auto con ruote, porte, batteria e autonomia, e la sua climatizzazione. Con la tua foto, ruote e porte si allineano sopra di essa.',
+'dsc.s_weather':'Meteo',
+'dsc.p_weather':'La scheda meteo della plancia, in una qualsiasi delle sue 17 condizioni meteo, su 7 paesaggi, di giorno e di notte.',
+'dsc.s_energy':'Energia',
+'dsc.p_energy':'L’energia in questo momento, i costi, lo storico per giorni e per mesi, la potenza di oggi con la previsione solare.',
+'dsc.looks_t':'Stili',
+'dsc.looks_sub':'e il tema',
+'dsc.looks_note':'Cambia in tutta la demo. Nella plancia, lo stile appartiene alla plancia e il tema si sceglie su ogni schermo.',
+'dsc.colours_t':'Colori',
+'dsc.colours_sub':'Tavolozza: {p}',
+'dsc.colours_note':'13 tavolozze già pronte o il tuo colore, per ogni plancia.',
+'dsc.hue':'Tonalità',
+'dsc.langs_t':'12 lingue',
+'dsc.per_screen':'su ogni schermo',
+'dsc.langs_note':'Tutta la demo passa subito alla lingua che scegli.',
+'dsc.text_apply':'Applica a tutta la demo',
+'dsc.text_reset':'Torna al 100 %',
+'dsc.text_note':'Grande sul tablet dell’ingresso, normale sul telefono. Anche la temperatura principale delle schede si può ingrandire a parte, fino al 200 %.',
+'dsc.motion_t':'Come si aprono le finestre',
+'dsc.motion_note':'Provalo sulle schede qui accanto: tocca la stanza per aprirne la finestra, oppure trascina il dito sulla lampada, sulla tapparella, sull’altoparlante o sul ventilatore per regolarli. In «{lively}» la finestra nasce dalla sua scheda (sul telefono sale dal basso); in «{classic}» ruota al centro dello schermo. {calm}: le animazioni che si ripetono si fermano un minuto dopo un tocco; {off}: le finestre appaiono e basta. Nella plancia, in Impostazioni › Questo dispositivo.',
+'dsc.drag_t':'Trascina su un riquadro ({lively})',
+'dsc.resize_big':'In modalità modifica puoi cambiare le dimensioni delle schede come preferisci.',
+'dsc.resize_note':'Trascina una scheda dal suo angolo, oppure scegli larghezza e altezza nelle sue impostazioni, per ogni schermo.',
+'dsc.gate_t':'Come si apre il cancello',
+'dsc.garage_t':'Come si apre il garage',
+'dsc.blind_t':'Come si chiude la tapparella',
+'dsc.n_ways':'{n} tipi',
+'dsc.design_t':'Disegni',
+'dsc.design_sub':'per tutta la plancia',
+'dsc.design_p':'Cinque modi di disegnare cancelli, garage e tapparelle. Cambiano su tutte le schede di questa sezione.',
+'dsc.design_note':'Su ogni scheda, «{open}», «{close}» e lo stop muovono il disegno come a casa tua.',
+'dsc.tiles_t':'Sui loro riquadri',
+'dsc.photos_t':'Le tue foto',
+'dsc.photos_sub':'sui dispositivi',
+'dsc.photos_p':'L’auto, i robot, gli altoparlanti e il purificatore possono avere la tua foto. Dopo averla scelta, «{place}» la sposta, la ingrandisce e la ruota; sull’auto allinei anche le ruote e le porte.',
+'dsc.photos_note':'Il pulsante con la fotocamera sulla scheda apre le impostazioni della scheda, come nella plancia. Le foto scelte qui restano solo in questo browser.',
+'dsc.dev_car':'Auto',
+'dsc.dev_vacuum':'Robot aspirapolvere',
+'dsc.dev_mower':'Robot tosaerba',
+'dsc.dev_speaker':'Altoparlante',
+'dsc.dev_purifier':'Purificatore',
+'dsc.wm_device':'Aggiungi la foto del tuo dispositivo',
+'dsc.wm_vehicle':'Aggiungi la foto del tuo veicolo',
+'dsc.map_wm':'La vera mappa della casa, dall’app del robot',
+'dsc.map_wm2':'supportata in particolare da Roborock',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Prova il meteo',
+'dsc.wx_sub':'sulla scheda meteo',
+'dsc.wx_p':'È la scheda meteo della plancia. Pioggia, neve, nebbia e fulmini vengono disegnati sopra l’immagine, con la stessa intensità con cui piove o nevica.',
+'dsc.wx_kind':'Il tempo fuori',
+'dsc.wx_time':'Ora del giorno',
+'dsc.wx_day':'Giorno',
+'dsc.wx_night':'Notte',
+'dsc.wx_note':'Nella plancia, il paesaggio segue da solo l’altitudine della casa in Home Assistant, e il meteo le condizioni attuali.',
+'ph.place':'Posiziona la foto',
+'ph.title':'Posiziona la foto · {d}',
+'ph.intro_car':'Così appare sulla scheda dell’auto. Metti l’auto sotto i segni: quelli verdi sono le ruote, quelli bianchi le porte, il cofano e il bagagliaio.',
+'ph.intro':'Così appare sul suo riquadro e nella sua finestra.',
+'ph.hint':'Trascina per spostarla, pizzica per ingrandirla',
+'ph.size':'Dimensione',
+'ph.smaller':'Più piccola',
+'ph.larger':'Più grande',
+'ph.fit_t':'Come si adatta',
+'ph.fit':'Adatta',
+'ph.fill':'Riempi',
+'ph.photo':'Foto',
+'ph.turn':'Ruota',
+'ph.center':'Centra',
+'ph.other':'Altra foto',
+'ph.front':'Muso dell’auto',
+'ph.up':'Su',
+'ph.right':'Destra',
+'ph.down':'Giù',
+'ph.left':'Sinistra',
+'ph.marks_t':'Ruote e porte',
+'ph.marks_on':'Sopra la foto',
+'ph.marks_reset':'Rimettili a posto',
+'ph.drag_t':'Cosa sposti trascinando',
+'ph.drag_marks':'I segni, insieme',
+'ph.drag_one':'Uno alla volta',
+'ph.cancel':'Annulla',
+'ph.done':'Fatto',
+'ph.placed':'Foto posizionata',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'ruotata di {d}°',
+'ph.kept':'La foto e il modo in cui l’hai posizionata restano nella plancia e nel backup.',
+'ph.cfg_title':'Impostazioni della scheda · {c}',
+'nav_discover':'Scopri',
 'lic.m_welcome_t':'Ti diamo il benvenuto in Nucleum Hub',
 'lic.m_welcome_p':'Scegli come iniziare. La prova gratuita si ottiene una sola volta per casa.',
 'lic.w_trial_t':'Prova gratuita, 3 giorni',
@@ -33667,7 +34833,7 @@ it:{
 'card_height':'Altezza min.',
 'card_entities':'Entità',
 'add_entity':'Aggiungi entità',
-'search_ent':'Cerca tra 1.309 entità…',
+'search_ent':'Cerca tra {x}…',
 'no_results':'Nessun risultato. Prova un’altra parola.',
 'del_card':'Rimuovi scheda',
 'save':'Salva',
@@ -33854,6 +35020,111 @@ it:{
 'tap_toggle':'In tempo reale · connesso a Home Assistant',
 },
 pl:{
+'dsc.top_t':'Odkryj {p}',
+'dsc.top_p':'Poniższe karty to prawdziwe karty panelu, z domem demo. Dotknij czegokolwiek: termostatów, odtwarzacza, robotów, bram, pogody. Obok niektórych kart znajdziesz opcje do wypróbowania.',
+'dsc.s_looks':'Jak wygląda',
+'dsc.p_looks':'Styl, motyw, kolory, język i rozmiar tekstu.',
+'dsc.s_motion':'Jak się porusza',
+'dsc.p_motion':'Okna, które wyrastają ze swojej karty albo obracają się na środku ekranu, oraz ile ruchu jest na ekranie. Ustawia się to dla każdego ekranu osobno: wypróbuj na kartach obok.',
+'dsc.s_resize':'Rozmiar kart',
+'dsc.p_resize':'Każda karta może być szersza lub węższa, wyższa lub niższa, na każdym ekranie.',
+'dsc.s_climate':'Klimat i powietrze',
+'dsc.p_climate':'Termostaty do ogrzewania i klimatyzacji, jakość powietrza, oczyszczacz i nawilżacz.',
+'dsc.s_media':'Muzyka i głośniki',
+'dsc.p_media':'Odtwarzacz strony Media, z okładką, kolejką i głośnością każdego głośnika; głośniki w pomieszczeniu i grupy.',
+'dsc.s_gates':'Bramy, garaż i rolety',
+'dsc.p_gates':'Karty bramy, garażu i rolety, ze wszystkimi sposobami otwierania: wybierz jeden pod kartą, a karta zostanie narysowana w ten sposób.',
+'dsc.s_robots':'Roboty',
+'dsc.p_robots':'Robot sprzątający i robot koszący, z ich oknem: stan, bateria, alerty, sterowanie, materiały eksploatacyjne i mapa. Przycisk z aparatem na karcie dodaje Twoje zdjęcie.',
+'dsc.s_car':'Samochód',
+'dsc.p_car':'Karta samochodu z oponami, drzwiami, baterią i zasięgiem oraz jego klimatyzacją. Gdy dodasz swoje zdjęcie, opony i drzwi zostaną do niego dopasowane.',
+'dsc.s_weather':'Pogoda',
+'dsc.p_weather':'Karta pogody z panelu, w dowolnym z 17 rodzajów pogody, na tle 7 krajobrazów, w dzień i w nocy.',
+'dsc.s_energy':'Energia',
+'dsc.p_energy':'Energia teraz, koszty, historia dzienna i miesięczna, dzisiejsza moc z prognozą PV.',
+'dsc.looks_t':'Style',
+'dsc.looks_sub':'i motyw',
+'dsc.looks_note':'Zmienia się w całym demo. W panelu styl ustawia się dla całego panelu, a motyw na każdym ekranie osobno.',
+'dsc.colours_t':'Kolory',
+'dsc.colours_sub':'Paleta: {p}',
+'dsc.colours_note':'13 gotowych palet albo własny kolor, dla każdego panelu.',
+'dsc.hue':'Odcień',
+'dsc.langs_t':'12 języków',
+'dsc.per_screen':'na każdym ekranie',
+'dsc.langs_note':'Całe demo od razu przechodzi na wybrany język.',
+'dsc.text_apply':'Zastosuj w całym demo',
+'dsc.text_reset':'Wróć do 100 %',
+'dsc.text_note':'Duży na tablecie w przedpokoju, normalny na telefonie. Temperaturę główną kart można też powiększyć osobno, do 200 %.',
+'dsc.motion_t':'Jak otwierają się okna',
+'dsc.motion_note':'Wypróbuj na kartach obok: dotknij pomieszczenia, aby otworzyć jego okno, albo przeciągnij palcem po lampie, rolecie, głośniku lub wentylatorze, aby je ustawić. W stylu „{lively}” okno wyrasta z karty (na telefonie wysuwa się od dołu); w stylu „{classic}” obraca się na środku ekranu. {calm}: zapętlone animacje zatrzymują się minutę po dotknięciu; {off}: okna po prostu się pojawiają. W panelu: Ustawienia › To urządzenie.',
+'dsc.drag_t':'Przeciągnij po kafelku ({lively})',
+'dsc.resize_big':'W trybie edycji możesz dowolnie zmieniać rozmiar kart.',
+'dsc.resize_note':'Przeciągnij kartę za róg albo wybierz jej szerokość i wysokość w ustawieniach, dla każdego ekranu.',
+'dsc.gate_t':'Jak otwiera się brama',
+'dsc.garage_t':'Jak otwiera się garaż',
+'dsc.blind_t':'Jak zamyka się roleta',
+'dsc.n_ways':'sposoby: {n}',
+'dsc.design_t':'Rysunki',
+'dsc.design_sub':'dla całego panelu',
+'dsc.design_p':'Pięć sposobów rysowania bram, garażu i rolet. Zmieniają się na wszystkich kartach w tej sekcji.',
+'dsc.design_note':'Na każdej karcie „{open}”, „{close}” i zatrzymanie poruszają rysunkiem tak jak u Ciebie w domu.',
+'dsc.tiles_t':'Na ich kafelkach',
+'dsc.photos_t':'Twoje zdjęcia',
+'dsc.photos_sub':'na urządzeniach',
+'dsc.photos_p':'Samochód, roboty, głośniki i oczyszczacz mogą mieć Twoje zdjęcie. Po jego wybraniu „{place}” przesuwa je, powiększa i obraca; przy samochodzie dopasowujesz też opony i drzwi.',
+'dsc.photos_note':'Przycisk z aparatem na karcie otwiera ustawienia karty, tak jak w panelu. Zdjęcia wybrane tutaj zostają tylko w tej przeglądarce.',
+'dsc.dev_car':'Samochód',
+'dsc.dev_vacuum':'Robot sprzątający',
+'dsc.dev_mower':'Robot koszący',
+'dsc.dev_speaker':'Głośnik',
+'dsc.dev_purifier':'Oczyszczacz',
+'dsc.wm_device':'Dodaj zdjęcie swojego urządzenia',
+'dsc.wm_vehicle':'Dodaj zdjęcie swojego pojazdu',
+'dsc.map_wm':'Prawdziwa mapa domu z aplikacji robota',
+'dsc.map_wm2':'szczególnie wspierane przez Roborock',
+'dsc.photo_of':'Zdjęcie: {d}',
+'dsc.wx_t':'Wypróbuj pogodę',
+'dsc.wx_sub':'na karcie pogody',
+'dsc.wx_p':'To karta pogody z panelu. Deszcz, śnieg, mgła i błyskawice są rysowane na obrazie, z siłą zależną od tego, jak mocno pada deszcz lub śnieg.',
+'dsc.wx_kind':'Pogoda na zewnątrz',
+'dsc.wx_time':'Pora dnia',
+'dsc.wx_day':'Dzień',
+'dsc.wx_night':'Noc',
+'dsc.wx_note':'W panelu krajobraz dobiera się sam według wysokości domu w Home Assistant, a pogoda według jej aktualnego stanu.',
+'ph.place':'Ułóż zdjęcie',
+'ph.title':'Ułóż zdjęcie · {d}',
+'ph.intro_car':'Tak wygląda na karcie samochodu. Ustaw samochód pod znacznikami: zielone to opony, białe to drzwi, maska i bagażnik.',
+'ph.intro':'Tak wygląda na kafelku i w oknie urządzenia.',
+'ph.hint':'Przeciągnij, aby przesunąć, rozsuń palce, aby powiększyć',
+'ph.size':'Rozmiar',
+'ph.smaller':'Mniejsze',
+'ph.larger':'Większe',
+'ph.fit_t':'Ułożenie',
+'ph.fit':'Dopasowanie',
+'ph.fill':'Wypełnienie',
+'ph.photo':'Zdjęcie',
+'ph.turn':'Obróć',
+'ph.center':'Wyśrodkuj',
+'ph.other':'Inne zdjęcie',
+'ph.front':'Przód samochodu',
+'ph.up':'W górę',
+'ph.right':'W prawo',
+'ph.down':'W dół',
+'ph.left':'W lewo',
+'ph.marks_t':'Opony i drzwi',
+'ph.marks_on':'Na zdjęciu',
+'ph.marks_reset':'Przywróć na miejsce',
+'ph.drag_t':'Co przesuwasz, przeciągając',
+'ph.drag_marks':'Wszystkie znaczniki razem',
+'ph.drag_one':'Każdy osobno',
+'ph.cancel':'Anuluj',
+'ph.done':'Gotowe',
+'ph.placed':'Zdjęcie ułożone',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'obrócone o {d}°',
+'ph.kept':'Zdjęcie i jego ułożenie są zachowywane w panelu i w kopii zapasowej.',
+'ph.cfg_title':'Ustawienia karty · {c}',
+'nav_discover':'Odkryj',
 'lic.m_welcome_t':'Witaj w Nucleum Hub',
 'lic.m_welcome_p':'Wybierz, jak zacząć. Bezpłatny okres próbny przysługuje raz na dom.',
 'lic.w_trial_t':'Bezpłatny okres próbny, 3 dni',
@@ -35331,7 +36602,7 @@ pl:{
 'card_height':'Min. wysokość',
 'card_entities':'Encje',
 'add_entity':'Dodaj encję',
-'search_ent':'Szukaj wśród 1309 encji…',
+'search_ent':'Szukaj: {x}…',
 'no_results':'Brak wyników. Spróbuj innego słowa.',
 'del_card':'Usuń kartę',
 'save':'Zapisz',
@@ -35518,6 +36789,111 @@ pl:{
 'tap_toggle':'Na żywo · połączono z Home Assistant',
 },
 sv:{
+'dsc.top_t':'Upptäck {p}',
+'dsc.top_p':'Korten nedan är instrumentpanelens egna, med demohuset. Tryck på vad som helst: termostaterna, spelaren, robotarna, grindarna, vädret. Bredvid vissa kort finns val som du kan prova.',
+'dsc.s_looks':'Så ser det ut',
+'dsc.p_looks':'Stilen, temat, färgerna, språket och textstorleken.',
+'dsc.s_motion':'Så rör det sig',
+'dsc.p_motion':'Fönster som växer fram ur sitt kort eller vänds fram mitt på skärmen, och hur mycket skärmen rör sig. Det ställs in per skärm: prova på korten bredvid.',
+'dsc.s_resize':'Kortstorlekar',
+'dsc.p_resize':'Varje kort kan vara bredare eller smalare, högre eller lägre, på varje skärm.',
+'dsc.s_climate':'Klimat och luft',
+'dsc.p_climate':'Termostater för värme och luftkonditionering, luftkvaliteten, luftrenaren och luftfuktaren.',
+'dsc.s_media':'Musik och högtalare',
+'dsc.p_media':'Spelaren på sidan Media, med omslaget, kön och volymen för varje högtalare; rummets högtalare och grupperna.',
+'dsc.s_gates':'Grindar, garage och persienner',
+'dsc.p_gates':'Korten för grind, garage och persienn, med alla sätt de kan öppnas på: välj ett under ett kort så ritas kortet så.',
+'dsc.s_robots':'Robotar',
+'dsc.p_robots':'Robotdammsugaren och robotgräsklipparen, med sina fönster: status, batteri, varningar, kommandon, förbrukningsdelar och kartan. Med kameran på ett kort lägger du in ditt eget foto.',
+'dsc.s_car':'Bilen',
+'dsc.p_car':'Bilkortet med däck, dörrar, batteri och räckvidd, och bilens klimatstyrning. Med ditt foto placeras däcken och dörrarna ovanpå det.',
+'dsc.s_weather':'Väder',
+'dsc.p_weather':'Instrumentpanelens väderkort, med alla sina 17 vädertyper och 7 landskap, dag som natt.',
+'dsc.s_energy':'Energi',
+'dsc.p_energy':'Energin just nu, kostnaderna, historiken per dag och per månad, dagens effekt med solprognosen.',
+'dsc.looks_t':'Stilar',
+'dsc.looks_sub':'och temat',
+'dsc.looks_note':'Ändras i hela demon. I instrumentpanelen hör stilen till instrumentpanelen, och temat väljs på varje skärm.',
+'dsc.colours_t':'Färger',
+'dsc.colours_sub':'Palett: {p}',
+'dsc.colours_note':'13 färdiga paletter eller din egen färg, för varje instrumentpanel.',
+'dsc.hue':'Nyans',
+'dsc.langs_t':'12 språk',
+'dsc.per_screen':'på varje skärm',
+'dsc.langs_note':'Hela demon byter direkt till språket du väljer.',
+'dsc.text_apply':'Använd i hela demon',
+'dsc.text_reset':'Tillbaka till 100 %',
+'dsc.text_note':'Stor på surfplattan i hallen, normal på telefonen. Kortens huvudtemperatur kan också förstoras separat, upp till 200 %.',
+'dsc.motion_t':'Så öppnas fönstren',
+'dsc.motion_note':'Prova på korten bredvid: tryck på rummet för att öppna dess fönster, eller dra med fingret över lampan, persiennen, högtalaren eller fläkten för att ställa in dem. Med ”{lively}” växer fönstret fram ur sitt kort (på telefonen glider det upp nerifrån); med ”{classic}” vänds det fram mitt på skärmen. {calm}: animationer som upprepas rör sig bara i en minut efter en beröring; {off}: fönstren dyker bara upp. I instrumentpanelen, under Inställningar › Den här enheten.',
+'dsc.drag_t':'Dra över en ruta ({lively})',
+'dsc.resize_big':'I redigeringsläget kan du ändra storlek på korten precis som du vill.',
+'dsc.resize_note':'Dra ett kort i hörnet eller välj bredd och höjd i dess inställningar, för varje skärm.',
+'dsc.gate_t':'Så öppnas grinden',
+'dsc.garage_t':'Så öppnas garageporten',
+'dsc.blind_t':'Så stängs persiennen',
+'dsc.n_ways':'{n} sätt',
+'dsc.design_t':'Ritningar',
+'dsc.design_sub':'för hela instrumentpanelen',
+'dsc.design_p':'Fem sätt att rita grindarna, garaget och persiennerna. De ändras på alla kort i det här avsnittet.',
+'dsc.design_note':'På varje kort får ”{open}”, ”{close}” och stopp ritningen att röra sig precis som hemma hos dig.',
+'dsc.tiles_t':'På sina rutor',
+'dsc.photos_t':'Dina foton',
+'dsc.photos_sub':'på enheter',
+'dsc.photos_p':'Bilen, robotarna, högtalarna och luftrenaren kan ha ditt foto. När du har valt det flyttar, förstorar och roterar du det med ”{place}”; på bilen passar du också in däcken och dörrarna.',
+'dsc.photos_note':'Kameraknappen på ett kort öppnar kortets inställningar, som i instrumentpanelen. Foton du väljer här sparas bara i den här webbläsaren.',
+'dsc.dev_car':'Bil',
+'dsc.dev_vacuum':'Robotdammsugaren',
+'dsc.dev_mower':'Robotgräsklipparen',
+'dsc.dev_speaker':'Högtalaren',
+'dsc.dev_purifier':'Luftrenaren',
+'dsc.wm_device':'Lägg till foto av din enhet',
+'dsc.wm_vehicle':'Lägg till foto av ditt fordon',
+'dsc.map_wm':'Den riktiga kartan över hemmet, från robotens app',
+'dsc.map_wm2':'särskilt stöd från Roborock',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Prova vädret',
+'dsc.wx_sub':'på väderkortet',
+'dsc.wx_p':'Det här är instrumentpanelens väderkort. Regn, snö, dimma och blixtar ritas över bilden, efter hur mycket det regnar eller snöar.',
+'dsc.wx_kind':'Vädret ute',
+'dsc.wx_time':'Tid på dygnet',
+'dsc.wx_day':'Dag',
+'dsc.wx_night':'Natt',
+'dsc.wx_note':'I instrumentpanelen väljs landskapet automatiskt efter husets höjd i Home Assistant, och vädret efter hur det är just nu.',
+'ph.place':'Placera fotot',
+'ph.title':'Placera fotot · {d}',
+'ph.intro_car':'Så här visas det på bilkortet. Placera bilen under markeringarna: de gröna är däcken, de vita är dörrarna, motorhuven och bakluckan.',
+'ph.intro':'Så här visas det på rutan och i fönstret.',
+'ph.hint':'Dra för att flytta, nyp för att zooma',
+'ph.size':'Storlek',
+'ph.smaller':'Mindre',
+'ph.larger':'Större',
+'ph.fit_t':'Hur det passar',
+'ph.fit':'Anpassa',
+'ph.fill':'Fyll',
+'ph.photo':'Foto',
+'ph.turn':'Rotera',
+'ph.center':'Centrera',
+'ph.other':'Annat foto',
+'ph.front':'Bilens front',
+'ph.up':'Upp',
+'ph.right':'Höger',
+'ph.down':'Ned',
+'ph.left':'Vänster',
+'ph.marks_t':'Däck och dörrar',
+'ph.marks_on':'Över fotot',
+'ph.marks_reset':'Lägg tillbaka dem',
+'ph.drag_t':'Vad du flyttar när du drar',
+'ph.drag_marks':'Markeringarna, tillsammans',
+'ph.drag_one':'En i taget',
+'ph.cancel':'Avbryt',
+'ph.done':'Klar',
+'ph.placed':'Fotot är placerat',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'roterat {d}°',
+'ph.kept':'Fotot och hur du har placerat det sparas i instrumentpanelen och i säkerhetskopian.',
+'ph.cfg_title':'Kortets inställningar · {c}',
+'nav_discover':'Upptäck',
 'lic.m_welcome_t':'Välkommen till Nucleum Hub',
 'lic.m_welcome_p':'Välj hur du vill börja. Den gratis provperioden ges en gång per hem.',
 'lic.w_trial_t':'Gratis provperiod, 3 dagar',
@@ -36995,7 +38371,7 @@ sv:{
 'card_height':'Min. höjd',
 'card_entities':'Entiteter',
 'add_entity':'Lägg till entitet',
-'search_ent':'Sök bland 1 309 entiteter…',
+'search_ent':'Sök bland {x}…',
 'no_results':'Inga träffar. Prova ett annat ord.',
 'del_card':'Ta bort kort',
 'save':'Spara',
@@ -37182,6 +38558,111 @@ sv:{
 'tap_toggle':'Live · ansluten till Home Assistant',
 },
 cs:{
+'dsc.top_t':'Objevte {p}',
+'dsc.top_p':'Karty níže jsou přímo z ovládacího panelu, s ukázkovým domem. Klepněte na cokoli: termostaty, přehrávač, roboty, brány, počasí. U některých karet najdete volby, které si můžete vyzkoušet.',
+'dsc.s_looks':'Jak vypadá',
+'dsc.p_looks':'Styl, motiv, barvy, jazyk a velikost textu.',
+'dsc.s_motion':'Jak se pohybuje',
+'dsc.p_motion':'Okna, která vyrůstají ze své karty nebo se otáčejí uprostřed obrazovky, a kolik se toho na obrazovce hýbe. Nastavuje se pro každou obrazovku zvlášť: vyzkoušejte to na kartách vedle.',
+'dsc.s_resize':'Velikost karet',
+'dsc.p_resize':'Každá karta může být širší nebo užší, vyšší nebo nižší, na každé obrazovce.',
+'dsc.s_climate':'Klima a vzduch',
+'dsc.p_climate':'Termostaty pro topení a klimatizaci, kvalita vzduchu, čistička vzduchu a zvlhčovač.',
+'dsc.s_media':'Hudba a reproduktory',
+'dsc.p_media':'Přehrávač stránky Média s obalem, frontou a hlasitostí každého reproduktoru; reproduktory v místnosti a skupiny.',
+'dsc.s_gates':'Brány, garáž a rolety',
+'dsc.p_gates':'Karty brány, garáže a rolety se všemi způsoby otevírání: vyberte jeden pod kartou a karta se podle něj vykreslí.',
+'dsc.s_robots':'Roboti',
+'dsc.p_robots':'Robotický vysavač a robotická sekačka s oknem, které ukazuje stav, baterii, upozornění, ovládání, spotřební díly a mapu. Tlačítkem s fotoaparátem na kartě na ni dáte svou fotku.',
+'dsc.s_car':'Auto',
+'dsc.p_car':'Karta auta s koly, dveřmi, baterií, dojezdem a klimatizací. S vaší fotkou se kola a dveře umístí přes ni.',
+'dsc.s_weather':'Počasí',
+'dsc.p_weather':'Karta počasí z ovládacího panelu, v kterémkoli ze 17 druhů počasí, v 7 krajinách, ve dne i v noci.',
+'dsc.s_energy':'Energie',
+'dsc.p_energy':'Energie právě teď, náklady, historie po dnech a po měsících, dnešní výkon s předpovědí slunce.',
+'dsc.looks_t':'Styly',
+'dsc.looks_sub':'a motiv',
+'dsc.looks_note':'Mění se v celé ukázce. V ovládacím panelu se styl volí pro celý panel a motiv pro každou obrazovku zvlášť.',
+'dsc.colours_t':'Barvy',
+'dsc.colours_sub':'Paleta: {p}',
+'dsc.colours_note':'13 hotových palet nebo vlastní barva, pro každý ovládací panel.',
+'dsc.hue':'Odstín',
+'dsc.langs_t':'12 jazyků',
+'dsc.per_screen':'na každé obrazovce',
+'dsc.langs_note':'Celá ukázka se hned přepne do zvoleného jazyka.',
+'dsc.text_apply':'Použít na celou ukázku',
+'dsc.text_reset':'Zpět na 100 %',
+'dsc.text_note':'Velký text na tabletu v předsíni, normální na telefonu. Hlavní teplotu karet lze zvětšit i zvlášť, až na 200 %.',
+'dsc.motion_t':'Jak se otevírají okna',
+'dsc.motion_note':'Vyzkoušejte to na kartách vedle: klepnutím na místnost otevřete její okno, nebo přejeďte prstem přes lampu, roletu, reproduktor či ventilátor a nastavte je. Ve stylu „{lively}“ okno vyrůstá z karty (na telefonu vyjede zdola); ve stylu „{classic}“ se otočí uprostřed obrazovky. {calm}: opakující se animace se minutu po dotyku zastaví; {off}: okna se jen objeví. V ovládacím panelu je to v Nastavení › Toto zařízení.',
+'dsc.drag_t':'Táhněte přes dlaždici ({lively})',
+'dsc.resize_big':'V režimu úprav můžete měnit velikost karet podle libosti.',
+'dsc.resize_note':'Přetáhněte kartu za roh nebo zvolte šířku a výšku v jejím nastavení, pro každou obrazovku.',
+'dsc.gate_t':'Jak se otevírá brána',
+'dsc.garage_t':'Jak se otevírá garáž',
+'dsc.blind_t':'Jak se zavírá roleta',
+'dsc.n_ways':'způsoby: {n}',
+'dsc.design_t':'Kresby',
+'dsc.design_sub':'pro celý ovládací panel',
+'dsc.design_p':'Pět způsobů, jak nakreslit brány, garáž a rolety. Mění se na všech kartách v této části.',
+'dsc.design_note':'Na každé kartě tlačítka „{open}“, „{close}“ a stop pohybují kresbou jako u vás doma.',
+'dsc.tiles_t':'Na jejich dlaždicích',
+'dsc.photos_t':'Vaše fotky',
+'dsc.photos_sub':'na zařízeních',
+'dsc.photos_p':'Auto, roboti, reproduktory a čistička vzduchu mohou mít vaši fotku. Když ji vyberete, tlačítkem „{place}“ ji posunete, zvětšíte a otočíte; u auta navíc srovnáte kola a dveře.',
+'dsc.photos_note':'Tlačítko s fotoaparátem na kartě otevře nastavení karty, jako v ovládacím panelu. Fotky vybrané tady zůstanou jen v tomto prohlížeči.',
+'dsc.dev_car':'Auto',
+'dsc.dev_vacuum':'Robotický vysavač',
+'dsc.dev_mower':'Robotická sekačka',
+'dsc.dev_speaker':'Reproduktor',
+'dsc.dev_purifier':'Čistička vzduchu',
+'dsc.wm_device':'Přidat fotku vašeho zařízení',
+'dsc.wm_vehicle':'Přidat fotku vašeho vozidla',
+'dsc.map_wm':'Skutečná mapa domu z aplikace robota',
+'dsc.map_wm2':'zvlášť podporováno značkou Roborock',
+'dsc.photo_of':'Fotka: {d}',
+'dsc.wx_t':'Vyzkoušejte počasí',
+'dsc.wx_sub':'na kartě počasí',
+'dsc.wx_p':'Je to karta počasí z ovládacího panelu. Déšť, sníh, mlha a blesky se kreslí přes obrázek podle toho, jak silně prší nebo sněží.',
+'dsc.wx_kind':'Počasí venku',
+'dsc.wx_time':'Denní doba',
+'dsc.wx_day':'Den',
+'dsc.wx_night':'Noc',
+'dsc.wx_note':'V ovládacím panelu se krajina řídí nadmořskou výškou domu v Home Assistant a počasí tím, jaké je právě teď.',
+'ph.place':'Umístit fotku',
+'ph.title':'Umístit fotku · {d}',
+'ph.intro_car':'Takto se zobrazí na kartě auta. Umístěte auto pod značky: zelené jsou kola, bílé dveře, kapota a kufr.',
+'ph.intro':'Takto se zobrazí na své dlaždici a ve svém okně.',
+'ph.hint':'Tažením posunete, roztažením prstů zvětšíte',
+'ph.size':'Velikost',
+'ph.smaller':'Menší',
+'ph.larger':'Větší',
+'ph.fit_t':'Jak sedí',
+'ph.fit':'Přizpůsobit',
+'ph.fill':'Vyplnit',
+'ph.photo':'Fotka',
+'ph.turn':'Otočit',
+'ph.center':'Na střed',
+'ph.other':'Jiná fotka',
+'ph.front':'Předek auta',
+'ph.up':'Nahoru',
+'ph.right':'Doprava',
+'ph.down':'Dolů',
+'ph.left':'Doleva',
+'ph.marks_t':'Kola a dveře',
+'ph.marks_on':'Přes fotku',
+'ph.marks_reset':'Vrátit na místo',
+'ph.drag_t':'Co tažením posunete',
+'ph.drag_marks':'Značky dohromady',
+'ph.drag_one':'Jednotlivě',
+'ph.cancel':'Zrušit',
+'ph.done':'Hotovo',
+'ph.placed':'Fotka umístěna',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'otočená o {d}°',
+'ph.kept':'Fotka i způsob, jakým jste ji umístili, se zachovají v ovládacím panelu i v záloze.',
+'ph.cfg_title':'Nastavení karty · {c}',
+'nav_discover':'Objevte',
 'lic.m_welcome_t':'Vítejte v Nucleum Hub',
 'lic.m_welcome_p':'Vyberte, jak začít. Bezplatnou zkušební dobu dostane každá domácnost jen jednou.',
 'lic.w_trial_t':'Bezplatná zkušební doba, 3 dny',
@@ -38659,7 +40140,7 @@ cs:{
 'card_height':'Min. výška',
 'card_entities':'Entity',
 'add_entity':'Přidat entitu',
-'search_ent':'Prohledat 1 309 entit…',
+'search_ent':'Prohledat {x}…',
 'no_results':'Žádné shody. Zkuste jiné slovo.',
 'del_card':'Odebrat kartu',
 'save':'Uložit',
@@ -38846,6 +40327,111 @@ cs:{
 'tap_toggle':'Živě · připojeno k Home Assistant',
 },
 da:{
+'dsc.top_t':'Opdag {p}',
+'dsc.top_p':'Kortene nedenfor er dashboardets egne, med demohuset. Tryk på hvad som helst: termostaterne, afspilleren, robotterne, portene, vejret. Ved siden af nogle kort finder du valg, du kan prøve.',
+'dsc.s_looks':'Sådan ser det ud',
+'dsc.p_looks':'Stilen, temaet, farverne, sproget og tekststørrelsen.',
+'dsc.s_motion':'Sådan bevæger det sig',
+'dsc.p_motion':'Vinduer, der vokser frem fra deres kort eller vender frem midt på skærmen, og hvor meget der bevæger sig på skærmen. Det indstilles pr. skærm: prøv det på kortene ved siden af.',
+'dsc.s_resize':'Kortstørrelser',
+'dsc.p_resize':'Hvert kort kan være bredere eller smallere, højere eller lavere, på hver skærm.',
+'dsc.s_climate':'Klima og luft',
+'dsc.p_climate':'Termostater til varme og aircondition, luftkvaliteten, luftrenseren og luftfugteren.',
+'dsc.s_media':'Musik og højttalere',
+'dsc.p_media':'Afspilleren på siden Medier, med cover, kø og hver højttalers lydstyrke; rummets højttalere og grupperne.',
+'dsc.s_gates':'Porte, garage og persienner',
+'dsc.p_gates':'Kortene for port, garage og persienne, med alle måder at åbne på: vælg én under et kort, så tegnes kortet sådan.',
+'dsc.s_robots':'Robotter',
+'dsc.p_robots':'Robotstøvsugeren og robotplæneklipperen med deres vindue: status, batteri, advarsler, betjening, forbrugsdele og kortet over hjemmet. Med kameraknappen på et kort sætter du dit foto på det.',
+'dsc.s_car':'Bilen',
+'dsc.p_car':'Bilkortet med dæk, døre, batteri og rækkevidde, og bilens klima. Med dit foto placeres dæk og døre oven på fotoet.',
+'dsc.s_weather':'Vejret',
+'dsc.p_weather':'Dashboardets vejrkort i alle 17 vejrtyper, i 7 landskaber, om dagen og om natten.',
+'dsc.s_energy':'Energi',
+'dsc.p_energy':'Energien lige nu, omkostningerne, historikken pr. dag og pr. måned, dagens effekt med solprognosen.',
+'dsc.looks_t':'Stilarter',
+'dsc.looks_sub':'og temaet',
+'dsc.looks_note':'Gælder hele demoen. I dashboardet hører stilen til dashboardet, og temaet vælges på hver skærm.',
+'dsc.colours_t':'Farver',
+'dsc.colours_sub':'Farvepalet: {p}',
+'dsc.colours_note':'13 færdige paletter eller din egen farve, for hvert dashboard.',
+'dsc.hue':'Farvetone',
+'dsc.langs_t':'12 sprog',
+'dsc.per_screen':'på hver skærm',
+'dsc.langs_note':'Hele demoen skifter til det sprog, du vælger, med det samme.',
+'dsc.text_apply':'Brug i hele demoen',
+'dsc.text_reset':'Tilbage til 100 %',
+'dsc.text_note':'Stor på tabletten i entréen, normal på telefonen. Kortenes hovedtemperatur kan også forstørres separat, op til 200 %.',
+'dsc.motion_t':'Sådan åbner vinduerne',
+'dsc.motion_note':'Prøv det på kortene ved siden af: tryk på rummet for at åbne dets vindue, eller træk en finger hen over lampen, persiennen, højttaleren eller ventilatoren for at indstille dem. I »{lively}« vokser vinduet frem fra sit kort (på en telefon glider det op nedefra); i »{classic}« vender det frem midt på skærmen. {calm}: animationer, der gentager sig, falder til ro et minut efter en berøring; {off}: vinduerne vises bare. I dashboardet under Indstillinger › Denne enhed.',
+'dsc.drag_t':'Træk hen over et felt ({lively})',
+'dsc.resize_big':'I redigeringstilstand kan du ændre kortenes størrelse, som du vil.',
+'dsc.resize_note':'Træk et kort i hjørnet, eller vælg bredde og højde i dets indstillinger, for hver skærm.',
+'dsc.gate_t':'Sådan åbner porten',
+'dsc.garage_t':'Sådan åbner garageporten',
+'dsc.blind_t':'Sådan lukker persiennen',
+'dsc.n_ways':'{n} måder',
+'dsc.design_t':'Tegninger',
+'dsc.design_sub':'for hele dashboardet',
+'dsc.design_p':'Fem måder at tegne portene, garagen og persiennerne på. De skifter på alle kort i dette afsnit.',
+'dsc.design_note':'På hvert kort bevæger »{open}«, »{close}« og stop tegningen, ligesom hjemme hos dig.',
+'dsc.tiles_t':'På deres felter',
+'dsc.photos_t':'Dine fotos',
+'dsc.photos_sub':'på enheder',
+'dsc.photos_p':'Bilen, robotterne, højttalerne og luftrenseren kan have dit foto. Når du har valgt det, kan du med »{place}« flytte, forstørre og dreje det; på bilen retter du også dækkene og dørene ind.',
+'dsc.photos_note':'Kameraknappen på et kort åbner kortets indstillinger, som i dashboardet. Fotos, du vælger her, gemmes kun i denne browser.',
+'dsc.dev_car':'Bil',
+'dsc.dev_vacuum':'Robotstøvsugeren',
+'dsc.dev_mower':'Robotplæneklipperen',
+'dsc.dev_speaker':'Højttaleren',
+'dsc.dev_purifier':'Luftrenseren',
+'dsc.wm_device':'Tilføj foto af din enhed',
+'dsc.wm_vehicle':'Tilføj foto af dit køretøj',
+'dsc.map_wm':'Det rigtige kort over hjemmet, fra robottens app',
+'dsc.map_wm2':'særligt understøttet af Roborock',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Prøv vejret',
+'dsc.wx_sub':'på vejrkortet',
+'dsc.wx_p':'Dette er dashboardets vejrkort. Regn, sne, tåge og lyn tegnes oven på billedet, lige så kraftigt, som det regner eller sner.',
+'dsc.wx_kind':'Vejret udenfor',
+'dsc.wx_time':'Tidspunkt',
+'dsc.wx_day':'Dag',
+'dsc.wx_night':'Nat',
+'dsc.wx_note':'I dashboardet vælges landskabet automatisk ud fra husets højde i Home Assistant, og vejret ud fra, hvordan det er lige nu.',
+'ph.place':'Placer fotoet',
+'ph.title':'Placer fotoet · {d}',
+'ph.intro_car':'Sådan vises det på bilkortet. Placer bilen under markeringerne: de grønne er dækkene, de hvide er dørene, motorhjelmen og bagagerummet.',
+'ph.intro':'Sådan vises det på feltet og i enhedens vindue.',
+'ph.hint':'Træk for at flytte det, knib for at zoome',
+'ph.size':'Størrelse',
+'ph.smaller':'Mindre',
+'ph.larger':'Større',
+'ph.fit_t':'Tilpasning',
+'ph.fit':'Tilpas',
+'ph.fill':'Udfyld',
+'ph.photo':'Foto',
+'ph.turn':'Drej',
+'ph.center':'Centrer',
+'ph.other':'Andet foto',
+'ph.front':'Bilens front',
+'ph.up':'Op',
+'ph.right':'Højre',
+'ph.down':'Ned',
+'ph.left':'Venstre',
+'ph.marks_t':'Dæk og døre',
+'ph.marks_on':'Oven på fotoet',
+'ph.marks_reset':'Sæt dem tilbage',
+'ph.drag_t':'Hvad du flytter, når du trækker',
+'ph.drag_marks':'Markeringerne, samlet',
+'ph.drag_one':'Én ad gangen',
+'ph.cancel':'Annuller',
+'ph.done':'Færdig',
+'ph.placed':'Fotoet er placeret',
+'ph.how':'{fit} · {z} %',
+'ph.turned':'drejet {d}°',
+'ph.kept':'Fotoet og måden, du har placeret det på, gemmes i dashboardet og i sikkerhedskopien.',
+'ph.cfg_title':'Kortets indstillinger · {c}',
+'nav_discover':'Opdag',
 'lic.m_welcome_t':'Velkommen til Nucleum Hub',
 'lic.m_welcome_p':'Vælg, hvordan du vil starte. Den gratis prøveperiode gives én gang pr. hjem.',
 'lic.w_trial_t':'Gratis prøveperiode, 3 dage',
@@ -40323,7 +41909,7 @@ da:{
 'card_height':'Min. højde',
 'card_entities':'Entiteter',
 'add_entity':'Tilføj entitet',
-'search_ent':'Søg i 1.309 entiteter…',
+'search_ent':'Søg i {x}…',
 'no_results':'Ingen resultater. Prøv et andet ord.',
 'del_card':'Fjern kort',
 'save':'Gem',
@@ -40510,6 +42096,111 @@ da:{
 'tap_toggle':'Live · forbundet til Home Assistant',
 },
 'pt-BR':{
+'dsc.top_t':'Descubra o {p}',
+'dsc.top_p':'Os cartões abaixo são os do próprio painel, com a casa de demonstração. Toque no que quiser: os termostatos, o player, os robôs, os portões, o tempo. Ao lado de alguns cartões estão as opções que você pode experimentar.',
+'dsc.s_looks':'Como fica',
+'dsc.p_looks':'O estilo, o tema, as cores, o idioma e o tamanho do texto.',
+'dsc.s_motion':'Como se move',
+'dsc.p_motion':'Janelas que crescem a partir do cartão ou giram no centro da tela, e quanto a tela se move. É uma configuração de cada tela: experimente nos cartões ao lado.',
+'dsc.s_resize':'Tamanho dos cartões',
+'dsc.p_resize':'Cada cartão pode ficar mais largo ou mais estreito, mais alto ou mais baixo, em cada tela.',
+'dsc.s_climate':'Clima e ar',
+'dsc.p_climate':'Os termostatos com aquecimento e ar-condicionado, a qualidade do ar, o purificador e o umidificador.',
+'dsc.s_media':'Música e alto-falantes',
+'dsc.p_media':'O player da página Mídia, com a capa, a fila e o volume de cada alto-falante; os alto-falantes do cômodo e os grupos.',
+'dsc.s_gates':'Portões, garagem e persianas',
+'dsc.p_gates':'Os cartões de portão, garagem e persiana, com todos os tipos de abertura: escolha um embaixo do cartão e o cartão é desenhado assim.',
+'dsc.s_robots':'Robôs',
+'dsc.p_robots':'O robô aspirador e o robô cortador de grama, com a janela deles: status, bateria, alertas, controles, consumíveis e o mapa. O botão com a câmera no cartão coloca a sua foto nele.',
+'dsc.s_car':'Carro',
+'dsc.p_car':'O cartão do carro com os pneus, as portas, a bateria e a autonomia, e a climatização dele. Com a sua foto, os pneus e as portas ficam alinhados sobre ela.',
+'dsc.s_weather':'Tempo',
+'dsc.p_weather':'O cartão do tempo do painel, em qualquer uma das suas 17 condições, em 7 paisagens, de dia e de noite.',
+'dsc.s_energy':'Energia',
+'dsc.p_energy':'A energia agora, os custos, o histórico por dia e por mês, a potência de hoje com a previsão solar.',
+'dsc.looks_t':'Estilos',
+'dsc.looks_sub':'e o tema',
+'dsc.looks_note':'Muda em toda a demonstração. No painel, o estilo é definido por painel e o tema é escolhido em cada tela.',
+'dsc.colours_t':'Cores',
+'dsc.colours_sub':'Paleta: {p}',
+'dsc.colours_note':'13 paletas prontas ou a sua própria cor, para cada painel.',
+'dsc.hue':'Matiz',
+'dsc.langs_t':'12 idiomas',
+'dsc.per_screen':'em cada tela',
+'dsc.langs_note':'Toda a demonstração passa para o idioma escolhido, na hora.',
+'dsc.text_apply':'Aplicar em toda a demonstração',
+'dsc.text_reset':'Voltar a 100%',
+'dsc.text_note':'Grande no tablet do hall, normal no celular. A temperatura principal dos cartões também pode ser aumentada separadamente, até 200%.',
+'dsc.motion_t':'Como as janelas se abrem',
+'dsc.motion_note':'Experimente nos cartões ao lado: toque no cômodo para abrir a janela dele, ou arraste o dedo sobre a luminária, a persiana, o alto-falante ou o ventilador para ajustá-los. Em “{lively}”, a janela cresce a partir do cartão (no celular, ela sobe de baixo); em “{classic}”, ela gira no centro da tela. {calm}: as animações que se repetem param um minuto depois de um toque; {off}: as janelas apenas aparecem. No painel, em Configurações › Este dispositivo.',
+'dsc.drag_t':'Arraste sobre um bloco ({lively})',
+'dsc.resize_big':'No modo de edição, você pode redimensionar os cartões como quiser.',
+'dsc.resize_note':'Arraste um cartão pelo canto ou escolha a largura e a altura nas configurações dele, para cada tela.',
+'dsc.gate_t':'Como o portão abre',
+'dsc.garage_t':'Como a garagem abre',
+'dsc.blind_t':'Como a persiana fecha',
+'dsc.n_ways':'{n} tipos',
+'dsc.design_t':'Desenhos',
+'dsc.design_sub':'para todo o painel',
+'dsc.design_p':'Cinco maneiras de desenhar os portões, a garagem e as persianas. A escolha vale para todos os cartões desta seção.',
+'dsc.design_note':'Em cada cartão, “{open}”, “{close}” e o botão de parar movem o desenho como na sua casa.',
+'dsc.tiles_t':'Nos blocos deles',
+'dsc.photos_t':'Suas fotos',
+'dsc.photos_sub':'nos dispositivos',
+'dsc.photos_p':'O carro, os robôs, os alto-falantes e o purificador podem ter a sua foto. Depois de escolhê-la, “{place}” move, amplia e gira a imagem; no carro, você também alinha os pneus e as portas.',
+'dsc.photos_note':'O botão com a câmera no cartão abre as configurações do cartão, como no painel. As fotos escolhidas aqui ficam só neste navegador.',
+'dsc.dev_car':'Carro',
+'dsc.dev_vacuum':'Robô aspirador',
+'dsc.dev_mower':'Cortador de grama',
+'dsc.dev_speaker':'Alto-falante',
+'dsc.dev_purifier':'Purificador',
+'dsc.wm_device':'Adicionar foto do seu dispositivo',
+'dsc.wm_vehicle':'Adicionar foto do seu veículo',
+'dsc.map_wm':'O mapa real da sua casa, do app do robô',
+'dsc.map_wm2':'com suporte especial da Roborock',
+'dsc.photo_of':'Foto: {d}',
+'dsc.wx_t':'Experimente o tempo',
+'dsc.wx_sub':'no cartão do tempo',
+'dsc.wx_p':'Este é o cartão do tempo do painel. Chuva, neve, neblina e relâmpagos são desenhados sobre a imagem, conforme a intensidade da chuva ou da neve.',
+'dsc.wx_kind':'Tempo lá fora',
+'dsc.wx_time':'Hora do dia',
+'dsc.wx_day':'Dia',
+'dsc.wx_night':'Noite',
+'dsc.wx_note':'No painel, a paisagem segue sozinha a altitude da casa no Home Assistant, e o tempo segue a condição atual.',
+'ph.place':'Posicionar a foto',
+'ph.title':'Posicionar a foto · {d}',
+'ph.intro_car':'É assim que a foto aparece no cartão do carro. Coloque o carro sob as marcas: as verdes são os pneus; as brancas, as portas, o capô e o porta-malas.',
+'ph.intro':'É assim que a foto aparece no bloco e na janela dele.',
+'ph.hint':'Arraste para mover, use dois dedos para ampliar',
+'ph.size':'Tamanho',
+'ph.smaller':'Menor',
+'ph.larger':'Maior',
+'ph.fit_t':'Enquadramento',
+'ph.fit':'Ajustar',
+'ph.fill':'Preencher',
+'ph.photo':'Foto',
+'ph.turn':'Girar',
+'ph.center':'Centralizar',
+'ph.other':'Outra foto',
+'ph.front':'Frente do carro',
+'ph.up':'Acima',
+'ph.right':'Direita',
+'ph.down':'Abaixo',
+'ph.left':'Esquerda',
+'ph.marks_t':'Pneus e portas',
+'ph.marks_on':'Sobre a foto',
+'ph.marks_reset':'Colocar de volta',
+'ph.drag_t':'O que mover ao arrastar',
+'ph.drag_marks':'As marcas, juntas',
+'ph.drag_one':'Uma de cada vez',
+'ph.cancel':'Cancelar',
+'ph.done':'Concluído',
+'ph.placed':'Foto posicionada',
+'ph.how':'{fit} · {z}%',
+'ph.turned':'girada {d}°',
+'ph.kept':'A foto e o jeito como você a posicionou ficam guardados no painel e no backup.',
+'ph.cfg_title':'Configurações do cartão · {c}',
+'nav_discover':'Descobrir',
 'lic.m_welcome_t':'Boas-vindas ao Nucleum Hub',
 'lic.m_welcome_p':'Escolha como começar. O teste grátis é dado uma única vez por casa.',
 'lic.w_trial_t':'Teste grátis, 3 dias',
@@ -41987,7 +43678,7 @@ da:{
 'card_height':'Altura mín.',
 'card_entities':'Entidades',
 'add_entity':'Adicionar entidade',
-'search_ent':'Pesquisar 1.309 entidades…',
+'search_ent':'Pesquisar {x}…',
 'no_results':'Nenhum resultado. Tente outra palavra.',
 'del_card':'Remover cartão',
 'save':'Salvar',
@@ -43424,7 +45115,7 @@ const carSVG = '<svg viewBox="0 0 300 460" aria-label="car">'+
 return '<div class="chead"><div class="chip-ic" style="--tc:var(--ember);--tcs:var(--ember-soft)">'+ic('car')+'</div>'+
 '<h3>'+esc(WDP.car?WDP.car.name:'')+' · '+(locked?t('locked'):t('unlocked'))+'</h3>'+(E[wdCar('sensor','power_mode')]&&!['unavailable','unknown'].includes(stof(wdCar('sensor','power_mode')).st)?'<span class="sub">'+esc(stText(wdCar('sensor','power_mode')))+'</span>':'')+'</div>'+
 '<div id="carwrap"><div id="carph">'+
-'<div class="carart" style="transform:rotate('+rot+'deg)">'+carSVG+'</div>'+
+'<div class="carart" style="transform:rotate('+rot+'deg)">'+(window.WD_STANDIN?WD_STANDIN.svg('car'):carSVG)+'</div>'+
 chip('front_left',0.03,0.155)+chip('front_right',0.97,0.155)+chip('rear_left',0.03,0.845)+chip('rear_right',0.97,0.845)+
 dot(dOpen('front_left'),0.115,0.44,'FL')+dot(dOpen('rear_left'),0.115,0.63,'RL')+
 dot(dOpen('front_right'),0.885,0.44,'FR')+dot(dOpen('rear_right'),0.885,0.63,'RR')+
@@ -44214,7 +45905,7 @@ const DOMS = (domInit && !PICK_DOMAINS.includes(domInit)) ? [domInit].concat(PIC
 const html = '<div class="shead"><h3>'+esc(t('add_entity'))+'</h3><button class="rbtn" id="pick-close" aria-label="'+esc(t('aria.close'))+'">'+ic('x')+'</button></div>'+
 '<div class="sbody">'+
 '<div id="mp-search" style="display:flex;align-items:center;gap:9px;height:46px;padding:0 13px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)">'+ic('search')+
-'<input id="pick-q" type="search" placeholder="'+esc(t('search_ent'))+'" style="flex:1;border:none;background:none;outline:none;font-size:calc(14.5px * var(--fs,1));color:var(--ink)"></div>'+
+'<input id="pick-q" type="search" placeholder="'+esc(fmt('search_ent',{x:t(WD_WORDS.key('ui.n_entities',LANG,RAW.length,k=>t(k)!==k)).replace('{n}',RAW.length.toLocaleString(LANG))}))+'" style="flex:1;border:none;background:none;outline:none;font-size:calc(14.5px * var(--fs,1));color:var(--ink)"></div>'+
 '<div class="domfilter" id="pick-doms">'+DOMS.map(d=>'<button class="pill'+(d===dom?' on':'')+'" data-pdom="'+d+'"'+(d==='all'||d==='other'?'':' title="'+esc(d)+'"')+' style="--tc:var(--accent);flex:0 0 auto">'+esc(d==='all'?'✳ '+t('all'):(d==='other'?t('other'):WD_WORDS.dom(d,1,t)))+'</button>').join('')+'</div>'+
 '<div class="stack" id="pick-list"></div></div>';
 const exitAll = ()=>{ closeSheet(); saveLayout(); renderPage(false); };
@@ -44668,7 +46359,10 @@ const rise=new Date(a.next_rising), set=new Date(a.next_setting); if(isNaN(rise)
 const m=x=>x.getHours()*60+x.getMinutes(), w=m(when);
 return w < m(rise) || w >= m(set);
 }
-function wxName(c){ const ha=WD_HAT.state(LANG, 'weather', c); if(ha) return ha; const w=WX[c]; return w ? (LANG==='ro'?w[1]:w[2]) : prettyToken(c); }
+function wxName(c){ const ha=WD_HAT.state(LANG, 'weather', c); if(ha) return ha;
+  const k={sunny:'clear','clear-night':'clear_night',partlycloudy:'partly',cloudy:'cloudy',fog:'fog',rainy:'rain',pouring:'pour',lightning:'thunder','lightning-rainy':'storm',snowy:'snow','snowy-rainy':'sleet',hail:'hail',windy:'windy','windy-variant':'windycloudy',exceptional:'exceptional'}[c];
+  if(k){ const v=t('wx.c.'+k); if(v && v!=='wx.c.'+k) return v; }
+  const w=WX[c]; return w ? (LANG==='ro'?w[1]:w[2]) : prettyToken(c); }
 async function openWeather(id){
 const s=stof(id), a=s.a||{}; const lc=loc();
 const meta=[(a.apparent_temperature!=null?[t('ui.feels_like'), fnum(a.apparent_temperature)+'°']:[t('ui.uv_index'), a.uv_index!=null?fnum(a.uv_index):'—']),[t('hum_word'), a.humidity!=null?Math.round(a.humidity)+'%':'—'],
@@ -45529,7 +47223,7 @@ tileHTML = function(id, ctx, o){
 let h=_wdTileHTML10(id, ctx, o);
 const c=ROBOTS[id]; const _own=(typeof wdImgGet==='function'&&wdImgGet('entity',id))||null;
 const _src=_own || (c && WD_IMG[c.img]) || null;
-if(_src) h=h.replace(/<div class="tic">[\s\S]*?<\/div>/, '<div class="tic timg"><img src="'+_src+'" alt=""></div>');
+if(_src) h=h.replace(/<div class="tic">[\s\S]*?<\/div>/, '<div class="tic timg"><img src="'+_src+'" alt=""'+(_own?wdImgAttr('entity',id):'')+'></div>');
 return h;
 };
 
@@ -45540,7 +47234,7 @@ let bat = has(c.battery) ? stof(c.battery).num : (a.battery_level!=null?a.batter
 const statusTxt = mower && a.status ? (haAttrText(id, 'status', a.status)||prettyToken(a.status)) : '';
 const _own=(typeof wdImgGet==='function'&&wdImgGet('entity',id))||null;
 const _src=_own || (c.img&&WD_IMG[c.img]) || null;
-let h='<div class="rbx-top"><div class="rbx-img">'+(_src?'<img src="'+_src+'" alt="">':ic(mower?'mower':'vacuum'))+'</div>'+
+let h='<div class="rbx-top"><div class="rbx-img">'+(_src?'<img src="'+_src+'" alt=""'+(_own?wdImgAttr('entity',id):'')+'>':(window.WD_STANDIN?WD_STANDIN.svg(mower?'mower':'vacuum'):ic(mower?'mower':'vacuum')))+'</div>'+
 '<div class="rbx-st"><b>'+esc(stText(id))+'</b><span>'+esc(statusTxt || (has(c.info&&c.info[0])?stText(c.info[0]):''))+'</span>'+
 (bat!=null?'<div class="rbx-bat" style="--p:'+Math.round(bat)+'%;--bc:'+(bat<20?'var(--bad)':bat<50?'var(--warn)':'var(--good)')+'">'+ic('battery')+'<i></i>'+Math.round(bat)+'%</div>':'')+'</div></div>';
 const al=[];
@@ -46141,7 +47835,8 @@ WD_SYNC3.use({
   history: wdSyncHistory,
   onApplied: (keys, o) => {
     try{ if(keys.indexOf('wd2_profiles') > -1) WD_PROFILE.applyTombstones('sync'); }catch(e){}
-    if(o && o.boot) wdReloadCaches(); else wdReloadAll();
+    const go = () => { if(o && o.boot) wdReloadCaches(); else wdReloadAll(); };
+    if(window.WD_PHOTO && WD_PHOTO.busy()) WD_PHOTO.afterClose(go); else go();
   },
   toast: key => { try{ toast(t(key), key === 'ui.update_needed_sync' ? 'siren' : 'refresh'); }catch(e){} },
   app: window.WD_VERSION
@@ -46248,8 +47943,9 @@ if(!document.body.classList.contains('edit')) UNDO.hideT=setTimeout(()=>bar.clas
 function wdReloadCaches(){
 try{ MPC=Object.assign({devs:null, w:100, h:0, btn:'m', art:'m'}, JSON.parse(WD_PROFILE.read('wd2_wd_mp_cfg')||'{}')); applyMpDevs(); }catch(e){}
 try{ const x=JSON.parse(localStorage.getItem('wd2_wd_feed_dismissed')||'null'); FDISM = (x&&x.n&&x.s) ? x : {n:{}, s:{}}; }catch(e){}
-try{ const x=JSON.parse(WD_STORE.raw(WDL_KEY)||'null'); if(x && typeof x==='object'){ Object.keys(WDL).forEach(k=>delete WDL[k]); Object.assign(WDL, x); if(!WDL._) WDL._={}; } }catch(e){}
-try{ if(typeof LOPT!=='undefined'){ const x=JSON.parse(WD_STORE.raw('wd2_wd_light_opts')||'null'); if(x && typeof x==='object'){ Object.keys(LOPT).forEach(k=>delete LOPT[k]); Object.assign(LOPT, x); } } }catch(e){}
+try{ const r=WD_STORE.raw(WDL_KEY), x=r==null ? {v:1, _:{}} : JSON.parse(r); if(x && typeof x==='object'){ Object.keys(WDL).forEach(k=>delete WDL[k]); Object.assign(WDL, x); if(!WDL.v) WDL.v=1; if(!WDL._) WDL._={}; } }catch(e){}
+try{ if(typeof LOPT!=='undefined'){ let r=WD_STORE.raw('wd2_wd_light_opts'); if(r==null) r=WD_STORE.raw('wd_light_opts');
+  const x=r==null ? {} : JSON.parse(r); if(x && typeof x==='object'){ Object.keys(LOPT).forEach(k=>delete LOPT[k]); Object.assign(LOPT, x); } } }catch(e){}
 }
 function wdReloadAll(){
 try{ closeSheet(); }catch(e){}
@@ -46578,7 +48274,7 @@ function airBodyHTML(id){
   let h='<div class="gair'+(on?' on':'')+'" style="--ac:'+ac+'">'+
    '<div class="rg"></div><div class="rg"></div><div class="rg"></div>'+
    [12,30,50,70,88].map((x,i)=>'<u style="left:'+x+'%; animation-delay:'+(i*.8)+'s"></u>').join('')+
-   '<div class="core"><div><b>'+(pm?fnum(stof(pm[0]).num,0):(pct!=null?pct:'—'))+'</b><span>'+esc(pm?'PM2.5 μg/m³':t('ui.power'))+'</span></div></div></div>';
+   '<div class="core"><div><b>'+(pm?fnum(stof(pm[0]).num,0):(pct!=null?pct:'—'))+'</b><span>'+(pm?'PM2.5 <i class="u">μg/m³</i>':esc(t('ui.power')))+'</span></div></div></div>';
   h+='<div class="grow" style="--ac:'+ac+'"><button class="gpw'+(on?' on':'')+'" data-airpw="1">'+ic('power')+'</button>'+
      (pct!=null?'<div class="bar" data-airpct="'+esc(id)+'" style="--p:'+pct+'%"><i></i><em>'+pct+'%</em></div>':'<div class="bar" style="--p:0%"><i></i><em>'+esc(stText(id))+'</em></div>')+'</div>';
   const pres=(a.preset_modes||[]);
@@ -48867,11 +50563,18 @@ function wdImgAll(){
 try{ return WD_DEMOISO.imgView(); }
 catch(e){ return {}; }
 }
-function wdImgGet(scope, id){ const o = wdImgAll(); return o[scope+':'+id] || null; }
+function wdImgGet(scope, id){ const o = wdImgAll(), v = o[scope+':'+id] || null;
+  return v && window.WD_PHOTO && !WD_PHOTO.srcOk(v) ? null : v; }
+function wdImgPlace(scope, id){ try{ return WD_PHOTO.parse(wdImgAll()['place:'+scope+':'+id]); }catch(e){ return null; } }
+function wdImgAttr(scope, id){ const p = wdImgPlace(scope, id); return p ? ' class="wdph" style="'+WD_PHOTO.style(p)+'"' : ''; }
 function wdImgBytes(o){ let n=0; for(const k in o) n += (o[k]||'').length; return n; }
 
 function wdImgSet(scope, id, dataUrl){
-const n = WD_DEMOISO.imgNext(scope+':'+id, dataUrl || null);
+const ch = {}; ch[scope+':'+id] = dataUrl || null; ch['place:'+scope+':'+id] = null;
+return wdImgSetMany(ch);
+}
+function wdImgSetMany(ch){
+const n = WD_DEMOISO.imgNextMany(ch);
 if(n.bytes > WDIMG_BUDGET){
   toast(fmt('ui.photo_too_big',{n:Math.round(n.bytes/1024)}), 'x');
   return false;
@@ -48908,19 +50611,35 @@ return new Promise((resolve, reject) => {
 });
 }
 
+function wdImgActs(cur){
+return (cur && window.WD_PHOTO ? '<button class="pri" data-imgplace="1">'+esc(t('ph.place'))+'</button>' : '')
+  + '<button'+(cur && window.WD_PHOTO ? '' : ' class="pri"')+' data-imgpick="1">'+esc(cur ? t('ui.photo_change') : t('ui.photo_add'))+'</button>'
+  + (cur ? '<button data-imgclear="1">'+esc(t('ui.photo_remove'))+'</button>' : '');
+}
+function wdImgBack(){
+try{ if(typeof CFGCARD !== 'undefined' && CFGCARD && document.querySelector('#sheet.on #cfg-title')){ const c = CFGCARD; return () => openCardConfig(c); } }catch(e){}
+return null;
+}
+
 function wdImgRowHTML(scope, id, label){
 const cur = wdImgGet(scope, id);
 return '<div class="slabel">'+esc(label || t('ui.photo'))+'</div>'
   + '<div class="wdimg-row" data-imgscope="'+esc(scope)+'" data-imgid="'+esc(id)+'">'
-  +   '<span class="wdimg-prev">'+(cur ? '<img src="'+cur+'" alt="">' : ic('frame'))+'</span>'
+  +   '<span class="wdimg-prev">'+(cur ? '<img src="'+cur+'" alt=""'+wdImgAttr(scope, id)+'>' : ic('frame'))+'</span>'
   +   '<span class="acts">'
-  +     '<button class="pri" data-imgpick="1">'+esc(cur ? t('ui.photo_change') : t('ui.photo_add'))+'</button>'
-  +     (cur ? '<button data-imgclear="1">'+esc(t('ui.photo_remove'))+'</button>' : '')
+  +     wdImgActs(cur)
   +   '</span></div>'
   + '<div class="wdimg-note">'+esc(t('ui.photo_note'))+'</div>';
 }
 
 document.addEventListener('click', ev => {
+const plc = ev.target.closest('[data-imgplace]');
+if(plc){
+  ev.stopImmediatePropagation();
+  const row = plc.closest('[data-imgscope]');
+  if(window.WD_PHOTO) WD_PHOTO.open(row.dataset.imgscope, row.dataset.imgid, { back: wdImgBack() });
+  return;
+}
 const clr = ev.target.closest('[data-imgclear]');
 if(clr){
   ev.stopImmediatePropagation();
@@ -48945,7 +50664,7 @@ inp.onchange = async () => {
     const url = await wdImgProcess(f);
     if(wdImgSet(row.dataset.imgscope, row.dataset.imgid, url)){
       toast(t('ui.photo_saved'), 'check');
-      wdImgRefresh(row);
+      if(!(window.WD_PHOTO && WD_PHOTO.open(row.dataset.imgscope, row.dataset.imgid, { back: wdImgBack() }))) wdImgRefresh(row);
     }
   }catch(e){ toast(t('ui.photo_failed'), 'x'); }
 };
@@ -48955,10 +50674,8 @@ inp.click();
 function wdImgRefresh(row){
 try{
   const cur = wdImgGet(row.dataset.imgscope, row.dataset.imgid);
-  row.querySelector('.wdimg-prev').innerHTML = cur ? '<img src="'+cur+'" alt="">' : ic('frame');
-  const acts = row.querySelector('.acts');
-  acts.innerHTML = '<button class="pri" data-imgpick="1">'+esc(cur ? t('ui.photo_change') : t('ui.photo_add'))+'</button>'
-    + (cur ? '<button data-imgclear="1">'+esc(t('ui.photo_remove'))+'</button>' : '');
+  row.querySelector('.wdimg-prev').innerHTML = cur ? '<img src="'+cur+'" alt=""'+wdImgAttr(row.dataset.imgscope, row.dataset.imgid)+'>' : ic('frame');
+  row.querySelector('.acts').innerHTML = wdImgActs(cur);
   renderPage(false);
 }catch(e){}
 }
@@ -48973,9 +50690,21 @@ carDiagHTML = function(card){
     const own = wdImgGet('car', id);
     if(own) h = (typeof WD_IMG!=='undefined' && WD_IMG.car && h.indexOf(WD_IMG.car) >= 0)
       ? h.split(WD_IMG.car).join(own)
-      : h.replace(/<svg viewBox="0 0 300 460" aria-label="car">[\s\S]*?<\/svg>/, '<img src="' + own + '" alt="">');
+      : h.replace(/<svg viewBox="0 0 300 460" aria-label="car">[\s\S]*?<\/svg>/, '<img src="' + own + '" alt=""' + wdImgAttr('car', id) + '>');
   }catch(e){}
   return h;
+};
+})();
+(function(){
+if(typeof carDiagHTML !== 'function' || !window.WD_PHOTO) return;
+const _cdp = carDiagHTML;
+carDiagHTML = function(card){
+  const h = _cdp.apply(this, arguments);
+  try{
+    if(card && /^dsc_/.test(String(card.id))) return h;
+    const id = (typeof WDP!=='undefined' && WDP.car && WDP.car.device) || 'car';
+    return wdImgGet('car', id) ? WD_PHOTO.carStage(h, wdImgPlace('car', id)) : h;
+  }catch(e){ return h; }
 };
 })();
 (function(){
@@ -49019,7 +50748,7 @@ if(typeof tileHTML === 'function'){
       const src = (typeof wdImgGet === 'function' && id) ? wdImgGet('entity', id) : null;
       if(src && h.indexOf('class="tic timg"') < 0){
         h = h.replace(/<div class="tic">[\s\S]*?<\/div>/,
-                      '<div class="tic timg"><img src="' + src + '" alt=""></div>');
+                      '<div class="tic timg"><img src="' + src + '" alt=""' + wdImgAttr('entity', id) + '></div>');
       }
     }catch(e){}
     return h;
@@ -49031,7 +50760,8 @@ if(typeof airBodyHTML === 'function'){
     let h = _air.apply(this, arguments);
     try{
       const src = (typeof wdImgGet === 'function' && id) ? wdImgGet('entity', id) : null;
-      if(src) h = '<div class="wdimg-hero"><img src="' + src + '" alt=""></div>' + h;
+      if(src) h = '<div class="wdimg-hero"><img src="' + src + '" alt=""' + wdImgAttr('entity', id) + '></div>' + h;
+      else if(window.WD_STANDIN) h = WD_STANDIN.hero('purifier') + h;
     }catch(e){}
     return h;
   };
@@ -49043,7 +50773,7 @@ if(typeof mppBodyHTML === 'function'){
     try{
       const src = (typeof wdImgGet === 'function' && id) ? wdImgGet('entity', id) : null;
       if(src) h = h.replace(/<div class="art">(?!<img)[\s\S]*?<\/div>/,
-                            '<div class="art"><img src="' + src + '" alt=""></div>');
+                            '<div class="art"><img src="' + src + '" alt=""' + wdImgAttr('entity', id) + '></div>');
     }catch(e){}
     return h;
   };
@@ -49595,6 +51325,9 @@ if(window.WD_MEDIA && typeof mpHTML==='function'){ const _mp61 = mpHTML; mpHTML 
 if(window.WD_MEDIA && typeof mppBodyHTML==='function'){ const _mpp61 = mppBodyHTML; mppBodyHTML = function(id){
   const h = _mpp61.apply(this, arguments);
   try{ WD_MEDIA.queueSync(); return WD_MEDIA.popModes(h, id, (stof(id).a)||{}); }catch(e){ return h; } }; }
+if(window.WD_STANDIN && typeof mppBodyHTML==='function'){ const _mppSi = mppBodyHTML; mppBodyHTML = function(id){
+  const h = _mppSi.apply(this, arguments);
+  try{ return WD_STANDIN.art(h, WD_STANDIN.kindOf(id, (stof(id).a)||{}, (E[id]||{}).dc)); }catch(e){ return h; } }; }
 if(window.WD_MEDIA && typeof gpHTML==='function'){ const _gh61 = gpHTML; gpHTML = function(){
   const h = _gh61.apply(this, arguments);
   try{ if(GPOP && GPOP.kind==='media'){ const s = stof(GPOP.id); return WD_MEDIA.popHead(h, s.a||{}, s.st); } }catch(e){}
@@ -50398,6 +52131,12 @@ if(typeof openRoomCfg === 'function'){
 if(typeof roomDeps === 'function'){ const _rdRl = roomDeps; roomDeps = function(card){ const r = _rdRl.apply(this, arguments); try{ WD_RLISTS.deps(card).forEach(id => { if(r.indexOf(id) < 0) r.push(id); }); }catch(e){ log(e); } return r; }; }
 if(typeof roomPopHTML === 'function'){ const _rpRl = roomPopHTML; roomPopHTML = function(card){ const h = _rpRl.apply(this, arguments); try{ const st = WD_RLISTS.popStatusHTML(card); if(st) return h.replace('<div class="rpb">', st + '<div class="rpb">'); }catch(e){ log(e); } return h; }; }
 if(typeof saveLayout === 'function'){ const _slRl = saveLayout; saveLayout = function(){ try{ WD_RLISTS.pruneAll(); }catch(e){ log(e); } return _slRl.apply(this, arguments); }; }
+})();
+</script>
+<script>
+(function(){
+if(!window.WD_DSC) return;
+try{ WD_DSC.install(); }catch(e){ try{ (window.__WD_ERRORS = window.__WD_ERRORS || []).push('discover: ' + ((e && e.message) || e)); }catch(_){} }
 })();
 </script>
 <script>
