@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.WD_VERSION = '1.0.1';
-window.WD_BUILD = '2026-10-29.e17686f';
+window.WD_BUILD = '2026-10-29.c6106d0';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -12236,7 +12236,13 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
   }
   function hero(kind) { var s = svg(kind); return s ? '<div class="wdimg-hero wdsi-hero">' + s + '</div>' : ''; }
 
-  return { KINDS: KINDS, svg: svg, standalone: standalone, kindOf: kindOf, art: art, hero: hero };
+  function tile(html, kind) {
+    var s = kind ? svg(kind) : '', h = String(html);
+    if (!s || h.indexOf('class="tic timg"') > -1) return h;
+    return h.replace(/<div class="tic">[\s\S]*?<\/div>/, function () { return '<div class="tic tsi">' + s + '</div>'; });
+  }
+
+  return { KINDS: KINDS, svg: svg, standalone: standalone, kindOf: kindOf, art: art, hero: hero, tile: tile };
 })();
 </script>
 <script>(function (root) {
@@ -12377,9 +12383,10 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
     }
     if (!done) return;
     try { closeSheet(); } catch (e) {}
+    var pulled = AFTER.length > 0;
     finish();
     try { renderPage(false); } catch (e) {}
-    if (s.back) { try { s.back(); } catch (e) {} }
+    if (s.back && !pulled) { try { s.back(); } catch (e) {} }
   }
   function onClick(e) {
     var b = e.target && e.target.closest && e.target.closest('button'); if (!b || !S) return;
@@ -19572,6 +19579,13 @@ svg.wdsi{display:block;}
 #roompop .rp.gsat .wdimg-hero.wdsi-hero{background:rgba(255,255,255,.06);}
 :root:not([data-app="dark"]) #roompop .rp.gsat .wdimg-hero.wdsi-hero{background:var(--surface2);}
 .wdimg-hero.wdsi-hero svg.wdsi{width:132px; height:132px;}
+.tile .tic.tsi{padding:0; overflow:visible;}
+.tile .tic.tsi svg.wdsi{width:31px; height:31px; stroke-width:5.2;}
+.tile.on .tic.tsi svg.wdsi{color:var(--on-acc);}
+.tile.on .tic.tsi svg.wdsi .wdsi-acc{fill:var(--on-acc);}
+.tile.on .tic.tsi svg.wdsi .wdsi-accs, .tile.on .tic.tsi svg.wdsi .wdsi-air, .tile.on .tic.tsi svg.wdsi .wdsi-grass, .tile.on .tic.tsi svg.wdsi .wdsi-lamp, .tile.on .tic.tsi svg.wdsi .wdsi-tail{stroke:var(--on-acc);}
+.tile.on .tic.tsi svg.wdsi .wdsi-gl{fill:var(--on-acc); fill-opacity:.3;}
+.tile.on .tic.tsi svg.wdsi .wdsi-sh{fill-opacity:0;}
 </style>
 <style>
 .tile .tic.timg:has(img.wdph), .rbx-img:has(img.wdph), .wdimg-hero:has(img.wdph), .art:has(img.wdph), .wdimg-prev:has(img.wdph){overflow:hidden;}
@@ -19616,6 +19630,8 @@ svg.wdsi{display:block;}
 .ppfr .mkbox u.se{right:-14px; bottom:-14px;}
 .ppfr[data-mode=one] .gdl i{pointer-events:auto; cursor:move; transform:translate(-50%, -50%) scale(1.35);}
 .wdimg-row .acts button svg{width:15px; height:15px; vertical-align:-2px; margin-right:4px;}
+.wdimg-prev .wdsi-prev{display:grid; place-items:center; width:100%; height:100%;}
+.wdimg-prev .wdsi-prev svg{width:44px; height:44px; color:var(--ink2);}
 .wdimg-hero{grid-template-rows:100%;}
 .stepper button:focus-visible{outline-offset:-3px;}
 </style>
@@ -47090,8 +47106,10 @@ function openRoomItemEdit(card, idx){
 let x=card.ents[idx]; if(x===undefined) return;
 if(typeof x==='string') x={e:x};
 x={...x};
+let plain=false; try{ plain = WDLP.plainCard===card.id; }catch(e){}
 const BTN_IC=['play','power','bulb','bell','music','vacuum','sun','moon','lock','car','sparkle','tv','drop','snow','fan','plug','shield','home'];
 const draw=()=>{
+if(plain) try{ WDLP.plainCard=card.id; }catch(e){}
 const isBtn=x.t==='btn', isTxt=x.t==='txt'; const id=isBtn?x.eid:x.e;
 let body='';
 if(isTxt){ body='<div class="slabel">'+t('ui.text')+'</div><input class="sinput" id="ri-t" value="'+esc(x.text||'')+'">'; }
@@ -47100,6 +47118,7 @@ body='<div class="slabel">'+t('ui.name_2')+'</div>'+(window.WD_NAMES&&!isBtn&&id
 '<div class="slabel">'+(isBtn?t('ui.action_entity'):t('ui.entity'))+'</div><div class="entrow">'+'<span class="dompill" title="'+esc(id&&E[id]?E[id].domain:'?')+'">'+esc(WD_WORDS.dom(id&&E[id]?E[id].domain:'?',0,t))+'</span>'+'<div class="en"><b>'+esc(id?ename(id):t('ui.nothing_selected'))+'</b><span>'+esc(id||'')+'</span></div><button class="ebtn" data-ripick="1">'+t('change')+'</button></div>';
 if(isBtn) body+='<div class="slabel">'+t('card_icon')+'</div><div class="sc-icons">'+BTN_IC.map(k=>'<button class="'+((x.icon||'play')===k?'on':'')+'" data-riic="'+k+'">'+ic(k)+'</button>').join('')+'</div>';
 if(window.WD_ASK) body+=WD_ASK.rowHTML(x,'tile');
+if(!isBtn && id && !/^dsc_/.test(String(card.id)) && typeof wdImgItemRow==='function') body+=wdImgItemRow(id);
 }
 openSheet('<div class="shead"><h3>'+esc(cardTitle(card))+' · '+esc(isTxt?t('ui.text'):isBtn?t('new_button'):t('ui.device'))+'</h3><button class="rbtn" data-rix="1" aria-label="'+esc(t('aria.close'))+'">'+ic('x')+'</button></div>'+
 '<div class="sbody">'+body+
@@ -47109,10 +47128,14 @@ openSheet('<div class="shead"><h3>'+esc(cardTitle(card))+' · '+esc(isTxt?t('ui.
 '<button data-ridel="1" style="color:var(--bad)">'+ic('trash')+'</button>'+
 '<button class="pri" data-riok="1">'+ic('check')+t('save')+'</button></div></div></div>', ()=>{ closeSheet(); reopenRoom(card.id); });
 const sh=document.getElementById('sheet'); sh.oninput=null;
-sh.onclick=ev=>{
+const readIn=()=>{
 const n=document.getElementById('ri-n'); if(n){ const v=n.value.trim(); if(x.t==='btn'){ x.label=v||undefined; } else { if(v) x.n=v; else delete x.n; } }
 const tt=document.getElementById('ri-t'); if(tt) x.text=tt.value;
 if(window.WD_ASK) WD_ASK.readRow(sh, x);
+};
+openRoomItemEdit.ret={read:readIn, back:draw};
+sh.onclick=ev=>{
+readIn();
 if(ev.target.closest('[data-rix]')){ closeSheet(); reopenRoom(card.id); return; }
 if(ev.target.closest('[data-ripick]')){ openEntityPicker(pid=>{ if(x.t==='btn') x.eid=pid; else x.e=pid; setTimeout(draw,0); return false; }, ()=>setTimeout(draw,0)); return; }
 const icb=ev.target.closest('[data-riic]'); if(icb){ x.icon=icb.dataset.riic; draw(); return; }
@@ -50611,6 +50634,21 @@ return new Promise((resolve, reject) => {
 });
 }
 
+function wdTileKind(id){
+try{
+  const e = E[id]; if(!e || !window.WD_STANDIN) return '';
+  const k = WD_STANDIN.kindOf(id, (stof(id) || {}).a || {}, e.dc);
+  return k === 'purifier' && !(e.domain === 'air_purifier' || (typeof gpKind === 'function' && gpKind(id) === 'air')) ? '' : k;
+}catch(e){ return ''; }
+}
+function wdImgBlank(scope, id){
+try{
+  const k = scope === 'car' ? 'car' : wdTileKind(id);
+  const d = k && window.WD_STANDIN ? WD_STANDIN.svg(k) : '';
+  if(d) return '<i class="wdsi-prev">' + d + '</i>';
+}catch(e){}
+return ic('frame');
+}
 function wdImgActs(cur){
 return (cur && window.WD_PHOTO ? '<button class="pri" data-imgplace="1">'+esc(t('ph.place'))+'</button>' : '')
   + '<button'+(cur && window.WD_PHOTO ? '' : ' class="pri"')+' data-imgpick="1">'+esc(cur ? t('ui.photo_change') : t('ui.photo_add'))+'</button>'
@@ -50618,6 +50656,7 @@ return (cur && window.WD_PHOTO ? '<button class="pri" data-imgplace="1">'+esc(t(
 }
 function wdImgBack(){
 try{ if(typeof CFGCARD !== 'undefined' && CFGCARD && document.querySelector('#sheet.on #cfg-title')){ const c = CFGCARD; return () => openCardConfig(c); } }catch(e){}
+try{ const r = openRoomItemEdit.ret; if(r && document.querySelector('#sheet.on [data-rix]')){ r.read(); return r.back; } }catch(e){}
 return null;
 }
 
@@ -50625,7 +50664,7 @@ function wdImgRowHTML(scope, id, label){
 const cur = wdImgGet(scope, id);
 return '<div class="slabel">'+esc(label || t('ui.photo'))+'</div>'
   + '<div class="wdimg-row" data-imgscope="'+esc(scope)+'" data-imgid="'+esc(id)+'">'
-  +   '<span class="wdimg-prev">'+(cur ? '<img src="'+cur+'" alt=""'+wdImgAttr(scope, id)+'>' : ic('frame'))+'</span>'
+  +   '<span class="wdimg-prev">'+(cur ? '<img src="'+cur+'" alt=""'+wdImgAttr(scope, id)+'>' : wdImgBlank(scope, id))+'</span>'
   +   '<span class="acts">'
   +     wdImgActs(cur)
   +   '</span></div>'
@@ -50674,7 +50713,7 @@ inp.click();
 function wdImgRefresh(row){
 try{
   const cur = wdImgGet(row.dataset.imgscope, row.dataset.imgid);
-  row.querySelector('.wdimg-prev').innerHTML = cur ? '<img src="'+cur+'" alt=""'+wdImgAttr(row.dataset.imgscope, row.dataset.imgid)+'>' : ic('frame');
+  row.querySelector('.wdimg-prev').innerHTML = cur ? '<img src="'+cur+'" alt=""'+wdImgAttr(row.dataset.imgscope, row.dataset.imgid)+'>' : wdImgBlank(row.dataset.imgscope, row.dataset.imgid);
   row.querySelector('.acts').innerHTML = wdImgActs(cur);
   renderPage(false);
 }catch(e){}
@@ -50754,6 +50793,13 @@ if(typeof tileHTML === 'function'){
     return h;
   };
 }
+if(typeof tileHTML === 'function' && window.WD_STANDIN){
+  const _tsi = tileHTML;
+  tileHTML = function(id, ctx, o){
+    const h = _tsi.apply(this, arguments);
+    try{ return id ? WD_STANDIN.tile(h, wdTileKind(id)) : h; }catch(e){ return h; }
+  };
+}
 if(typeof airBodyHTML === 'function'){
   const _air = airBodyHTML;
   airBodyHTML = function(id){
@@ -50797,6 +50843,13 @@ const WDIMG_DOMAINS = {
   air_purifier: () => t('ui.photo_of_purifier'),
   media_player: () => t('ui.photo_of_speaker'),
 };
+function wdImgItemRow(id){
+try{
+  const dom = (E[id] || {}).domain; if(!WDIMG_DOMAINS[dom]) return '';
+  const lbl = (dom === 'fan' || dom === 'humidifier') && !(typeof gpKind === 'function' && gpKind(id) === 'air') ? t('ui.photo') : WDIMG_DOMAINS[dom]();
+  return '<div class="wdimg-one wdimg-item">' + wdImgRowHTML('entity', id, lbl) + '</div>';
+}catch(e){ return ''; }
+}
 function wdImgCardRows(card){
 try{
   const ids = (card.ents || []).map(itemId).filter(Boolean)
