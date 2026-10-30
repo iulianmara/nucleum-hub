@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>window.WD_VERSION = '1.0.1';
-window.WD_BUILD = '2026-10-29.c6106d0';
+<script>window.WD_VERSION = '1.0.2';
+window.WD_BUILD = '2026-10-30.d8b3482';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -31,6 +31,7 @@ window.wdReload = function(){
 <script>window.WD_LICENSE = (function () {
   'use strict';
   var CMD = 'wall_dashboard/licence', CMD_SUB = 'wall_dashboard/licence/subscribe', CMD_TRIAL = 'wall_dashboard/licence/trial';
+  var NEWS_V = 1;
   var STATES = ['FULL', 'TRIAL', 'GRACE', 'FALLBACK', 'UNCOVERED', 'ACTIVATE'];
   var BLOCKS = ['ACTIVATE', 'UNCOVERED'];
   var KINDS = ['buy', 'renew', 'payment'];
@@ -343,7 +344,15 @@ window.wdReload = function(){
     var e = r && typeof r === 'object' && has(TRIAL_ERRORS, r.error) ? r.error : 'failed';
     return { ok: false, error: e, minutes: e === 'rate_limited' && num(r.minutes) && r.minutes > 0 ? Math.ceil(r.minutes) : null };
   }
-  function startTrial() {
+  function trialFields(contact, lang) {
+    var email = contact && typeof contact.email === 'string' ? contact.email.trim() : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 254) return {};
+    var l = typeof lang === 'string' && lang ? lang : 'en';
+    var out = { email: email, language: l };
+    if (contact.news === true) { out.news = true; out.consent_version = 'news-' + l.toLowerCase() + '-' + NEWS_V; }
+    return out;
+  }
+  function startTrial(contact) {
     if (R.trial) return R.trial;
     var c = R.conn || D.conn();
     if (!c || D.demo() || R.left) return Promise.resolve(trialAnswer(null, { code: 'no_connection' }));
@@ -351,7 +360,9 @@ window.wdReload = function(){
     var p = new Promise(function (ok) {
       var done = false;
       var tm = D.later(function () { if (!done) { done = true; ok(trialAnswer(null, { code: 'timeout' })); } }, TRIAL_MS);
-      Promise.resolve().then(function () { return c.send({ type: CMD_TRIAL }); }).then(function (r) {
+      var msg = { type: CMD_TRIAL }, f = trialFields(contact, D.lang());
+      Object.keys(f).forEach(function (k) { msg[k] = f[k]; });
+      Promise.resolve().then(function () { return c.send(msg); }).then(function (r) {
         if (done) return; done = true; D.cancel(tm); ok(trialAnswer(r));
       }, function (err) {
         if (done) return; done = true; D.cancel(tm); ok(trialAnswer(null, err || {}));
@@ -399,7 +410,7 @@ window.wdReload = function(){
     TRIAL_CARD: TRIAL_CARD, TRIAL_LAST: TRIAL_LAST, TRIAL_MS: TRIAL_MS, TRIAL_ERRORS: TRIAL_ERRORS.slice(),
     TABLET_SIDE: TABLET_SIDE, RETRY: RETRY.slice(),
     clean: clean, model: model, msgOf: msgOf, bandsOf: bandsOf, isTablet: isTablet, qrOn: qrOn, link: link,
-    leftUnit: leftUnit, trialAnswer: trialAnswer,
+    leftUnit: leftUnit, trialAnswer: trialAnswer, trialFields: trialFields, NEWS_V: NEWS_V,
     start: start, reconnected: reconnected, refresh: refresh, retry: retry, startTrial: startTrial, view: view, onChange: onChange, use: use,
     state: function () { return R.p ? R.p.state : null; },
     limits: function () { return { answerMs: ANSWER_MS, absentMs: ABSENT_MS }; },
@@ -429,6 +440,7 @@ window.wdReload = function(){
     licchat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
     licretry: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
     licchev: '<path d="m9 6 6 6-6 6"/>',
+    licmail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
     licspark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/>'
   };
   var ICON_OF = { key: 'key', clock: 'clock', card: 'liccard', wifi: 'licwifi', move: 'licmove', undo: 'licundo', stop: 'licstop',
@@ -461,7 +473,9 @@ window.wdReload = function(){
   var ABOUT_RETRY = 'lic.btn_check';
   var FORMS = ['one', 'few', 'many', 'other'];
   var MSGS = L ? L.MESSAGES : [];
-  var KEYS = ['lic.eyebrow', 'lic.foot', 'lic.settings', 'lic.retry', 'lic.write', 'lic.later', 'lic.checking',
+  var KEYS = [
+ 'lic.s_t', 'lic.s_p', 'lic.s_email', 'lic.s_opt', 'lic.s_ph', 'lic.s_hint', 'lic.s_bad', 'lic.s_need',
+    'lic.s_news', 'lic.s_news_sub', 'lic.s_skip', 'lic.s_back', 'lic.s_fine', 'lic.s_sent','lic.eyebrow', 'lic.foot', 'lic.settings', 'lic.retry', 'lic.write', 'lic.later', 'lic.checking',
     'lic.path_settings', 'lic.path_devices', 'lic.path_configure', 'lic.qr_buy', 'lic.qr_renew', 'lic.qr_payment',
     'lic.btn_prices', 'lic.btn_plan', 'lic.btn_renew_sub', 'lic.btn_options', 'lic.btn_renew', 'lic.btn_pay', 'lic.btn_try_now',
     'lic.btn_check', 'lic.btn_open_settings', 'lic.band_aria', 'lic.card_p', 'lic.a_sub_end_s', 'lic.pill_min', 'aria.close',
@@ -517,6 +531,13 @@ window.wdReload = function(){
     var keyBtn = canKey && way ? button('settings', 'lic.btn_have_key', false) : null;
     var buy = has(b.actions, 'link') ? button('link', 'lic.btn_buy', false, b.link) : null;
     if (buy) buy.ghost = true;
+    if (st.step && canStart) {
+      return {
+        msg: b.msg, tone: b.tone, icon: 'licmail', pending: false, title: 'lic.s_t', text: 'lic.s_p', note: null, path: false,
+        step: { email: st.email || '', news: !!st.news, bad: st.bad || null, err: errLine(err), busy: !!st.busy, skip: !!st.skip },
+        buttons: [], cards: null, qr: b.qr && b.link ? { url: b.link, caption: 'lic.qr_' + (b.kind || 'buy') } : null, foot: false, code: b.code
+      };
+    }
     var cards = [
       { id: 'trial', hl: true, title: 'lic.w_trial_t', text: 'lic.w_trial_p', admin: canStart ? null : 'lic.w_trial_admin', path: false,
         buttons: start ? [start] : [], err: canStart ? errLine(err) : null, note: canStart ? 'lic.w_trial_server' : null },
@@ -638,8 +659,29 @@ window.wdReload = function(){
       + (c.note ? '<p class="wdlic-onote">' + X.esc(X.t(c.note)) + '</p>' : '')
       + '</div>';
   }
+  function stepHTML(p, X) {
+    var s = p.step, bad = s.bad ? X.t(s.bad === 'need' ? 'lic.s_need' : 'lic.s_bad') : '';
+    var err = s.err ? (s.err.n !== undefined ? X.fmt(s.err.key, { n: s.err.n }) : X.t(s.err.key)) : '';
+    var start = { act: 'trial_go', key: s.busy && !s.skip ? 'lic.starting' : 'lic.btn_start_trial', pri: true, icon: null, busy: s.busy && !s.skip };
+    var skip = { act: 'trial_skip', key: s.busy && s.skip ? 'lic.starting' : 'lic.s_skip', pri: false, ghost: true, icon: null, busy: s.busy && s.skip };
+    return '<div class="wdlic-msg wdlic-step">'
+      + '<button type="button" class="wdlic-back" data-wdlic="trial_back">' + X.ic('chevl') + '<span>' + X.esc(X.t('lic.s_back')) + '</span></button>'
+      + '<div class="wdlic-top"><span class="wdlic-ic">' + X.ic(p.icon) + '</span><span class="wdlic-eyebrow">' + X.esc(X.t('lic.w_trial_t')) + '</span></div>'
+      + '<h2 id="wdlic-t">' + X.esc(X.t(p.title)) + '</h2>'
+      + '<p id="wdlic-p">' + X.esc(X.t(p.text)) + '</p>'
+      + '<div class="wdlic-field"><label for="wdlic-email"><span>' + X.esc(X.t('lic.s_email')) + '</span><small>' + X.esc(X.t('lic.s_opt')) + '</small></label>'
+      + '<input id="wdlic-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254"'
+      + ' value="' + X.esc(s.email) + '" placeholder="' + X.esc(X.t('lic.s_ph')) + '"' + (bad ? ' aria-invalid="true" aria-describedby="wdlic-eh"' : ' aria-describedby="wdlic-eh"') + '>'
+      + '<p class="wdlic-hint' + (bad ? ' err' : '') + '" id="wdlic-eh"' + (bad ? ' role="alert"' : '') + '>' + X.esc(bad || X.t('lic.s_hint')) + '</p></div>'
+      + '<label class="wdlic-chk"><input id="wdlic-news" type="checkbox"' + (s.news ? ' checked' : '') + '>'
+      + '<span>' + X.esc(X.fmt('lic.s_news', { product: X.name })) + '<small>' + X.esc(X.t('lic.s_news_sub')) + '</small></span></label>'
+      + '<div class="wdlic-acts">' + btnHTML(skip, X) + btnHTML(start, X) + '</div>'
+      + (err ? '<p class="wdlic-oerr" role="status">' + X.esc(err) + '</p>' : '')
+      + '<p class="wdlic-onote">' + X.esc(X.t('lic.s_fine')) + '</p>'
+      + '</div>';
+  }
   function blockHTML(p, X) {
-    var msg = '<div class="wdlic-msg">'
+    var msg = p.step ? stepHTML(p, X) : '<div class="wdlic-msg">'
       + (p.pending ? '<div class="wdlic-spin" aria-hidden="true"></div>'
         : '<div class="wdlic-top"><span class="wdlic-ic">' + X.ic(p.icon) + '</span><span class="wdlic-eyebrow">' + X.esc(X.name + ' · ' + X.t('lic.eyebrow')) + '</span></div>')
       + '<h2 id="wdlic-t">' + X.esc(X.t(p.title)) + '</h2>'
@@ -808,11 +850,12 @@ window.wdReload = function(){
     inertAll();
     if (sig !== S.blockSig) {
       var hadFocus = el.contains(document.activeElement) ? (document.activeElement.getAttribute('data-wdlic') || '') : null;
-      el.className = 'wdlic tone-' + p.tone + (p.qr ? ' has-qr' : '') + (p.pending ? ' pending' : '') + (p.cards ? ' cards' : '') + (S.under ? ' under' : '');
+      el.className = 'wdlic tone-' + p.tone + (p.qr ? ' has-qr' : '') + (p.pending ? ' pending' : '') + (p.cards ? ' cards' : '') + (p.step ? ' step' : '') + (S.under ? ' under' : '');
       el.innerHTML = blockHTML(p, X());
       S.blockSig = sig;
       var back = hadFocus ? el.querySelector('[data-wdlic="' + hadFocus + '"]') : null;
       if (!S.under) (back || el).focus({ preventScroll: true });
+      if (!S.under && S.trial.focus === 'email') { S.trial.focus = null; var fe = byId('wdlic-email'); if (fe) fe.focus({ preventScroll: true }); }
     }
     if (!S.clockT) tick();
   }
@@ -965,6 +1008,23 @@ window.wdReload = function(){
     chipSync();
   }
 
+  function startTrialNow(contact, skip) {
+    clearTimeout(S.trial.t);
+    var tr0 = S.trial = { busy: true, err: null, at: D.now(), t: null, step: true, email: S.trial.email || '', news: !!S.trial.news, bad: null, skip: !!skip };
+    render(L.view());
+    L.startTrial(contact).then(function (a) {
+      if (S.trial !== tr0) return;
+      if (a.ok) {
+        if (contact && contact.news) g(function () { toast(X().fmt('lic.s_sent', { email: contact.email }), 'check'); }, null);
+        tr0.t = setTimeout(function () { if (S.trial !== tr0) return; tr0.busy = false; tr0.t = null; render(L.view()); },
+          Math.max(0, (L.TRIAL_MS || 30000) - (D.now() - tr0.at)));
+        return;
+      }
+      tr0.busy = false;
+      tr0.err = { code: a.error, minutes: a.minutes };
+      render(L.view());
+    });
+  }
   function act(name, el) {
     if (name === 'settings') { var way = settingsWay(D.env()); g(function () { return D.navigate(way); }, false); return; }
     if (name === 'retry' || name === 'again') {
@@ -977,6 +1037,34 @@ window.wdReload = function(){
     }
     if (name === 'write') { write(); return; }
     if (name === 'trial') {
+      if (!L || S.trial.busy) return;
+      S.trial = { busy: false, err: null, at: 0, t: null, step: true, email: '', news: false, bad: null, focus: 'email' };
+      render(L.view());
+      return;
+    }
+    if (name === 'trial_back') {
+      if (!L || S.trial.busy) return;
+      S.trial = { busy: false, err: null, at: 0, t: null };
+      S.blockSig = '';
+      render(L.view());
+      g(function () { var b = S.block && S.block.querySelector('[data-wdlic="trial"]'); if (b) b.focus({ preventScroll: true }); }, null);
+      return;
+    }
+    if (name === 'trial_go' || name === 'trial_skip') {
+      if (!L || S.trial.busy || !S.trial.step) return;
+      var skip = name === 'trial_skip';
+      var em = byId('wdlic-email'), nw = byId('wdlic-news');
+      var email = em ? String(em.value || '').trim() : '', news = !!(nw && nw.checked);
+      S.trial.email = email; S.trial.news = news;
+      if (!skip) {
+        var bad = email && !(L.trialFields({ email: email }, 'en').email) ? 'bad' : (!email && news ? 'need' : null);
+        if (bad) { S.trial.bad = bad; S.trial.focus = 'email'; render(L.view()); return; }
+      }
+      S.trial.bad = null;
+      startTrialNow(skip ? null : (email ? { email: email, news: news } : null), skip);
+      return;
+    }
+    if (name === '__trial_start') {
       if (!L || S.trial.busy) return;
       clearTimeout(S.trial.t);
       var tr0 = S.trial = { busy: true, err: null, at: D.now(), t: null };
@@ -1029,6 +1117,7 @@ window.wdReload = function(){
   }, true);
   if (PAGE) window.addEventListener('keydown', function (ev) {
     if (!S.block || S.under) return;
+    if (ev.key === 'Enter' && ev.target && ev.target.id === 'wdlic-email') { ev.preventDefault(); ev.stopImmediatePropagation(); act('trial_go'); return; }
     if (ev.key === 'Tab') {
       var f = focusables(S.block), a = document.activeElement;
       ev.preventDefault();
@@ -1248,6 +1337,39 @@ html.wdlic-band #app{top:var(--wdlic-band, 48px);}
 .wdlic-about .wdlic-btn{background:var(--surface);}
 .wdlic-about .wdlic-btn.pri{background:var(--accent);}
 .wdlic-about .wdlic-meta{margin-top:9px; font-size:calc(12px * var(--fs,1)); color:var(--ink3);}
+
+#wdlic .wdlic-step{max-width:560px;}
+#wdlic .wdlic-back{display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 12px 0 6px; margin:0 0 6px -6px; border:0; border-radius:12px;
+  background:transparent; color:var(--ink2); font:inherit; font-size:calc(14px * var(--fs,1)); font-weight:650; cursor:pointer;}
+#wdlic .wdlic-back:hover{background:var(--surface2); color:var(--ink);}
+#wdlic .wdlic-back svg{width:18px; height:18px;}
+#wdlic .wdlic-field{display:flex; flex-direction:column; gap:6px; margin:16px 0 0;}
+#wdlic .wdlic-field label{display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:calc(14px * var(--fs,1)); font-weight:650; color:var(--ink);}
+#wdlic .wdlic-field label small{font-size:calc(12.5px * var(--fs,1)); font-weight:600; color:var(--ink3);}
+#wdlic .wdlic-field input{min-height:48px; padding:10px 14px; box-sizing:border-box; width:100%; border-radius:14px; border:1px solid var(--line2);
+  background:var(--surface); color:var(--ink); font:inherit; font-size:calc(16px * var(--fs,1));}
+#wdlic .wdlic-field input:focus-visible{outline:3px solid var(--accent); outline-offset:1px;}
+#wdlic .wdlic-field input[aria-invalid="true"]{border-color:var(--bad);}
+#wdlic .wdlic-hint{margin:0; font-size:calc(13px * var(--fs,1)); color:var(--ink2); line-height:1.4;}
+#wdlic .wdlic-hint.err{color:var(--bad); font-weight:650;}
+#wdlic .wdlic-chk{display:flex; align-items:flex-start; gap:12px; margin:14px 0 0; padding:12px 14px; border-radius:14px; border:1px solid var(--line2);
+  background:var(--surface2); cursor:pointer; font-size:calc(14px * var(--fs,1)); line-height:1.4; color:var(--ink);}
+#wdlic .wdlic-chk input{flex:0 0 auto; width:22px; height:22px; margin:1px 0 0; accent-color:var(--accent); cursor:pointer;}
+#wdlic .wdlic-chk small{display:block; margin-top:4px; font-size:calc(12.5px * var(--fs,1)); color:var(--ink2);}
+#wdlic .wdlic-step .wdlic-acts{margin-top:18px;}
+#wdlic .wdlic-step .wdlic-oerr{margin:12px 0 0; padding:8px 10px; border-radius:10px; background:var(--rose-soft); color:var(--ink); font-size:calc(13px * var(--fs,1));}
+#wdlic .wdlic-step .wdlic-onote{margin:12px 0 0; font-size:calc(12.5px * var(--fs,1)); color:var(--ink2);}
+@media (max-height:700px){
+  #wdlic .wdlic-step .wdlic-top{display:none;}
+  #wdlic .wdlic-back{margin-bottom:0;}
+  #wdlic .wdlic-step h2{margin-top:2px;}
+  #wdlic .wdlic-field{margin-top:8px; gap:4px;}
+  #wdlic .wdlic-field input{min-height:44px; padding:8px 12px;}
+  #wdlic .wdlic-chk{margin-top:8px; padding:8px 12px;}
+  #wdlic .wdlic-step .wdlic-acts{margin-top:10px;}
+  #wdlic .wdlic-step .wdlic-oerr{margin-top:8px; padding:6px 10px;}
+  #wdlic .wdlic-step .wdlic-onote{margin-top:6px;}
+}
 </style>
 <script>window.WD_STORE = (function(){
   'use strict';
@@ -23029,6 +23151,20 @@ function ic(n, cls){ return '<svg viewBox="0 0 24 24" fill="none" stroke="curren
 
 const T = {
 fr:{
+'lic.s_t':'Une étape de plus, si vous le souhaitez',
+'lic.s_p':'Laissez-nous votre adresse e-mail. C’est facultatif : l’essai démarre aussi sans elle.',
+'lic.s_email':'Votre adresse e-mail',
+'lic.s_opt':'facultatif',
+'lic.s_ph':'nom@exemple.fr',
+'lic.s_hint':'Nous vous écrivons une fois, la veille de la fin de l’essai.',
+'lic.s_bad':'L’adresse semble incomplète. Corrigez-la ou laissez le champ vide.',
+'lic.s_need':'Saisissez votre adresse pour recevoir nos nouvelles, ou décochez la case.',
+'lic.s_news':'Tenez-moi informé des nouveautés de {product} et des futures solutions de maison connectée.',
+'lic.s_news_sub':'Au plus un e-mail par mois. Désinscription en un clic, depuis n’importe quel e-mail.',
+'lic.s_skip':'Démarrer sans e-mail',
+'lic.s_back':'Retour',
+'lic.s_fine':'L’adresse reste chez nous, sur notre serveur de licences dans l’UE, et nous ne la donnons à personne.',
+'lic.s_sent':'Nous avons envoyé un e-mail à {email}. Appuyez sur « Confirmer » dedans pour recevoir nos nouvelles.',
 'dsc.top_t':'Découvrir {p}',
 'dsc.top_p':'Les cartes ci-dessous sont celles du tableau de bord, avec la maison de démo. Touchez ce que vous voulez : les thermostats, le lecteur, les robots, les portails, la météo. À côté de certaines cartes, vous trouverez des options à essayer.',
 'dsc.s_looks':'Apparence',
@@ -24798,6 +24934,20 @@ fr:{
 'tap_toggle':'En direct · connecté à Home Assistant',
 },
 de:{
+'lic.s_t':'Noch ein Schritt, wenn du magst',
+'lic.s_p':'Gib uns deine E-Mail-Adresse. Das ist freiwillig: Die Testphase startet auch ohne sie.',
+'lic.s_email':'Deine E-Mail-Adresse',
+'lic.s_opt':'freiwillig',
+'lic.s_ph':'name@beispiel.de',
+'lic.s_hint':'Wir schreiben dir einmal, einen Tag bevor die Testphase endet.',
+'lic.s_bad':'Die Adresse sieht unvollständig aus. Korrigiere sie oder lass das Feld leer.',
+'lic.s_need':'Gib deine Adresse ein, um unsere Neuigkeiten zu erhalten, oder entferne das Häkchen.',
+'lic.s_news':'Halte mich über Neuigkeiten von {product} und künftige Smart-Home-Lösungen auf dem Laufenden.',
+'lic.s_news_sub':'Höchstens eine E-Mail im Monat. Abmelden mit einem Klick, aus jeder E-Mail.',
+'lic.s_skip':'Ohne E-Mail starten',
+'lic.s_back':'Zurück',
+'lic.s_fine':'Die Adresse bleibt bei uns, auf unserem Lizenzserver in der EU, und wir geben sie an niemanden weiter.',
+'lic.s_sent':'Wir haben eine E-Mail an {email} geschickt. Drücke darin „Bestätigen“, um unsere Neuigkeiten zu erhalten.',
 'dsc.top_t':'{p} entdecken',
 'dsc.top_p':'Die Karten unten sind dieselben wie im Dashboard, mit dem Demohaus. Tippe auf alles: die Thermostate, den Player, die Roboter, die Tore, das Wetter. Neben einigen Karten findest du Optionen zum Ausprobieren.',
 'dsc.s_looks':'Wie es aussieht',
@@ -26567,6 +26717,20 @@ de:{
 'tap_toggle':'Live · mit Home Assistant verbunden',
 },
 en:{
+'lic.s_t':'One more step, if you like',
+'lic.s_p':'Leave us your e-mail address. It is optional: the trial starts without it too.',
+'lic.s_email':'Your e-mail address',
+'lic.s_opt':'optional',
+'lic.s_ph':'name@example.com',
+'lic.s_hint':'We write to you once, a day before the trial ends.',
+'lic.s_bad':'The address looks incomplete. Correct it or leave the field empty.',
+'lic.s_need':'Write your address to get our news, or untick the box.',
+'lic.s_news':'Keep me posted on {product} news and on future smart home solutions.',
+'lic.s_news_sub':'At most one e-mail a month. Unsubscribe in one click, from any e-mail.',
+'lic.s_skip':'Start without e-mail',
+'lic.s_back':'Back',
+'lic.s_fine':'The address stays with us, on our licence server in the EU, and we give it to no one.',
+'lic.s_sent':'We sent an e-mail to {email}. Press “Confirm” in it to get our news.',
 'dsc.top_t':'Discover {p}',
 'dsc.top_p':'The cards below are the dashboard’s own, with the demo home. Tap anything: the thermostats, the player, the robots, the gates, the weather. Next to some cards are the choices you can try.',
 'dsc.s_looks':'How it looks',
@@ -28148,6 +28312,20 @@ choose_type:'What kind of card?', type_tiles:'Entity tiles', type_stats:'Big num
 washer_done:'done at', dish_prog:'Program', move_hint:'Drag to move', tap_toggle:'Live · connected to Home Assistant',
 },
 ro:{
+'lic.s_t':'Încă un pas, dacă vrei',
+'lic.s_p':'Lasă-ne adresa ta de e-mail. E opțional: încercarea pornește și fără ea.',
+'lic.s_email':'Adresa ta de e-mail',
+'lic.s_opt':'opțional',
+'lic.s_ph':'nume@exemplu.ro',
+'lic.s_hint':'Îți scriem o dată, cu o zi înainte să se termine încercarea.',
+'lic.s_bad':'Adresa pare incompletă. Corecteaz-o sau lasă câmpul gol.',
+'lic.s_need':'Scrie adresa ca să primești noutățile, sau scoate bifa.',
+'lic.s_news':'Ține-mă la curent cu noutățile {product} și cu viitoarele soluții de smart home.',
+'lic.s_news_sub':'Cel mult un e-mail pe lună. Te dezabonezi dintr-un clic, din orice e-mail.',
+'lic.s_skip':'Pornește fără e-mail',
+'lic.s_back':'Înapoi',
+'lic.s_fine':'Adresa stă doar la noi, pe serverul de licențe din UE, și nu o dăm nimănui.',
+'lic.s_sent':'Ți-am trimis un e-mail la {email}. Apasă „Confirmă” în el ca să primești noutățile.',
 'dsc.top_t':'Descoperă {p}',
 'dsc.top_p':'Cardurile de mai jos sunt cele ale dashboard-ului, cu casa din demo. Atinge orice: termostatele, playerul, roboții, porțile, vremea. Lângă unele carduri ai ce se poate alege, ca să încerci.',
 'dsc.s_looks':'Cum arată',
@@ -29729,6 +29907,20 @@ choose_type:'Ce fel de card?', type_tiles:'Tile-uri cu entități', type_stats:'
 washer_done:'gata la', dish_prog:'Program', move_hint:'Trage pentru a muta', tap_toggle:'Live · conectat la Home Assistant',
 },
 nl:{
+'lic.s_t':'Nog één stap, als je wilt',
+'lic.s_p':'Laat je e-mailadres achter. Het is optioneel: de proefperiode start ook zonder.',
+'lic.s_email':'Je e-mailadres',
+'lic.s_opt':'optioneel',
+'lic.s_ph':'naam@voorbeeld.nl',
+'lic.s_hint':'We schrijven je één keer, een dag voordat de proefperiode eindigt.',
+'lic.s_bad':'Het adres lijkt onvolledig. Verbeter het of laat het veld leeg.',
+'lic.s_need':'Vul je adres in om ons nieuws te krijgen, of vink het vakje uit.',
+'lic.s_news':'Houd me op de hoogte van nieuws over {product} en toekomstige smart-home-oplossingen.',
+'lic.s_news_sub':'Hooguit één e-mail per maand. Afmelden met één klik, vanuit elke e-mail.',
+'lic.s_skip':'Starten zonder e-mail',
+'lic.s_back':'Terug',
+'lic.s_fine':'Het adres blijft bij ons, op onze licentieserver in de EU, en we geven het aan niemand.',
+'lic.s_sent':'We hebben een e-mail gestuurd naar {email}. Druk daarin op ‘Bevestigen’ om ons nieuws te krijgen.',
 'dsc.top_t':'Ontdek {p}',
 'dsc.top_p':'De kaarten hieronder zijn die van het dashboard, met het demohuis. Tik op alles wat je wilt: de thermostaten, de speler, de robots, de poorten, het weer. Naast sommige kaarten staan keuzes die je kunt uitproberen.',
 'dsc.s_looks':'Hoe het eruitziet',
@@ -31498,6 +31690,20 @@ nl:{
 'tap_toggle':'Live · verbonden met Home Assistant',
 },
 es:{
+'lic.s_t':'Un paso más, si quieres',
+'lic.s_p':'Déjanos tu correo electrónico. Es opcional: la prueba empieza también sin él.',
+'lic.s_email':'Tu correo electrónico',
+'lic.s_opt':'opcional',
+'lic.s_ph':'nombre@ejemplo.es',
+'lic.s_hint':'Te escribimos una vez, un día antes de que termine la prueba.',
+'lic.s_bad':'La dirección parece incompleta. Corrígela o deja el campo vacío.',
+'lic.s_need':'Escribe tu dirección para recibir nuestras novedades, o desmarca la casilla.',
+'lic.s_news':'Mantenme al día de las novedades de {product} y de las futuras soluciones de hogar inteligente.',
+'lic.s_news_sub':'Como mucho un correo al mes. Te das de baja con un clic, desde cualquier correo.',
+'lic.s_skip':'Empezar sin correo',
+'lic.s_back':'Atrás',
+'lic.s_fine':'La dirección se queda con nosotros, en nuestro servidor de licencias en la UE, y no se la damos a nadie.',
+'lic.s_sent':'Te enviamos un correo a {email}. Pulsa «Confirmar» en él para recibir nuestras novedades.',
 'dsc.top_t':'Descubre {p}',
 'dsc.top_p':'Las tarjetas de abajo son las del propio panel, con la casa de demostración. Toca lo que quieras: los termostatos, el reproductor, los robots, los portones, el tiempo. Junto a algunas tarjetas tienes opciones para probar.',
 'dsc.s_looks':'Cómo se ve',
@@ -33267,6 +33473,20 @@ es:{
 'tap_toggle':'En vivo · conectado a Home Assistant',
 },
 it:{
+'lic.s_t':'Un altro passo, se vuoi',
+'lic.s_p':'Lasciaci il tuo indirizzo e-mail. È facoltativo: la prova parte anche senza.',
+'lic.s_email':'Il tuo indirizzo e-mail',
+'lic.s_opt':'facoltativo',
+'lic.s_ph':'nome@esempio.it',
+'lic.s_hint':'Ti scriviamo una volta, il giorno prima che la prova finisca.',
+'lic.s_bad':'L’indirizzo sembra incompleto. Correggilo o lascia vuoto il campo.',
+'lic.s_need':'Scrivi il tuo indirizzo per ricevere le novità, oppure togli la spunta.',
+'lic.s_news':'Tienimi aggiornato sulle novità di {product} e sulle future soluzioni per la casa intelligente.',
+'lic.s_news_sub':'Al massimo un’e-mail al mese. Ti disiscrivi con un clic, da qualsiasi e-mail.',
+'lic.s_skip':'Avvia senza e-mail',
+'lic.s_back':'Indietro',
+'lic.s_fine':'L’indirizzo resta da noi, sul nostro server delle licenze nell’UE, e non lo diamo a nessuno.',
+'lic.s_sent':'Ti abbiamo inviato un’e-mail a {email}. Premi «Conferma» per ricevere le novità.',
 'dsc.top_t':'Scopri {p}',
 'dsc.top_p':'Le schede qui sotto sono quelle della plancia, con la casa demo. Tocca qualsiasi cosa: i termostati, il lettore, i robot, i cancelli, il meteo. Accanto ad alcune schede trovi le opzioni da provare.',
 'dsc.s_looks':'Come appare',
@@ -35036,6 +35256,20 @@ it:{
 'tap_toggle':'In tempo reale · connesso a Home Assistant',
 },
 pl:{
+'lic.s_t':'Jeszcze jeden krok, jeśli chcesz',
+'lic.s_p':'Zostaw nam swój adres e-mail. To opcjonalne: okres próbny ruszy także bez niego.',
+'lic.s_email':'Twój adres e-mail',
+'lic.s_opt':'opcjonalnie',
+'lic.s_ph':'imie@przyklad.pl',
+'lic.s_hint':'Napiszemy raz, dzień przed końcem okresu próbnego.',
+'lic.s_bad':'Adres wygląda na niepełny. Popraw go albo zostaw pole puste.',
+'lic.s_need':'Wpisz adres, aby otrzymywać nowości, albo odznacz pole.',
+'lic.s_news':'Informuj mnie o nowościach {product} i przyszłych rozwiązaniach smart home.',
+'lic.s_news_sub':'Najwyżej jeden e-mail w miesiącu. Wypisujesz się jednym kliknięciem, z każdego e-maila.',
+'lic.s_skip':'Rozpocznij bez e-maila',
+'lic.s_back':'Wstecz',
+'lic.s_fine':'Adres zostaje u nas, na naszym serwerze licencji w UE, i nikomu go nie przekazujemy.',
+'lic.s_sent':'Wysłaliśmy e-mail na {email}. Naciśnij w nim „Potwierdź”, aby otrzymywać nowości.',
 'dsc.top_t':'Odkryj {p}',
 'dsc.top_p':'Poniższe karty to prawdziwe karty panelu, z domem demo. Dotknij czegokolwiek: termostatów, odtwarzacza, robotów, bram, pogody. Obok niektórych kart znajdziesz opcje do wypróbowania.',
 'dsc.s_looks':'Jak wygląda',
@@ -36805,6 +37039,20 @@ pl:{
 'tap_toggle':'Na żywo · połączono z Home Assistant',
 },
 sv:{
+'lic.s_t':'Ett steg till, om du vill',
+'lic.s_p':'Lämna din e-postadress. Det är frivilligt: provperioden startar även utan den.',
+'lic.s_email':'Din e-postadress',
+'lic.s_opt':'frivilligt',
+'lic.s_ph':'namn@exempel.se',
+'lic.s_hint':'Vi skriver till dig en gång, dagen innan provperioden slutar.',
+'lic.s_bad':'Adressen ser ofullständig ut. Rätta den eller lämna fältet tomt.',
+'lic.s_need':'Skriv din adress för att få våra nyheter, eller kryssa ur rutan.',
+'lic.s_news':'Håll mig uppdaterad om nyheter från {product} och framtida smarta hem-lösningar.',
+'lic.s_news_sub':'Högst ett mejl i månaden. Avsluta med ett klick, från vilket mejl som helst.',
+'lic.s_skip':'Starta utan e-post',
+'lic.s_back':'Tillbaka',
+'lic.s_fine':'Adressen stannar hos oss, på vår licensserver i EU, och vi lämnar den inte till någon.',
+'lic.s_sent':'Vi har skickat ett mejl till {email}. Tryck på ”Bekräfta” i det för att få våra nyheter.',
 'dsc.top_t':'Upptäck {p}',
 'dsc.top_p':'Korten nedan är instrumentpanelens egna, med demohuset. Tryck på vad som helst: termostaterna, spelaren, robotarna, grindarna, vädret. Bredvid vissa kort finns val som du kan prova.',
 'dsc.s_looks':'Så ser det ut',
@@ -38574,6 +38822,20 @@ sv:{
 'tap_toggle':'Live · ansluten till Home Assistant',
 },
 cs:{
+'lic.s_t':'Ještě jeden krok, pokud chcete',
+'lic.s_p':'Nechte nám svou e-mailovou adresu. Je to nepovinné: zkušební doba se spustí i bez ní.',
+'lic.s_email':'Vaše e-mailová adresa',
+'lic.s_opt':'nepovinné',
+'lic.s_ph':'jmeno@priklad.cz',
+'lic.s_hint':'Napíšeme vám jednou, den před koncem zkušební doby.',
+'lic.s_bad':'Adresa vypadá neúplně. Opravte ji, nebo nechte pole prázdné.',
+'lic.s_need':'Napište adresu, abyste dostávali novinky, nebo zrušte zaškrtnutí.',
+'lic.s_news':'Informujte mě o novinkách {product} a o budoucích řešeních chytré domácnosti.',
+'lic.s_news_sub':'Nejvýše jeden e-mail měsíčně. Odhlásíte se jedním kliknutím, z kteréhokoli e-mailu.',
+'lic.s_skip':'Spustit bez e-mailu',
+'lic.s_back':'Zpět',
+'lic.s_fine':'Adresa zůstává u nás, na našem licenčním serveru v EU, a nikomu ji nedáváme.',
+'lic.s_sent':'Poslali jsme e-mail na {email}. Stiskněte v něm „Potvrdit“, abyste dostávali novinky.',
 'dsc.top_t':'Objevte {p}',
 'dsc.top_p':'Karty níže jsou přímo z ovládacího panelu, s ukázkovým domem. Klepněte na cokoli: termostaty, přehrávač, roboty, brány, počasí. U některých karet najdete volby, které si můžete vyzkoušet.',
 'dsc.s_looks':'Jak vypadá',
@@ -40343,6 +40605,20 @@ cs:{
 'tap_toggle':'Živě · připojeno k Home Assistant',
 },
 da:{
+'lic.s_t':'Ét trin mere, hvis du vil',
+'lic.s_p':'Giv os din e-mailadresse. Det er frivilligt: prøveperioden starter også uden.',
+'lic.s_email':'Din e-mailadresse',
+'lic.s_opt':'frivilligt',
+'lic.s_ph':'navn@eksempel.dk',
+'lic.s_hint':'Vi skriver én gang, dagen før prøveperioden slutter.',
+'lic.s_bad':'Adressen ser ufuldstændig ud. Ret den, eller lad feltet stå tomt.',
+'lic.s_need':'Skriv din adresse for at få vores nyheder, eller fjern fluebenet.',
+'lic.s_news':'Hold mig opdateret om nyheder fra {product} og fremtidige smart home-løsninger.',
+'lic.s_news_sub':'Højst én e-mail om måneden. Afmeld med ét klik, fra enhver e-mail.',
+'lic.s_skip':'Start uden e-mail',
+'lic.s_back':'Tilbage',
+'lic.s_fine':'Adressen bliver hos os, på vores licensserver i EU, og vi giver den ikke til nogen.',
+'lic.s_sent':'Vi har sendt en e-mail til {email}. Tryk på »Bekræft« i den for at få vores nyheder.',
 'dsc.top_t':'Opdag {p}',
 'dsc.top_p':'Kortene nedenfor er dashboardets egne, med demohuset. Tryk på hvad som helst: termostaterne, afspilleren, robotterne, portene, vejret. Ved siden af nogle kort finder du valg, du kan prøve.',
 'dsc.s_looks':'Sådan ser det ud',
@@ -42112,6 +42388,20 @@ da:{
 'tap_toggle':'Live · forbundet til Home Assistant',
 },
 'pt-BR':{
+'lic.s_t':'Mais um passo, se quiser',
+'lic.s_p':'Deixe seu e-mail. É opcional: o teste começa também sem ele.',
+'lic.s_email':'Seu e-mail',
+'lic.s_opt':'opcional',
+'lic.s_ph':'nome@exemplo.com.br',
+'lic.s_hint':'Escrevemos uma vez, um dia antes de o teste terminar.',
+'lic.s_bad':'O endereço parece incompleto. Corrija ou deixe o campo vazio.',
+'lic.s_need':'Escreva seu endereço para receber as novidades, ou desmarque a caixa.',
+'lic.s_news':'Quero receber as novidades do {product} e das futuras soluções de casa inteligente.',
+'lic.s_news_sub':'No máximo um e-mail por mês. Cancele com um clique, em qualquer e-mail.',
+'lic.s_skip':'Começar sem e-mail',
+'lic.s_back':'Voltar',
+'lic.s_fine':'O endereço fica só conosco, no nosso servidor de licenças na UE, e não o passamos a ninguém.',
+'lic.s_sent':'Enviamos um e-mail para {email}. Aperte “Confirmar” nele para receber as novidades.',
 'dsc.top_t':'Descubra o {p}',
 'dsc.top_p':'Os cartões abaixo são os do próprio painel, com a casa de demonstração. Toque no que quiser: os termostatos, o player, os robôs, os portões, o tempo. Ao lado de alguns cartões estão as opções que você pode experimentar.',
 'dsc.s_looks':'Como fica',
@@ -43885,8 +44175,15 @@ let hl = ''; try{ hl = window.parent.document.querySelector('home-assistant').ha
 let nl = ''; try{ nl = navigator.language || ''; }catch(e){}
 return WD_LANG.first([hl, nl], Object.keys(T)) || 'en';
 }
+function wdQueryLang(){
+try{
+  if(window.WD_EDITION !== 'demo') return '';
+  const q = new URLSearchParams(location.search).get('lang') || '';
+  return q ? (WD_LANG.first([q], Object.keys(T)) || '') : '';
+}catch(e){ return ''; }
+}
 let LANG = 'en';
-try{ LANG = localStorage.getItem('wd2_ch_lang') || wdDefaultLang(); }catch(e){}
+try{ LANG = wdQueryLang() || localStorage.getItem('wd2_ch_lang') || wdDefaultLang(); }catch(e){}
 if(!T[LANG]) LANG = 'en';
 try{ document.documentElement.lang = LANG; }catch(e){}
 const WDL = { v: 1, _: {}, };

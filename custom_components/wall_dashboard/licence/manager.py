@@ -460,7 +460,7 @@ class LicenceManager:
         self._spawn(self._async_refresh(forced=True), "nucleum_hub_licence_refresh")
 
     # --- the free trial, which only an admin starts (D-090) ----------------------------------------------------------
-    async def async_start_trial(self) -> Outcome:
+    async def async_start_trial(self, contact: dict[str, Any] | None = None) -> Outcome:
         """"Start the free trial" pressed by a Home Assistant admin on the dashboard's activation screen
         (websocket.py ``wall_dashboard/licence/trial``, which checks the admin): the server is asked once
         (POST /v1/trial). A press while one is still on its way, waiting for the lock or on the wire, gets that one's
@@ -477,7 +477,7 @@ class LicenceManager:
         (cannot_connect, not_configured, identity, unavailable, unknown). Nothing is retried by itself."""
         task = self._trial_press
         if task is None or task.done():
-            task = self._trial_press = self._exchange_task(self._trial())
+            task = self._trial_press = self._exchange_task(self._trial(contact))
         return await asyncio.shield(task)
 
     def _wants_trial(self) -> bool:
@@ -497,7 +497,7 @@ class LicenceManager:
         # a home that had a licence here and freed it was never given the trial: not offered, but not "used" either
         return Outcome("trial_used" if self._held.trial_used else "not_available")
 
-    async def _trial(self) -> Outcome:
+    async def _trial(self, contact: dict[str, Any] | None = None) -> Outcome:
         async with self._lock:
             if self._stopped:
                 return Outcome("unavailable")
@@ -511,7 +511,7 @@ class LicenceManager:
             self._trial_on_wire = True
             self._changed()
             try:
-                outcome, server_now = await self._ask_trial(now)
+                outcome, server_now = await self._ask_trial(now, contact)
             finally:
                 self._trial_on_wire = False
                 self._changed()  # even after a mistake of ours, no screen is left saying "Starting…"
@@ -523,13 +523,13 @@ class LicenceManager:
             self._changed()
             return outcome
 
-    async def _ask_trial(self, now: float) -> tuple[Outcome, int | None]:
+    async def _ask_trial(self, now: float, contact: dict[str, Any] | None = None) -> tuple[Outcome, int | None]:
         """The trial's request and what its answer changes in what is held: (the outcome, the server's clock)."""
         held = self._held
         held.failures.pop("trial", None)  # the count of the 1.0 builds' automatic attempts: nothing reads it now
         try:
             iidh = await self._identity.async_iidh()
-            answer = await self._api.trial(self._home, iidh)
+            answer = await self._api.trial(self._home, iidh, contact)
         except IdentityUnavailable as err:
             # Home Assistant gave no instance id or has no owner yet: nothing was sent, the budget is not spent
             _LOGGER.debug("Nucleum Hub trial: no identity yet (%s)", err.code)

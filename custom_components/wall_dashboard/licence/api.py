@@ -56,6 +56,35 @@ from .contract import (
 )
 from .state import is_moment
 
+# The e-mail at the trial (D-095): what the server takes, so that a field it would refuse (400 invalid) never stops the
+# trial: an address as server/worker/validate.mjs reads it, the 12 languages, the box's text version.
+_EMAIL = re.compile(r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+(?:[A-Za-z]{2,63}|xn--[A-Za-z0-9-]{2,59})$")
+_LANGS = ("en", "ro", "de", "fr", "nl", "es", "it", "pl", "sv", "cs", "da", "pt-BR")
+_CONSENT = re.compile(r"^[a-z0-9][a-z0-9._-]{2,39}$")
+
+
+def trial_contact(contact: dict[str, Any] | None) -> dict[str, Any]:
+    """The optional fields of the trial's request (D-095) from what the dashboard sent: the address only when the server
+    would take it, the language when it is one of the 12, the news box only with an address and its text's version."""
+    if not contact:
+        return {}
+    email = contact.get("email")
+    email = email.strip() if isinstance(email, str) else ""
+    local = email.split("@")[0] if "@" in email else ""
+    if not (6 <= len(email) <= 254 and _EMAIL.match(email) and not local.startswith(".") and not local.endswith(".") and ".." not in local):
+        return {}
+    out: dict[str, Any] = {"email": email}
+    lang = contact.get("lang")
+    if isinstance(lang, str):
+        found = next((code for code in _LANGS if code.lower() == lang.strip().replace("_", "-").lower()), None)
+        if found:
+            out["lang"] = found
+    version = contact.get("consent_version")
+    if contact.get("news") is True and isinstance(version, str) and _CONSENT.match(version):
+        out["news"] = True
+        out["consent_version"] = version
+    return out
+
 _LOGGER = logging.getLogger(__name__)
 
 _HEADERS = {hdrs.CONTENT_TYPE: "application/json", hdrs.ACCEPT: "application/json"}
@@ -439,13 +468,14 @@ class LicenceApi:
         """False while the server's address is the placeholder: every request raises ApiNotConfigured."""
         return not self._placeholder
 
-    async def trial(self, home: str, iidh: str) -> TrialAnswer:
+    async def trial(self, home: str, iidh: str, contact: dict[str, Any] | None = None) -> TrialAnswer:
         """The free trial's token (D-090: 3 days from the server's yes, once per installation and per home), asked
         only when a Home Assistant admin starts it from the dashboard. ``ask: true`` says so: the server answers a
         request without it (the 1.0 builds that asked by themselves at the first start) with 409
-        ``update_required`` and uses nothing up."""
+        ``update_required`` and uses nothing up. ``contact``: the optional e-mail and news box of D-095, only what the
+        server takes (trial_contact)."""
         _invalid(home=is_home_id(home), iidh=is_iidh(iidh))
-        answer = _Answer(await self._post(ROUTE_TRIAL, {"home": home, "iidh": iidh, "ask": True}))
+        answer = _Answer(await self._post(ROUTE_TRIAL, {"home": home, "iidh": iidh, "ask": True, **trial_contact(contact)}))
         return TrialAnswer(token=answer.take("token", is_statement), now=answer.now())
 
     async def activate(self, key: str, home: str, iidh: str, *, role: str = "prod", version: str | None = None,

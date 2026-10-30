@@ -10,5 +10,5 @@
   "issue_tracker": "https://nucleumhub.com/support",
   "requirements": ["pillow-heif==1.8.0"],
   "single_config_entry": true,
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

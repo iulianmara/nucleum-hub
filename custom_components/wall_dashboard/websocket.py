@@ -179,7 +179,10 @@ def trial_answer(error: str | None, minutes: int | None = None) -> dict[str, Any
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): WS_LICENCE_TRIAL, vol.Optional("language"): str})
+@websocket_api.websocket_command({
+    vol.Required("type"): WS_LICENCE_TRIAL, vol.Optional("language"): str,
+    vol.Optional("email"): str, vol.Optional("news"): bool, vol.Optional("consent_version"): str,
+})
 @websocket_api.async_response
 async def ws_licence_trial(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -188,8 +191,10 @@ async def ws_licence_trial(
     "error", "minutes"}`` (TRIAL_ERRORS, trial_answer). The licence asks the server once; a press while that request is
     on its way gets the same answer. Waits for the answer (up to the request's timeout, plus a request ahead of it).
 
-    The dashboard sends ``{"type"}`` alone (docs/PACHET.md). ``language`` is taken too and never read, as the two other
-    commands take it: Home Assistant answers a key the schema does not name with ``invalid_format`` before the command
+    The dashboard sends ``{"type"}``, and from 1.0.2 the optional e-mail of D-095: ``email``, ``news`` (the box, false
+    when not ticked), ``consent_version`` (its text's version) and ``language`` (the e-mail's language); the licence passes
+    on only what the server takes (licence/api.py trial_contact), so none of it can stop the trial. ``language`` was
+    taken before too, as the two other commands take it: Home Assistant answers a key the schema does not name with ``invalid_format`` before the command
     (and require_admin) runs, and a schema of ``type`` alone takes no other key at all, so a dashboard that sent its
     language (as one build of 26.10 did) would never start the trial and would never even hear "admins only".
 
@@ -204,7 +209,10 @@ async def ws_licence_trial(
         connection.send_result(msg["id"], trial_answer("not_available"))
         return
     try:
-        outcome = await data.licence.async_start_trial()
+        outcome = await data.licence.async_start_trial({
+            "email": msg.get("email"), "lang": msg.get("language"), "news": msg.get("news", False),
+            "consent_version": msg.get("consent_version"),
+        })
     except Exception:  # noqa: BLE001 (a mistake of ours: the dashboard is answered, and offers to try again)
         _LOGGER.exception("The Nucleum Hub licence could not ask for the trial")
         connection.send_result(msg["id"], trial_answer("unknown"))
