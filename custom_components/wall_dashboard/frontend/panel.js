@@ -36,8 +36,15 @@
       update(), applyUpdate(),           a new version installed, and the reload it needs (D-054, "a new version" below)
       on('menu' | 'update', fn) -> off}  told when either changes, until the frame is replaced
 
+   On every page of Home Assistant's frontend, for an administrator only, about once a day per run of Home Assistant
+   (the integration gives each refresh to one browser; a restart makes it due again): Home Assistant's update provider
+   (the Marketplace, or HACS before 2026.11) is asked to look at our repository now, so a new version shows in
+   Settings › Updates and in the dashboard's notice without waiting for its own 48 hours (D-103, "the new version's
+   daily check" below; docs/ACTUALIZARE-INTEGRARE.md, contract v2).
+
    Tested: tests/panel.test.mjs (the pure parts: the language, the reason, the <base>, the build and what changed,
-   the menu's rule), WDProbe.scenarioPanel (dev/probe-panel.js, the harness in Home Assistant's place: ?panel=1). */
+   the menu's rule), tests/panel-update.test.mjs (the daily check, with a stand-in for Home Assistant's frontend),
+   WDProbe.scenarioPanel (dev/probe-panel.js, the harness in Home Assistant's place: ?panel=1). */
 
 export const TAG = 'nucleum-hub-panel';
 export const APP = '/api/wall_dashboard/app';
@@ -346,6 +353,101 @@ export function forgetUpdate() {
   Object.assign(UP, { base: null, now: null, change: '', conn: null, timer: 0, every: CHECK_MS, retry: 0, retryTimer: 0, busy: null, last: 0, asked: 0 });
   emit();
 }
+
+/* ------------------------------------------------------------------ the new version's daily check (D-103) */
+/* Nucleum Hub comes from a custom repository of HACS, which Home Assistant 2026.11 ships built in as the Marketplace.
+   HACS 2.0.5 looks at a custom repository only 48 hours after Home Assistant started (never, on a Home Assistant
+   restarted more often); the Marketplace at each start and every 48 hours, and only with GitHub connected. So this
+   module, which Home Assistant loads on every page of its frontend (D-087), does what the provider's own "Refresh
+   information" does, about once a day per run of Home Assistant (due again after each restart) and only for an
+   administrator (the commands are admin-only).
+   The day is the integration's (contract v2, docs/ACTUALIZARE-INTEGRARE.md §2), not this browser's: a kiosk that
+   clears its storage, or every admin's phone and tablet, would each refresh again, and on the Marketplace a refresh
+   that meets a GitHub hiccup leaves the repository unavailable until the next one.
+   1. wall_dashboard/update/status {claim_refresh: true}: the integration answers whether a refresh is due and, when
+      it is, gives it to this caller alone (refresh_claimed: true); every other browser or device is told it is not
+      due, until a day has passed, or an hour while the update entity is unavailable (at most 6 such times in a run of
+      Home Assistant); a restart of Home Assistant starts afresh, due at once. Never due without a provider (Nucleum
+      Hub installed from its zip, or no HACS), during an install or while a restart waits (updates.py);
+   2. only after refresh_claimed: marketplace/repository/refresh or hacs/repository/refresh {repository: "1431103586"}
+      (Home Assistant 2026.11.0b1 homeassistant/components/marketplace/websocket/repository.py; HACS 2.0.5
+      custom_components/hacs/websocket/repository.py): the provider reads our GitHub releases with the user's account
+      and its update entity has the new version, in Settings › Updates and in the dashboard's notice.
+   A look sends nothing at all unless the user is an admin, Home Assistant runs (hass.config.state 'RUNNING': while it
+   starts, the integration may not answer yet and HACS may not have its repositories), the dashboard's demo is not on
+   screen and no look is on its way. Nothing shown, nothing kept in the browser, nothing asked outside Home Assistant,
+   and any error is silent (an older integration: unknown_command; a provider that refuses). Looked at 5 s, 20 s and
+   60 s after the page loads, then every hour while it stays open: each look is one small message, which the
+   integration answers "not due" all day but once. */
+export const UPDATE_STATUS = 'wall_dashboard/update/status';
+export const REPOSITORY = '1431103586';
+export const REFRESH = Object.freeze({ marketplace: 'marketplace/repository/refresh', hacs: 'hacs/repository/refresh' });
+export const DAILY_AT = [5000, 20000, 60000];
+export const DAILY_EVERY = 60 * 60 * 1000;
+const DAILY = { busy: null, runs: 0 };
+/* a Home Assistant user who is an administrator (hass.user, which the frontend sets once it knows the user) */
+export function isAdmin(hass) { try { return !!(hass && hass.user && hass.user.is_admin === true); } catch (e) { return false; } }
+/* Home Assistant has started (hass.config.state, kept current by the frontend: NOT_RUNNING, STARTING, RUNNING, ...) */
+export function haRunning(hass) { try { return !!(hass && hass.config && hass.config.state === 'RUNNING'); } catch (e) { return false; } }
+/* the provider's refresh for an answer of wall_dashboard/update/status: {type, repository} when the answer gave this
+   caller the refresh (refresh_claimed: true) and names a provider this loader knows, else null */
+export function refreshOf(status) {
+  if (!status || typeof status !== 'object' || status.refresh_claimed !== true) return null;
+  const type = Object.prototype.hasOwnProperty.call(REFRESH, status.provider) ? REFRESH[status.provider] : null;
+  if (!type) return null;
+  const id = typeof status.repository_id === 'string' && /^[0-9]{1,20}$/.test(status.repository_id) ? status.repository_id : REPOSITORY;
+  return { type, repository: id };
+}
+/* one message on the frontend's connection (hass.callWS, else the connection's own) -> its answer */
+function callWS(hass, msg) {
+  try {
+    if (typeof hass.callWS === 'function') return Promise.resolve(hass.callWS(msg));
+    if (hass.connection && typeof hass.connection.sendMessagePromise === 'function') return Promise.resolve(hass.connection.sendMessagePromise(msg));
+  } catch (e) { return Promise.reject(e); }
+  return Promise.reject(new Error('no connection'));
+}
+/* the dashboard's demo in a panel of ours on this page (its frame is ours: same origin). The page declares WD_DEMO as
+   a const of its script, never a property of its window, so the flag its WD_DEMO.active reads is read here: wd2_demo
+   "1" in the frame's storage (only read) */
+export const DEMO_KEY = 'wd2_demo';
+function demoOn() {
+  for (const el of UP.els) {
+    try {
+      const w = el._frame && el._frame.contentWindow;
+      if (w && w.localStorage && w.localStorage.getItem(DEMO_KEY) === '1') return true;
+      if (w && w.WD_DEMO && w.WD_DEMO.active) return true;
+    } catch (e) {}
+  }
+  return false;
+}
+/* One look (o: {demo} for the tests: a boolean, read before the status and again before the refresh) -> what it
+   came to: 'not-admin' | 'starting' | 'busy' | 'demo' (nothing sent) | 'none' (the status only: the refresh not
+   claimed, or a provider this loader does not know) | 'refreshed' | 'failed' (an error, silent). Never throws. */
+export function dailyCheck(hass, o) {
+  o = o || {};
+  const demo = () => { const d = o.demo; return d !== undefined ? !!d : demoOn(); };
+  if (!isAdmin(hass)) return Promise.resolve('not-admin');
+  if (!haRunning(hass)) return Promise.resolve('starting');
+  if (DAILY.busy) return Promise.resolve('busy');
+  if (demo()) return Promise.resolve('demo');
+  DAILY.runs++;
+  const p = DAILY.busy = callWS(hass, { type: UPDATE_STATUS, claim_refresh: true }).then(status => {
+    const msg = refreshOf(status);
+    if (!msg) return 'none';
+    if (demo()) return 'demo';   /* the demo begun meanwhile: the day's refresh is left (claimed, not sent) */
+    return callWS(hass, msg).then(() => 'refreshed');
+  }).catch(() => 'failed').finally(() => { if (DAILY.busy === p) DAILY.busy = null; });
+  return p;
+}
+/* what the looks know (the tests, the probe): {busy, runs: statuses asked}; forgetDaily(): as at a page load */
+export function dailyState() { return { busy: !!DAILY.busy, runs: DAILY.runs }; }
+export function forgetDaily() { DAILY.busy = null; DAILY.runs = 0; }
+/* the frontend's hass: Home Assistant's own element, on every page; else the one a panel of ours was given */
+function frontendHass() {
+  try { const ha = document.querySelector('home-assistant'); if (ha && ha.hass) return ha.hass; } catch (e) {}
+  return UP.hass;
+}
+function dailyLook() { const h = frontendHass(); if (h) dailyCheck(h).catch(() => {}); }
 
 /* ------------------------------------------------------------------ the panel */
 const CSS = `
@@ -674,4 +776,11 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
   let n = 0;
   const every = setInterval(() => { ensureDefined(); if (++n >= 120) clearInterval(every); }, 250);
   window.addEventListener('location-changed', () => ensureDefined());
+  /* the new version's daily check (D-103, above): a few looks after the page loads, then one an hour; the
+     integration lets one of them, in one browser, refresh once a day per run of Home Assistant (sooner while the
+     update entity is unavailable) */
+  if (typeof document !== 'undefined') {
+    DAILY_AT.forEach(ms => setTimeout(dailyLook, ms));
+    setInterval(dailyLook, DAILY_EVERY);
+  }
 }

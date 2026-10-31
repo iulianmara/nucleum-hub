@@ -110,7 +110,28 @@ DATA_LICENCE_REGISTERED: Final = f"{DOMAIN}_licence_registered"
 # through the entry's state, which Home Assistant sets to loaded only after setup, when the start was already told.
 DATA_LICENCE_ENTRY: Final = f"{DOMAIN}_licence_entry"
 
+# --- A new version (D-103; the contract: docs/ACTUALIZARE-INTEGRARE.md) ------------------------------------------
+# Nucleum Hub is installed from our public repository github.com/iulianmara/nucleum-hub, a custom repository of HACS
+# (Home Assistant 2026.11 and later: of the Marketplace, HACS built in). Its update entity is the one whose registry
+# entry has the provider's platform and this unique_id, GitHub's id of the repository; its entity_id may be anything.
+UPDATE_REPOSITORY_ID: Final = "1431103586"
+# The providers, in the order they are looked for: the Marketplace (Home Assistant 2026.11 and later, which migrates a
+# HACS installation, entity and all), then HACS (2.0.5 and earlier). Each is also the domain of its repair issues.
+UPDATE_PROVIDERS: Final = ("marketplace", "hacs")
+# The update's state for the dashboard's notice and the loader's look, from a Home Assistant admin only (contract v2):
+# {"type": "wall_dashboard/update/status", "candidate"?: null | {"version", "released", "lts"}, "claim_refresh"?: bool}
+# (websocket.py, updates.py).
+WS_UPDATE_STATUS: Final = f"{DOMAIN}/update/status"
+# The provider's refresh of our repository, claimed through the status (claim_refresh, refresh_claimed): once a day per
+# Home Assistant run, whichever browser or device asks first; sooner, an hour after the last claim and at most
+# UPDATE_REFRESH_EARLY_MAX times a run, while the update entity is unavailable (the Marketplace marks a repository it
+# could not reach that way until its next refresh). The claim is kept in hass.data under DATA_UPDATE_REFRESH, so a
+# reload of the entry keeps it and a restart of Home Assistant starts afresh. Seconds of a monotonic clock.
+DATA_UPDATE_REFRESH: Final = f"{DOMAIN}_update_refresh"
+UPDATE_REFRESH_EVERY: Final = 24 * 60 * 60.0
+UPDATE_REFRESH_EARLY_AFTER: Final = 60 * 60.0
+UPDATE_REFRESH_EARLY_MAX: Final = 6
+
 # --- Later features, not built yet (plan §4.2, §6.3, Anexa G) --------------------------------
 # WS_FEEDBACK_INFO = f"{DOMAIN}/feedback/info"      # docs/FEEDBACK-INTEGRARE.md
 # WS_FEEDBACK_SEND = f"{DOMAIN}/feedback/send"
-# the update entity: beta 2 (LANSARE-PLAN §4.8, §6.4)

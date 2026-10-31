@@ -111,7 +111,7 @@
         "provisional": "Sua licença precisa de uma verificação com o servidor de licenças. Conecte o Home Assistant à internet antes de {until}.",
         "renewal_due": "Sua licença precisa ser renovada antes de {until}.",
         "kept_lts": "Seu ano de atualizações terminou: você mantém esta versão, com as correções de segurança da linha LTS dela.",
-        "uncovered": "Esta versão saiu depois que suas atualizações terminaram. Volte para uma versão coberta pela licença, ou renove.",
+        "uncovered": "Esta versão saiu depois que suas atualizações terminaram. Volte para uma versão coberta pela licença, ou renove. Para voltar: no Marketplace, Nucleum Hub Dashboard › ⋮ › “Install another version”, escolha a versão (no HACS, ⋮ › “Redownload”), depois reinicie o Home Assistant.",
         "broken_environment": "A licença não pode ser verificada neste Home Assistant (o log diz por quê), então o painel continua totalmente utilizável.",
         "no_token": "Ainda não há licença. Cole a chave do e-mail da sua compra.",
         "trial_available": "Ainda não há licença. Inicie o teste grátis de 3 dias no painel do Nucleum Hub ou cole a chave do e-mail da sua compra.",

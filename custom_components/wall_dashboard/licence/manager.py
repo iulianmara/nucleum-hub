@@ -164,6 +164,19 @@ def build_stamps(info: Any) -> dict[str, Any] | None:
     return stamps
 
 
+def candidate_stamps(candidate: Any) -> dict[str, Any] | None:
+    """The stamps of a build that is not this one, a new version's (D-103: coverage), from {"released", "lts"}: the
+    state's ctx.build, or None when the state rule would refuse them (released not a date, an lts that is not
+    {"line", "started"} started on or before it). Unlike build_stamps, an lts it cannot read is not left out: judged
+    without its line, a build of a line the licence keeps would be called not covered."""
+    if not isinstance(candidate, Mapping):
+        return None
+    lts = candidate.get("lts")
+    stamps = {"released": candidate.get("released"), "base_released": None,
+              "lts": dict(lts) if isinstance(lts, Mapping) else lts}
+    return stamps if _usable(stamps) else None
+
+
 def _usable(stamps: Mapping[str, Any]) -> bool:
     """Whether the state rule accepts these stamps: asked of the rule itself, so the two never disagree."""
     try:
@@ -348,6 +361,33 @@ class LicenceManager:
             "link": site_link(kind_page[1], language) if kind_page else None,
             "link_kind": kind_page[0] if kind_page else None,
         }
+
+    def coverage(self, candidate: Any) -> dict[str, Any]:
+        """Whether the licence held here covers another build of the dashboard, the one a new version would install
+        (D-103, docs/ACTUALIZARE-INTEGRARE.md): the state rule (state.py) run with that build's stamps in place of this
+        build's, everything else as it is now (the token, the home, the statements, Home Assistant's time).
+
+        ``candidate``: {"released": "YYYY-MM-DD", "lts": None | {"line", "started"}} (the new version's, from its
+        release notes), or None. -> {"covered", "reason", "until"}: False with the rule's reason where that build would
+        be UNCOVERED (build_after_ent, not_on_kept_lts); True for every other state, and when the licence cannot judge
+        (broken: the dashboard stays fully usable, plan §4.1 p.5, and so would the new build); None with the reason
+        no_candidate when there is no candidate or the rule cannot read it. ``until``: the token's ent, the last day
+        whose builds it covers (None without a token that verifies)."""
+        now = self._clock()
+        until = None
+        if self._broken is None:
+            try:
+                claims = self._claims(now)
+            except Exception:  # noqa: BLE001 (only a mistake of ours gets here: the day is then not said)
+                claims = None
+            until = claims.get("ent") if claims else None
+        build = candidate_stamps(candidate)
+        if build is None:
+            return {"covered": None, "reason": "no_candidate", "until": until}
+        said = self._result(now, build)
+        if said["state"] == "UNCOVERED":
+            return {"covered": False, "reason": said["reason"], "until": until}
+        return {"covered": True, "reason": None, "until": until}
 
     def _said_now(self, now: float) -> dict[str, Any]:
         """The payload without what does not change with the state (``now``, the link's language): a change of any
@@ -731,12 +771,14 @@ class LicenceManager:
         verified = self._verified(now)
         return verified["claims"] if verified is not None and verified["ok"] else None
 
-    def _result(self, now: float) -> dict[str, Any]:
+    def _result(self, now: float, build: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        """The state of the token held, for this build (``build``: another build's stamps, coverage)."""
         if self._broken is not None:
             return dict(BROKEN)
         try:
             revocations = [r for r in map(self._statement, self._held.revocations) if r is not None]
-            context = {"now": now, "build": self._build, "home": self._home, "revocations": revocations}
+            context = {"now": now, "build": self._build if build is None else build, "home": self._home,
+                       "revocations": revocations}
             return state_of_verified(self._verified(now), context, self._verifier.self_test)
         except Exception as err:  # noqa: BLE001 (only a mistake of ours gets here: never the blocking screen for it)
             if not self._rule_failed:

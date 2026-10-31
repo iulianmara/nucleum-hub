@@ -111,7 +111,7 @@
         "provisional": "Je licentie heeft één controle bij de licentieserver nodig. Verbind Home Assistant vóór {until} met internet.",
         "renewal_due": "Je licentie moet vóór {until} worden verlengd.",
         "kept_lts": "Je jaar met updates is voorbij: je houdt deze versie, met de beveiligingsupdates van haar LTS-lijn.",
-        "uncovered": "Deze versie is verschenen nadat je updates afliepen. Ga terug naar een versie die je licentie dekt, of verleng.",
+        "uncovered": "Deze versie is verschenen nadat je updates afliepen. Ga terug naar een versie die je licentie dekt, of verleng. Zo ga je terug: in de Marketplace Nucleum Hub Dashboard › ⋮ › ‘Install another version’, kies de versie (in HACS ⋮ › ‘Redownload’), en herstart daarna Home Assistant.",
         "broken_environment": "De licentie kan op deze Home Assistant niet worden gecontroleerd (het logboek zegt waarom), dus het dashboard blijft volledig bruikbaar.",
         "no_token": "Nog geen licentie. Plak de sleutel uit je aankoopmail.",
         "trial_available": "Nog geen licentie. Start de gratis proefperiode van 3 dagen vanuit het Nucleum Hub-dashboard, of plak de sleutel uit je aankoopmail.",

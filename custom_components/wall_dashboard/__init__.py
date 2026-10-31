@@ -12,8 +12,12 @@ In the sale edition, the licence (D-064 to D-068, ``licence/``): started after t
 executor and inside ``try`` (docs/LANSARE-PLAN.md §4.2), so a licence that fails, or a package without the folder
 (the owner's, D-037), never takes the panel and its alarm keypad with it.
 
+A new version (D-103, ``updates.py``, docs/ACTUALIZARE-INTEGRARE.md): the WebSocket command an admin's dashboard and the
+loader ask, which reads the update entity of HACS or the Marketplace and, in the sale edition, the licence; nothing to
+start here (it keeps no state).
+
 Later, each in its own module with a field in ``WallDashboardData`` (docs/LANSARE-PLAN.md §4.2,
-§6.4; LANSARE-STACK.md Anexa G): the update entity and the feedback relay (docs/FEEDBACK-INTEGRARE.md).
+§6.4; LANSARE-STACK.md Anexa G): the feedback relay (docs/FEEDBACK-INTEGRARE.md).
 """
 
 from __future__ import annotations
@@ -81,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallDashboardConfigEntry
     if missing:
         _LOGGER.warning(
             "The Nucleum Hub package is incomplete (frontend/%s missing): install the package again, "
-            "from HACS or from its zip, not the source folder",
+            "from the Marketplace, HACS or its zip, not the source folder",
             ", frontend/".join(missing),
         )
     edition = build_info.get("edition") if build_info else None

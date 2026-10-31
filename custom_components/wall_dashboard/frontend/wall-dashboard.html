@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>window.WD_VERSION = '1.0.2';
-window.WD_BUILD = '2026-10-30.d8b3482';
+<script>window.WD_VERSION = '1.0.3';
+window.WD_BUILD = '2026-10-31.3d02e5c';
 window.WD_EDITION = 'sale';
 (function(){
   var errs = window.__WD_ERRORS = [];
@@ -14135,6 +14135,12 @@ window.WD_DEMO_EXT.push(function (msg) { return window.WD_DEMOHOUSE.ext(msg); })
     var b = base(id);
     return g(function () { return wdlName('nav', id, b); }, b);
   }
+  function barLabel(id) {
+    var k = 'nav.short_' + id;
+    if (valid(id) || !g(function () { return T.en[k] != null; }, false)) return label(id);
+    var s = t(k);
+    return g(function () { return wdlName('nav', id, s); }, s);
+  }
   function pageFor(id) {
     return { cp: 1, title: function () { return label(id); }, sub: function () { return ''; }, onstate: function () {} };
   }
@@ -14289,7 +14295,7 @@ window.WD_DEMO_EXT.push(function (msg) { return window.WD_DEMOHOUSE.ext(msg); })
 
   return { ID: ID, NAME_MAX: NAME_MAX, valid: valid, newId: newId, cleanName: cleanName, clean: clean, defs: defs, navEntry: navEntry,
     syncNav: syncNav, pickTint: pickTint, neighbour: neighbour, remove: remove, carry: carry,
-    def: def, base: base, label: label, sync: sync, addBtnHTML: addBtnHTML, navMark: navMark, emptyHTML: emptyHTML,
+    def: def, base: base, label: label, barLabel: barLabel, sync: sync, addBtnHTML: addBtnHTML, navMark: navMark, emptyHTML: emptyHTML,
     open: open, close: close };
 })();
 </script>
@@ -19337,6 +19343,651 @@ window.WD_DEMO_EXT.push(function (msg) { return window.WD_DEMOHOUSE.ext(msg); })
     available: function () { return menuOn(host()); }, update: function () { return updateOf(host()); } };
 })();
 </script>
+<script>window.WD_UPDATE = (function () {
+  'use strict';
+  var CMD = 'wall_dashboard/update/status';
+  var REPO = '1431103586';
+  var ASK_EVERY = 6 * 3600000, TICK_MS = 3600000, ANSWER_MS = 15000, NOTES_MS = 30000;
+  var TIMES = { restart: 180000, reask: 60000, giveUp: 900000, back: [30000, 120000, 300000] };
+  var REFRESH_CMD = { marketplace: 'marketplace/repository/refresh', hacs: 'hacs/repository/refresh' };
+  var LANGS = ['en', 'ro', 'de', 'fr', 'nl', 'es', 'it', 'pl', 'sv', 'cs', 'da', 'pt-BR'];
+  var BLOCK_RE = /<!--[ \t]*nucleum-hub:notes[ \t]+v1[ \t]+([A-Za-z0-9_-]+)[ \t]*-->/g;
+  var MAX_B64 = 65536, MAX_ITEMS = 8, MAX_LEN = 300, MAX_BLOCKS = 10;
+
+  var ICONS = {
+    wdupget: '<path d="M12 3.5v10.5"/><path d="m7.5 9.5 4.5 4.5 4.5-4.5"/><path d="M4 15.5V18a2.5 2.5 0 0 0 2.5 2.5h11A2.5 2.5 0 0 0 20 18v-2.5"/>',
+    wduprst: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+    wdupok: '<circle cx="12" cy="12" r="9"/><path d="m8 12.3 2.7 2.7L16.2 9.5"/>',
+    wdupext: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
+  };
+  var KEYS = ['upd.chip', 'upd.chip_dl', 'upd.chip_done', 'upd.chip_rs', 'upd.avail_t', 'upd.have', 'upd.have_news', 'upd.restart_note',
+    'upd.update', 'upd.later', 'upd.retry', 'upd.no_notes', 'upd.no_check', 'upd.unc_ent', 'upd.unc_lts', 'upd.unc', 'upd.dl_t', 'upd.dl_s',
+    'upd.done_t', 'upd.done_s', 'upd.restart', 'upd.rs_t', 'upd.rs_s', 'upd.rs_q', 'upd.rs_qp', 'upd.e_warning', 'upd.e_install',
+    'upd.e_restart', 'upd.e_failed', 'upd.region', 'lic.btn_options', 'aria.close'];
+
+  function normVer(v) {
+    if (typeof v !== 'string' && typeof v !== 'number') return null;
+    var s = String(v).trim().replace(/^[vV]/, '');
+    return /^\d{1,6}(\.\d{1,6}){0,3}(-[0-9A-Za-z.]{1,40})?$/.test(s) ? s : null;
+  }
+  function cmpVer(a, b) {
+    a = normVer(a); b = normVer(b);
+    if (a === null || b === null) return null;
+    var pa = a.split('-'), pb = b.split('-'), na = pa[0].split('.'), nb = pb[0].split('.');
+    for (var i = 0; i < Math.max(na.length, nb.length); i++) {
+      var x = +(na[i] || 0), y = +(nb[i] || 0);
+      if (x !== y) return x < y ? -1 : 1;
+    }
+    var ra = pa.slice(1).join('-'), rb = pb.slice(1).join('-');
+    if (ra === rb) return 0;
+    if (!ra) return 1;
+    if (!rb) return -1;
+    var xa = ra.split('.'), xb = rb.split('.');
+    for (var j = 0; j < Math.max(xa.length, xb.length); j++) {
+      if (xa[j] === undefined) return -1;
+      if (xb[j] === undefined) return 1;
+      var da = /^\d+$/.test(xa[j]), db = /^\d+$/.test(xb[j]);
+      if (da && db && +xa[j] !== +xb[j]) return +xa[j] < +xb[j] ? -1 : 1;
+      if (da !== db) return da ? -1 : 1;
+      if (!da && xa[j] !== xb[j]) return xa[j] < xb[j] ? -1 : 1;
+    }
+    return 0;
+  }
+  function newer(a, b) { return cmpVer(a, b) === 1; }
+  function isDay(s) {
+    var m = typeof s === 'string' && /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return false;
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+  }
+
+  function fromB64url(s) {
+    if (typeof s !== 'string' || !s || s.length > MAX_B64 || !/^[A-Za-z0-9_-]+$/.test(s) || s.length % 4 === 1) return null;
+    try {
+      var b = s.replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var bin = atob(b), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch (e) { return null; }
+  }
+  function line(s) {
+    if (typeof s !== 'string') return null;
+    var x = s.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!x) return null;
+    if (x.length <= MAX_LEN) return x;
+    var cut = x.slice(0, MAX_LEN - 1);
+    if (/[\ud800-\udbff]$/.test(cut)) cut = cut.slice(0, -1);
+    return cut.trim() + '…';
+  }
+  function ltsOf(x) {
+    if (x === undefined || x === null) return null;
+    if (typeof x !== 'object' || Array.isArray(x) || Object.keys(x).length !== 2) return undefined;
+    if (typeof x.line !== 'string' || !/^\d{1,3}\.\d{1,3}$/.test(x.line) || !isDay(x.started)) return undefined;
+    return { line: x.line, started: x.started };
+  }
+  function cleanBlock(o) {
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+    var v = normVer(o.version);
+    if (!v || !isDay(o.released)) return null;
+    var lts = ltsOf(o.lts);
+    if (lts === undefined) return null;
+    if (!o.notes || typeof o.notes !== 'object' || Array.isArray(o.notes)) return null;
+    var notes = {};
+    LANGS.forEach(function (l) {
+      var a = o.notes[l];
+      if (!Array.isArray(a)) return;
+      var out = a.map(line).filter(Boolean).slice(0, MAX_ITEMS);
+      if (out.length) notes[l] = out;
+    });
+    if (!notes.en) return null;
+    return { version: v, released: o.released, lts: lts, notes: notes };
+  }
+  function parseNotes(body, installed) {
+    var out = [], seen = {};
+    if (typeof body !== 'string' || !body) return out;
+    var re = new RegExp(BLOCK_RE.source, 'g'), m, n = 0;
+    while ((m = re.exec(body)) && n < MAX_BLOCKS * 4) {
+      n++;
+      try {
+        var txt = fromB64url(m[1]); if (txt === null) continue;
+        var b = cleanBlock(JSON.parse(txt)); if (!b || seen[b.version]) continue;
+        if (normVer(installed) !== null && !newer(b.version, installed)) continue;
+        seen[b.version] = 1; out.push(b);
+      } catch (e) { continue; }
+    }
+    out.sort(function (a, b) { return -(cmpVer(a.version, b.version) || 0); });
+    return out.slice(0, MAX_BLOCKS);
+  }
+  function bullets(block, lang) {
+    if (!block || !block.notes) return [];
+    var l = String(lang || 'en');
+    return (block.notes[l] || block.notes[l.split('-')[0]] || block.notes.en || []).slice();
+  }
+  function blockFor(blocks, latest) {
+    if (!Array.isArray(blocks) || normVer(latest) === null) return null;
+    for (var i = 0; i < blocks.length; i++) if (blocks[i] && cmpVer(blocks[i].version, latest) === 0) return blocks[i];
+    return null;
+  }
+  function candidateOf(block) {
+    if (!block) return null;
+    var lts = ltsOf(block.lts);
+    return lts === undefined ? null : { version: block.version, released: block.released, lts: lts };
+  }
+
+  function refreshMsg(provider) { return REFRESH_CMD[provider] ? { type: REFRESH_CMD[provider], repository: REPO } : null; }
+  function refreshFor(st) { return st && st.refresh_claimed && !st.in_progress && !st.restart_needed ? refreshMsg(st.provider) : null; }
+  function cleanStatus(r) {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) return null;
+    var pct = typeof r.percentage === 'number' && isFinite(r.percentage) ? Math.max(0, Math.min(100, r.percentage)) : null;
+    var raw = r.latest_raw;
+    return { provider: REFRESH_CMD[r.provider] ? r.provider : null, entity_id: typeof r.entity_id === 'string' && /^update\.[a-z0-9_]+$/.test(r.entity_id) ? r.entity_id : null,
+      installed: normVer(r.installed), latest: normVer(r.latest), available: r.available === true, in_progress: r.in_progress === true, percentage: pct,
+      restart_needed: r.restart_needed === true, covered: r.covered === true ? true : r.covered === false ? false : null,
+      reason: typeof r.reason === 'string' ? r.reason : null,
+      covered_until: typeof r.covered_until === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.covered_until) ? r.covered_until : null,
+      edition: r.edition === 'sale' ? 'sale' : r.edition === 'owner' ? 'owner' : null,
+      pending_version: normVer(r.pending_version),
+      latest_raw: typeof raw === 'string' && raw.length <= 64 && /^[vV]?\d[0-9A-Za-z.-]*$/.test(raw) && normVer(raw) !== null ? raw : null,
+      supports_version: r.supports_version === true,
+      warning_accepted: r.warning_accepted === true ? true : r.warning_accepted === false ? false : null,
+      refresh_due: r.refresh_due === true, refresh_claimed: r.refresh_claimed === true };
+  }
+  function failOf(e) {
+    var c = e && typeof e === 'object' ? e.code : null;
+    if (c === 'unknown_command') return 'absent';
+    if (c === 'unauthorized') return 'denied';
+    if (c === 'timeout') return 'timeout';
+    if (typeof c !== 'string' || c === 'no_connection') return 'lost';
+    return 'other';
+  }
+  function canInstall(st, block) {
+    return !!st && !!block && !!st.entity_id && !!st.latest && cmpVer(st.latest, block.version) === 0 && st.covered === true
+      && st.available === true && !st.in_progress && !st.restart_needed;
+  }
+  function installMsg(st) {
+    var data = {};
+    if (st.supports_version && st.latest_raw && cmpVer(st.latest_raw, st.latest) === 0) data.version = st.latest_raw;
+    return { type: 'call_service', domain: 'update', service: 'install', service_data: data, target: { entity_id: st.entity_id } };
+  }
+  function liveOf(so) {
+    if (!so || typeof so !== 'object') return null;
+    var a = so.attributes || {}, ip = a.in_progress;
+    var pct = typeof a.update_percentage === 'number' ? a.update_percentage : typeof ip === 'number' ? ip : null;
+    return { inProgress: ip === true || (typeof ip === 'number' && ip >= 0), pct: pct === null || !isFinite(pct) ? null : Math.max(0, Math.min(100, pct)),
+      latest: normVer(a.latest_version), installed: normVer(a.installed_version), on: so.state === 'on' };
+  }
+  function phaseOf(st, live, loc) {
+    loc = loc || {};
+    if (!st) return null;
+    if (loc.restarting) return 'restarting';
+    var ip = live ? live.inProgress : st.in_progress;
+    if (loc.installing || ip) return 'dl';
+    if (st.restart_needed) return 'done';
+    if (st.available && st.latest) {
+      var c = live && live.installed ? cmpVer(live.installed, st.latest) : null;
+      return c === 0 || c === 1 ? 'dl' : 'avail';
+    }
+    return null;
+  }
+  function versionOf(phase, st, live) {
+    if (!st) return null;
+    if (phase === 'avail') return st.latest;
+    if (phase === 'done' || phase === 'restarting') return st.pending_version || st.installed;
+    return st.latest || (live && live.latest) || st.installed;
+  }
+  function errsAfter(loc, phase, st) {
+    loc = loc || {};
+    var err = loc.err || null, rs = loc.rsErr || null;
+    if (err && (phase !== 'avail' || !st || cmpVer(err.v, st.latest) !== 0)) err = null;
+    if (rs && phase !== 'done') rs = null;
+    return { err: err, rsErr: rs };
+  }
+  function chipParts(phase, v) {
+    if (!phase) return null;
+    var long = phase === 'dl' ? { key: 'upd.chip_dl' } : phase === 'done' ? { key: 'upd.chip_done' } : phase === 'restarting' ? { key: 'upd.chip_rs' } : { key: 'upd.chip', vars: { v: v } };
+    var aria = phase === 'dl' ? { key: 'upd.dl_t', vars: { v: v } } : phase === 'done' ? { key: 'upd.done_t', vars: { v: v } } : phase === 'restarting' ? { key: 'upd.rs_t' } : { key: 'upd.avail_t', vars: { v: v } };
+    return { phase: phase, icon: phase === 'dl' || phase === 'restarting' ? 'spin' : phase === 'done' ? 'wduprst' : 'wdupget', long: long, short: v || '', aria: aria, go: phase === 'done' };
+  }
+  function cardParts(o) {
+    var ph = o.phase, st = o.st, loc = o.loc || {};
+    if (!ph || !st) return null;
+    var v = versionOf(ph, st, o.live), later = { act: 'later', key: 'upd.later', ghost: true };
+    if (ph === 'dl') {
+      var pct = o.live && o.live.pct !== null && o.live.pct !== undefined ? o.live.pct : st.percentage;
+      return { phase: ph, icon: 'spin', title: { key: 'upd.dl_t', vars: { v: v } }, sub: { key: 'upd.dl_s' }, list: [], line: null, warn: null, err: null,
+        prog: { pct: typeof pct === 'number' ? Math.round(pct) : null }, buttons: [] };
+    }
+    if (ph === 'restarting') {
+      return { phase: ph, icon: 'spin', title: { key: 'upd.rs_t' }, sub: { key: 'upd.rs_s' }, list: [], line: null, warn: null, err: null, prog: null, buttons: [] };
+    }
+    if (ph === 'done') {
+      return { phase: ph, icon: 'wdupok', title: { key: 'upd.done_t', vars: { v: v } }, sub: { key: 'upd.done_s' }, list: [], line: null, warn: null,
+        err: loc.rsErr ? { key: 'upd.e_restart', vars: { msg: loc.rsErr } } : null, prog: null,
+        buttons: [{ act: 'restart', key: 'upd.restart', pri: true, icon: 'wduprst' }, later] };
+    }
+    var block = blockFor(o.blocks, st.latest), list = bullets(block, o.lang);
+    var p = { phase: ph, icon: 'wdupget', title: { key: 'upd.avail_t', vars: { v: v } }, sub: { key: list.length ? 'upd.have_news' : 'upd.have', vars: { v: st.installed || '' } },
+      list: list, line: null, warn: null, err: null, prog: null, buttons: [] };
+    if (!st.installed) p.sub = null;
+    if (st.covered === false) {
+      var date = st.covered_until ? o.date(st.covered_until) : '';
+      p.line = { key: !date ? 'upd.unc' : st.reason === 'not_on_kept_lts' ? 'upd.unc_lts' : 'upd.unc_ent', vars: { v: v, date: date }, box: true };
+      p.buttons = (o.link ? [{ act: 'link', key: 'lic.btn_options', pri: true, href: o.link }] : []).concat([later]);
+      return p;
+    }
+    if (!block) { p.line = { key: 'upd.no_notes', box: true }; p.buttons = [later]; return p; }
+    if (st.covered === true) {
+      p.line = { key: 'upd.restart_note' };
+      if (loc.err) p.err = loc.err.kind === 'warning' ? { key: 'upd.e_warning' } : loc.err.msg ? { key: 'upd.e_install', vars: { msg: loc.err.msg } } : { key: 'upd.e_failed' };
+      else if (st.provider === 'marketplace' && st.warning_accepted === false) p.warn = { key: 'upd.e_warning', box: true };
+      p.buttons = [{ act: 'install', key: loc.err ? 'upd.retry' : 'upd.update', pri: true }, later];
+      return p;
+    }
+    p.line = { key: 'upd.no_check', box: true };
+    p.buttons = [later];
+    return p;
+  }
+  function errOf(e, provider) {
+    if (!e || typeof e !== 'object' || typeof e.code !== 'string') return { kind: 'lost', msg: null };
+    var m = typeof e.message === 'string' ? e.message : '';
+    var warn = (e.translation_key === 'warning_not_accepted' && (e.translation_domain == null || e.translation_domain === 'marketplace'))
+      || /read the warning first/i.test(m);
+    if (warn && provider === 'marketplace') return { kind: 'warning', msg: null };
+    if (e.code === 'timeout') return { kind: 'lost', msg: null };
+    return { kind: 'other', msg: line(m) };
+  }
+  function siteLink(base, lang) {
+    var m = /^(https:\/\/[a-z0-9.-]+)(\/|$)/i.exec(String(base || ''));
+    if (!m || /\.invalid$/i.test(m[1])) return null;
+    var l = LANGS.indexOf(lang) > -1 ? lang : 'en';
+    return m[1] + (l === 'en' ? '' : '/' + l.toLowerCase()) + '/pricing';
+  }
+
+  function say(x, X) { return !x ? '' : x.vars ? X.fmt(x.key, Object.assign({ name: X.name }, x.vars)) : X.fmt(x.key, { name: X.name }); }
+  var SPIN = '<i class="wdup-spin" aria-hidden="true"></i>';
+  function iconHTML(name, X) { return name === 'spin' ? SPIN : X.ic(name); }
+  function chipHTML(p, X) {
+    return iconHTML(p.icon, X) + '<span class="l">' + X.esc(say(p.long, X)) + '</span><span class="s">' + X.esc(p.short) + '</span>';
+  }
+  function btnHTML(b, X) {
+    var c = 'wdup-btn sm' + (b.pri ? ' pri' : '') + (b.ghost ? ' ghost' : '');
+    var inner = (b.icon ? X.ic(b.icon) : '') + '<span>' + X.esc(X.t(b.key)) + '</span>' + (b.act === 'link' ? X.ic('wdupext') : '');
+    if (b.act === 'link') return '<a class="' + c + '" href="' + X.esc(b.href) + '" target="_blank" rel="noopener noreferrer" data-wdup="link">' + inner + '</a>';
+    return '<button type="button" class="' + c + '" data-wdup="' + b.act + '">' + inner + '</button>';
+  }
+  function cardHTML(p, X) {
+    var prog = p.prog ? '<div class="wdup-prog' + (p.prog.pct === null ? ' ind' : '') + '" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
+      + (p.prog.pct === null ? '' : ' aria-valuenow="' + p.prog.pct + '"') + ' aria-label="' + X.esc(say(p.title, X)) + '"><i' + (p.prog.pct === null ? '' : ' style="width:' + p.prog.pct + '%"') + '></i></div>' : '';
+    return '<span class="wdup-cic">' + iconHTML(p.icon, X) + '</span><div class="wdup-ctx"><b>' + X.esc(say(p.title, X)) + '</b>'
+      + prog
+      + (p.sub ? '<p>' + X.esc(say(p.sub, X)) + '</p>' : '')
+      + (p.list.length ? '<ul class="wdup-notes">' + p.list.map(function (s) { return '<li>' + X.esc(s) + '</li>'; }).join('') + '</ul>' : '')
+      + (p.line ? '<p class="' + (p.line.box ? 'wdup-adm' : 'wdup-take') + '">' + X.esc(say(p.line, X)) + '</p>' : '')
+      + (p.warn ? '<p class="wdup-adm wdup-warn">' + X.esc(say(p.warn, X)) + '</p>' : '')
+      + (p.err ? '<p class="wdup-err" role="alert">' + X.esc(say(p.err, X)) + '</p>' : '')
+      + (p.buttons.length ? '<div class="wdup-cacts">' + p.buttons.map(function (b) { return btnHTML(b, X); }).join('') + '</div>' : '')
+      + '</div><button type="button" class="wdup-x" data-wdup="later" aria-label="' + X.esc(X.t('aria.close')) + '">' + X.ic('x') + '</button>';
+  }
+
+  function g(fn, d) { try { var v = fn(); return v === undefined ? d : v; } catch (e) { return d; } }
+  var D = {
+    HA: function () { return g(function () { return typeof HA !== 'undefined' ? HA : null; }, null); },
+    conn: function () { var h = D.HA(); return h && h.conn && typeof h.conn.send === 'function' ? h.conn : null; },
+    admin: function () { var h = D.HA(); return h ? h.admin : null; },
+    standalone: function () { var h = D.HA(); return !!(h && h.standalone); },
+    demo: function () { return g(function () { return typeof WD_DEMO !== 'undefined' && !!WD_DEMO && !!WD_DEMO.active; }, false); },
+    lang: function () { return g(function () { return typeof LANG !== 'undefined' && LANG ? String(LANG) : 'en'; }, 'en'); },
+    edit: function () { return g(function () { return document.body.classList.contains('edit'); }, false); },
+    blocked: function () { return g(function () { return !!(window.WD_LICENSE_UI && WD_LICENSE_UI.blocked()); }, false); },
+    state: function (id) { return g(function () { return HA.st[id] || null; }, null); },
+    link: function () {
+      var lang = D.lang();
+      var own = g(function () { var v = WD_LICENSE.view(); return v && v.about && v.about.link || null; }, null);
+      if (own && /^https:\/\//.test(own)) return own;
+      return g(function () { return WD_FEEDBACK.PLACEHOLDER ? null : siteLink(WD_FEEDBACK.SUPPORT.form, lang); }, null);
+    },
+    confirm: function (title, msg, ok, go) {
+      if (!g(function () { wdConfirm(title, msg, ok, go, 'wduprst'); return true; }, false)) go();
+    },
+    now: function () { return Date.now(); },
+    later: function (fn, ms) { return setTimeout(fn, ms); },
+    cancel: function (t) { if (t) clearTimeout(t); },
+    onLeave: function (fn) { try { if (typeof wdOnLeave === 'function') wdOnLeave(fn); } catch (e) {} }
+  };
+  function icons() { g(function () { Object.keys(ICONS).forEach(function (k) { if (!IC[k]) IC[k] = ICONS[k]; }); }, null); }
+  function tr(k) { return g(function () { return t(k); }, k); }
+  function X() {
+    return {
+      t: tr,
+      fmt: function (k, vars) { return g(function () { return fmt(k, vars); }, tr(k)); },
+      esc: function (s) { return g(function () { return esc(s); }, String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; })); },
+      ic: function (n) { return g(function () { return ic(n); }, ''); },
+      name: g(function () { return WD_BRAND.NAME; }, 'Nucleum Hub')
+    };
+  }
+  function dayText(ymd) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || ''); if (!m) return '';
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return g(function () { return d.toLocaleDateString(loc(), { day: 'numeric', month: 'long', year: 'numeric' }); }, ymd);
+  }
+
+  var S = { st: null, eid: null, absent: false, denied: false, fail: null, notes: null, live: null,
+    loc: { installing: false, instDone: false, restarting: false, rsAt: 0, dropped: false, err: null, rsErr: null },
+    open: false, gen: 0, inst: 0, asked: 0, back: 99, backT: null, rsAsk: false, lang: null, chip: null, card: null, cardSig: '', conn: null,
+    tick: null, leaveSet: false, topObs: null, topMo: null, bodyMo: null, moving: false, soon: null, rsT: null, sent: [], inflight: 0, licSet: false };
+  var byId = function (id) { return typeof document !== 'undefined' ? document.getElementById(id) : null; };
+  function eligible() { return !D.demo() && D.admin() === true && !!D.conn(); }
+
+  function send(m, ms, via, late) {
+    var c = via || D.conn();
+    if (!c) return Promise.reject({ code: 'no_connection' });
+    if (S.sent.length < 400) S.sent.push(m.type + (m.domain ? ' ' + m.domain + '.' + m.service : '') + (m.claim_refresh ? ' claim' : ''));
+    S.inflight++;
+    return new Promise(function (ok, no) {
+      var done = false, end = function () { done = true; S.inflight--; };
+      var tm = ms ? D.later(function () { if (!done) { end(); no({ code: 'timeout' }); } }, ms) : null;
+      Promise.resolve().then(function () { return c.send(m); }).then(function (r) { if (done) { if (late) late(r, c); return; } end(); D.cancel(tm); ok(r); },
+        function (e) { if (done) return; end(); D.cancel(tm); no(e); });
+    });
+  }
+  function lateClaim(r, c) {
+    var rm = refreshFor(cleanStatus(r));
+    if (rm) send(rm, NOTES_MS, c).then(function () {}, function () {});
+  }
+  function status(cand, claim) {
+    var m = { type: CMD }; if (cand) m.candidate = cand; if (claim) m.claim_refresh = true;
+    return send(m, ANSWER_MS, null, claim ? lateClaim : null).then(function (r) {
+      var st = cleanStatus(r);
+      S.absent = false; S.denied = false; S.fail = st ? null : 'other';
+      if (st) { S.asked = D.now(); if (st.entity_id) S.eid = st.entity_id; }
+      return st;
+    }, function (e) {
+      S.fail = failOf(e); S.absent = S.fail === 'absent'; S.denied = S.fail === 'denied';
+      return null;
+    });
+  }
+  function notesFor(st) {
+    if (!st.available || !st.entity_id || !st.latest) return Promise.resolve(null);
+    var n = S.notes;
+    if (n && n.latest === st.latest && n.installed === st.installed) return Promise.resolve(n);
+    return send({ type: 'update/release_notes', entity_id: st.entity_id }, NOTES_MS).then(function (body) {
+      return (S.notes = { latest: st.latest, installed: st.installed, blocks: parseNotes(typeof body === 'string' ? body : '', st.installed) });
+    }, function () { return null; });
+  }
+  function cycle() {
+    if (!eligible()) { S.st = null; paint(); return Promise.resolve(); }
+    var gen = ++S.gen, conn = D.conn();
+    return status(null, true).then(function (st) {
+      var rm = refreshFor(st);
+      if (rm && gen !== S.gen) { send(rm, NOTES_MS, conn).then(function () {}, function () {}); return st; }
+      if (!st || gen !== S.gen || !rm) return st;
+      return send(rm, NOTES_MS, conn).then(function () { return status(); }, function () { return null; }).then(function (s2) { return s2 || st; });
+    }).then(function (st) {
+      if (!st || gen !== S.gen) return st;
+      return notesFor(st).then(function (n) {
+        var b = n && blockFor(n.blocks, st.latest), cand = candidateOf(b);
+        if (!cand) return st;
+        return status(cand).then(function (s2) { return s2 || st; });
+      });
+    }).then(function (st) {
+      if (gen !== S.gen) return;
+      if (st) settle(st); else unanswered();
+    });
+  }
+  function soon(ms) { D.cancel(S.soon); S.soon = D.later(function () { S.soon = null; cycle(); }, ms === undefined ? 600 : ms); }
+  function settle(st) {
+    var L = S.loc;
+    S.st = st;
+    S.live = st.entity_id ? liveOf(D.state(st.entity_id)) : null;
+    S.back = TIMES.back.length; D.cancel(S.backT); S.backT = null;
+    if (L.instDone) { L.installing = false; L.instDone = false; }
+    if (L.restarting && (L.dropped || !st.restart_needed || D.now() - L.rsAt >= TIMES.restart)) rsEnd();
+    paint();
+  }
+  function unanswered() {
+    var L = S.loc;
+    if (L.instDone) { L.installing = false; L.instDone = false; }
+    if (S.fail === 'absent' || S.fail === 'denied') {
+      if (!L.restarting || S.fail === 'denied' || D.now() - L.rsAt >= TIMES.giveUp) { rsEnd(); S.st = null; }
+    }
+    if (S.fail !== 'denied' && S.back < TIMES.back.length) {
+      var ms = TIMES.back[S.back++];
+      D.cancel(S.backT); S.backT = D.later(function () { S.backT = null; cycle(); }, ms);
+    }
+    paint();
+  }
+
+  function phase() {
+    if (!eligible() || D.edit() || D.blocked()) return null;
+    return phaseOf(S.st, S.live, S.loc);
+  }
+  function paint() {
+    S.lang = D.lang();
+    icons();
+    var e = errsAfter(S.loc, phaseOf(S.st, S.live, S.loc), S.st);
+    S.loc.err = e.err; S.loc.rsErr = e.rsErr;
+    var ph = phase();
+    chipSync(ph);
+    cardSync(ph);
+  }
+  function isPhone() { return g(function () { return window.matchMedia('(max-width:760px)').matches; }, false); }
+  function refit() { g(function () { if (window.WD_HDR && typeof WD_HDR.fitBadges === 'function') WD_HDR.fitBadges(); }, null); }
+  function chipSync(ph) {
+    var p = chipParts(ph, versionOf(ph, S.st, S.live));
+    var host = (isPhone() && byId('hd-mid')) || byId('ctls'), el = byId('wdupchip');
+    if (!p || !host) { if (el) { el.remove(); refit(); } S.chip = null; return; }
+    watchTop();
+    if (!el) { el = document.createElement('button'); el.type = 'button'; el.id = 'wdupchip'; el.setAttribute('data-wdup', 'chip'); el.setAttribute('aria-haspopup', 'dialog'); }
+    var changed = false, cls = 'ctl wdup-chip' + (p.go ? ' go' : '');
+    if (el.className !== cls) { el.className = cls; changed = true; }
+    var trial = byId('wdlicchip'), want = trial && trial.parentNode === host ? trial.nextSibling : host.firstChild;
+    if (el.parentNode !== host || want !== el) { S.moving = true; host.insertBefore(el, want); S.moving = false; changed = true; }
+    var x = X(), html = chipHTML(p, x), sig = html + '|' + p.phase;
+    if (el._wdupSig !== sig) { el.innerHTML = html; el._wdupSig = sig; el.setAttribute('data-phase', p.phase); el.setAttribute('aria-label', say(p.aria, x)); changed = true; }
+    el.setAttribute('aria-expanded', S.open ? 'true' : 'false');
+    S.chip = el;
+    if (changed) refit();
+  }
+  function watchTop() {
+    var tb = byId('topbar'); if (!tb || S.topObs === tb || typeof MutationObserver !== 'function') return;
+    if (S.topMo) S.topMo.disconnect();
+    S.topObs = tb;
+    S.topMo = new MutationObserver(function () { if (!S.moving && !byId('wdupchip') && phase()) chipSync(phase()); });
+    S.topMo.observe(tb, { childList: true, subtree: true });
+  }
+  function cardSync(ph) {
+    if (typeof document === 'undefined') return;
+    var p = S.open ? cardParts({ phase: ph, st: S.st, live: S.live, loc: S.loc, blocks: S.notes ? S.notes.blocks : [], lang: D.lang(), link: D.link(), date: dayText }) : null;
+    if (!p) { if (S.card) { S.card.remove(); S.card = null; S.cardSig = ''; } if (!ph) S.open = false; return; }
+    var el = S.card;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'wdupcard'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'false');
+      el.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.stopPropagation(); act('later'); } });
+      document.body.appendChild(el);
+      S.card = el;
+    }
+    var x = X();
+    el.className = 'wdup-card ph-' + p.phase;
+    el.setAttribute('aria-label', say({ key: 'upd.region' }, x));
+    var sig = JSON.stringify([p, S.lang]);
+    if (sig !== S.cardSig) {
+      var had = el.contains(document.activeElement) ? document.activeElement.getAttribute('data-wdup') : null;
+      el.innerHTML = cardHTML(p, x); S.cardSig = sig;
+      if (had) { var back = el.querySelector('[data-wdup="' + had + '"]') || el.querySelector('[data-wdup]'); if (back) g(function () { back.focus({ preventScroll: true }); }, null); }
+    }
+    var lic = byId('wdliccard');
+    el.style.bottom = lic && lic.getClientRects().length ? Math.max(16, Math.round(window.innerHeight - lic.getBoundingClientRect().top + 12)) + 'px' : '';
+  }
+
+  function install() {
+    var st = S.st, b = st && S.notes && blockFor(S.notes.blocks, st.latest), cand = candidateOf(b);
+    if (!st || !cand || st.covered !== true || S.loc.installing) return;
+    var tok = ++S.inst, L = S.loc;
+    L.installing = true; L.instDone = false; L.err = null; L.rsErr = null; paint();
+    status(cand).then(function (s2) {
+      if (tok !== S.inst) return;
+      if (!canInstall(s2, b)) { S.loc.installing = false; if (s2) S.st = s2; S.notes = null; paint(); cycle(); return; }
+      S.st = s2;
+      return send(installMsg(s2), 0).then(function () {
+        if (tok !== S.inst) return;
+        S.loc.instDone = true; cycle();
+      }, function (e) {
+        if (tok !== S.inst) return;
+        var er = errOf(e, s2.provider);
+        S.loc.installing = false;
+        if (er.kind !== 'lost') S.loc.err = { kind: er.kind, msg: er.msg, v: s2.latest };
+        paint(); cycle();
+      });
+    });
+  }
+  function rsWait(ms) {
+    D.cancel(S.rsT);
+    S.rsT = D.later(function () { S.rsT = null; if (!S.loc.restarting) return; rsWait(TIMES.reask); cycle(); }, ms);
+  }
+  function rsBegin(dropped) {
+    var L = S.loc;
+    L.restarting = true; L.rsAt = D.now(); L.dropped = !!dropped; L.rsErr = null;
+    rsWait(TIMES.restart);
+  }
+  function rsEnd() { var L = S.loc; L.restarting = false; L.dropped = false; D.cancel(S.rsT); S.rsT = null; }
+  function restart() {
+    if (S.loc.restarting || S.rsAsk) return;
+    D.confirm(tr('upd.rs_q'), tr('upd.rs_qp'), tr('upd.restart'), function () {
+      if (S.loc.restarting || S.rsAsk) return;
+      S.rsAsk = true; S.loc.rsErr = null;
+      status().then(function (st) {
+        S.rsAsk = false;
+        if (S.loc.restarting) return;
+        if (!st) {
+          if (S.fail === 'lost') { rsBegin(true); S.open = true; }
+          else if (S.fail === 'absent' || S.fail === 'denied') S.st = null;
+          else S.loc.rsErr = tr('upd.e_failed');
+          paint(); return;
+        }
+        S.st = st;
+        if (st.entity_id) S.live = liveOf(D.state(st.entity_id));
+        if (phaseOf(st, S.live, S.loc) !== 'done') { paint(); cycle(); return; }
+        rsBegin(false); S.open = true; paint();
+        send({ type: 'call_service', domain: 'homeassistant', service: 'restart', service_data: {} }, 0).then(function () {}, function (e) {
+          var er = errOf(e);
+          if (er.kind === 'lost') { S.loc.dropped = true; return; }
+          rsEnd(); S.loc.rsErr = er.msg || tr('upd.e_failed'); paint();
+        });
+      });
+    });
+  }
+  function act(name, el) {
+    if (name === 'chip') {
+      S.open = !S.open || !S.card;
+      paint();
+      if (S.open) {
+        var b = S.card && (S.card.querySelector('[data-wdup]:not(.wdup-x)') || S.card.querySelector('[data-wdup]'));
+        if (b) g(function () { b.focus({ preventScroll: true }); }, null);
+        if (D.now() - S.asked > 60000) cycle();
+      }
+      return;
+    }
+    if (name === 'later') {
+      var had = S.card && S.card.contains(document.activeElement);
+      S.open = false; S.loc.err = null; S.loc.rsErr = null; paint();
+      if (had && S.chip) g(function () { S.chip.focus({ preventScroll: true }); }, null);
+      return;
+    }
+    if (name === 'install') { install(); return; }
+    if (name === 'restart') { restart(); return; }
+  }
+
+  function start() {
+    if (D.demo()) { S.st = null; paint(); return false; }
+    var c = D.conn(); if (!c) return false;
+    if (!S.leaveSet) { S.leaveSet = true; D.onLeave(leave); }
+    watchBody();
+    if (!S.licSet && window.WD_LICENSE && typeof WD_LICENSE.onChange === 'function') { S.licSet = true; WD_LICENSE.onChange(function () { D.later(paint, 0); }); }
+    S.conn = c;
+    soon(1200);
+    if (!S.tick) S.tick = setInterval(function () {
+      if (!eligible()) return;
+      var st = S.st;
+      if (D.standalone() || D.now() - S.asked > ASK_EVERY || (st && st.refresh_due) || phaseOf(st, S.live, S.loc) === 'dl') cycle();
+    }, TICK_MS);
+    return true;
+  }
+  function reconnected() {
+    if (D.demo()) return;
+    var L = S.loc;
+    if (L.restarting) L.dropped = true;
+    if (L.installing) { S.inst++; L.installing = false; L.instDone = false; }
+    L.err = null; L.rsErr = null;
+    S.notes = null;
+    S.back = 0; D.cancel(S.backT); S.backT = null;
+    soon(1500);
+  }
+  function down() {
+    if (D.demo() || !S.st) return;
+    if (S.loc.restarting) { S.loc.dropped = true; return; }
+    if (phaseOf(S.st, S.live, S.loc) === 'done') { rsBegin(true); paint(); }
+  }
+  function watchBody() {
+    if (S.bodyMo || typeof MutationObserver !== 'function' || !document.body) return;
+    var was = D.edit();
+    S.bodyMo = new MutationObserver(function () { var e = D.edit(); if (e !== was) { was = e; paint(); } });
+    S.bodyMo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+  function leave() {
+    D.cancel(S.soon); S.soon = null; D.cancel(S.rsT); S.rsT = null; D.cancel(S.backT); S.backT = null;
+    if (S.tick) { clearInterval(S.tick); S.tick = null; }
+    if (S.topMo) { S.topMo.disconnect(); S.topMo = null; S.topObs = null; }
+    if (S.bodyMo) { S.bodyMo.disconnect(); S.bodyMo = null; }
+    S.gen++; S.inst++;
+  }
+  function live(so) {
+    if (!so) return;
+    if (!S.st) { if (S.eid && so.entity_id === S.eid && S.fail && eligible()) soon(2000); return; }
+    if (so.entity_id !== S.st.entity_id) return;
+    var was = S.live, now = liveOf(so);
+    S.live = now;
+    if (was && was.inProgress && !now.inProgress) soon(400);
+    else if (!was || was.inProgress !== now.inProgress || was.latest !== now.latest || was.installed !== now.installed || was.on !== now.on) soon(800);
+    paint();
+  }
+  function header() {
+    if (S.lang !== D.lang()) { S.cardSig = ''; var el = byId('wdupchip'); if (el) el._wdupSig = ''; }
+    paint();
+  }
+
+  var PAGE = typeof document !== 'undefined' && typeof window.addEventListener === 'function';
+  if (PAGE) document.addEventListener('click', function (ev) {
+    var el = ev.target && ev.target.closest ? ev.target.closest('[data-wdup]') : null;
+    if (!el) return;
+    var name = el.getAttribute('data-wdup');
+    if (name === 'link') return;
+    ev.preventDefault(); ev.stopPropagation();
+    act(name, el);
+  }, true);
+  if (PAGE) window.addEventListener('resize', function () { D.cancel(S.rz); S.rz = D.later(function () { if (S.st) paint(); }, 250); });
+
+  return {
+    KEYS: KEYS, ICONS: ICONS, CMD: CMD, REPO: REPO, LANGS: LANGS, MAX_B64: MAX_B64, MAX_LEN: MAX_LEN, TIMES: TIMES,
+    normVer: normVer, cmpVer: cmpVer, newer: newer, isDay: isDay, fromB64url: fromB64url, ltsOf: ltsOf, cleanBlock: cleanBlock, parseNotes: parseNotes,
+    bullets: bullets, blockFor: blockFor, candidateOf: candidateOf, refreshMsg: refreshMsg, refreshFor: refreshFor, cleanStatus: cleanStatus, failOf: failOf,
+    canInstall: canInstall, installMsg: installMsg, liveOf: liveOf, phaseOf: phaseOf, versionOf: versionOf, errsAfter: errsAfter,
+    chipParts: chipParts, cardParts: cardParts, errOf: errOf, siteLink: siteLink, chipHTML: chipHTML, cardHTML: cardHTML,
+    start: start, reconnected: reconnected, down: down, live: live, header: header, cycle: cycle, act: act,
+    use: function (deps) {
+      Object.keys(deps || {}).forEach(function (k) { if (typeof deps[k] === 'function') D[k] = deps[k]; });
+      if (deps && deps.times && typeof deps.times === 'object') Object.keys(TIMES).forEach(function (k) { if (deps.times[k] !== undefined) TIMES[k] = deps.times[k]; });
+    },
+    state: function () {
+      return { phase: phase(), chip: !!byId('wdupchip'), card: !!S.card, open: S.open, absent: S.absent, denied: !!S.denied, fail: S.fail,
+        status: S.st ? JSON.parse(JSON.stringify(S.st)) : null, blocks: S.notes ? S.notes.blocks.map(function (b) { return b.version; }) : null,
+        live: S.live, loc: JSON.parse(JSON.stringify(S.loc)), sent: S.sent.slice(), inflight: S.inflight, back: S.back, retrying: !!S.backT, waiting: !!S.rsT };
+    },
+    clearSent: function () { S.sent.length = 0; }
+  };
+})();
+</script>
 <style>:root{
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px;
   --rad-1:8px; --rad-2:12px; --rad-3:16px; --rad-4:20px; --rad-pill:999px;
@@ -21446,6 +22097,71 @@ body.edit #wd-update, body:has(#wdundo.on) #wd-update{display:none;}
 body:has(#wd-update.on) #main > .wd-brand-fix{visibility:hidden;}
 body:has(#wd-update.on):not(.edit) #toasts{bottom:calc(var(--wd-bot, 0px) + 72px) !important;}
 </style>
+<style>:where(#wdupchip, #wdupcard){--tone:var(--green); --tone-soft:var(--green-soft);}
+
+.wdup-btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; max-width:100%; padding:5px 14px; box-sizing:border-box;
+  border-radius:12px; border:1px solid var(--line2); background:var(--surface2); color:var(--ink); font-family:var(--ui); font-weight:700;
+  font-size:calc(14px * var(--fs,1)); line-height:1.25; text-align:center; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+.wdup-btn svg{width:17px; height:17px; flex:0 0 auto;}
+.wdup-btn.pri{background:var(--accent); border-color:transparent; color:var(--on-acc);}
+.wdup-btn.ghost{background:transparent; border-color:transparent; color:var(--ink2); padding-left:10px; padding-right:10px;}
+.wdup-btn:active{transform:scale(.97);}
+.wdup-btn:focus-visible, .wdup-x:focus-visible, #topbar .ctl.wdup-chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+.wdup-spin{display:inline-block; width:16px; height:16px; flex:0 0 auto; box-sizing:border-box; border-radius:50%; border:2px solid currentColor;
+  border-right-color:transparent; animation:wdupspin .9s linear infinite;}
+@keyframes wdupspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .wdup-spin{animation:none;} }
+:root[data-motion="off"] .wdup-spin{animation:none !important;}
+
+#topbar .ctl.wdup-chip{gap:7px; white-space:nowrap; font-weight:700; color:var(--ink); background:var(--tone-soft); border:1px solid var(--line); position:relative;}
+#topbar .ctl.wdup-chip svg{width:16px; height:16px; color:var(--tone);}
+#topbar .ctl.wdup-chip .wdup-spin{width:14px; height:14px; color:var(--tone);}
+#topbar .ctl.wdup-chip.go{background:linear-gradient(var(--tone-soft), var(--tone-soft)) var(--surface); border-color:var(--tone);}
+@supports (color: color-mix(in srgb, red, blue)) {
+  #topbar .ctl.wdup-chip.go{background:color-mix(in srgb, var(--tone) 18%, var(--surface)); border-color:color-mix(in srgb, var(--tone) 50%, transparent);}
+}
+#topbar .ctl.wdup-chip::after{content:""; position:absolute; left:0; right:0; top:50%; height:max(100%, 44px); transform:translateY(-50%);}
+#topbar .wdup-chip .s{display:none;}
+@media (max-width:1180px){
+  #topbar .wdup-chip .l{display:none;}
+  #topbar .wdup-chip .s{display:inline;}
+}
+#topbar #hd-mid > .wdup-chip{flex:0 0 auto; align-self:center; height:auto; min-height:44px; padding:0 12px 0 10px; border-radius:13px;}
+
+#wdupcard{position:fixed; right:16px; bottom:16px; z-index:96; box-sizing:border-box; width:min(410px, calc(100vw - 32px)); max-height:calc(100vh - 32px);
+  overflow:auto; overscroll-behavior:contain; display:flex; gap:12px; align-items:flex-start; padding:14px 48px 14px 16px; background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r, 20px); box-shadow:var(--shadow-lg); color:var(--ink); font-family:var(--ui);}
+#wdupcard::before{content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--tone);}
+#wdupcard .wdup-cic{width:36px; height:36px; border-radius:11px; display:grid; place-items:center; flex:0 0 auto; background:var(--tone-soft); color:var(--tone);}
+#wdupcard .wdup-cic svg{width:18px; height:18px;}
+#wdupcard .wdup-ctx{min-width:0; flex:1;}
+#wdupcard .wdup-ctx b{display:block; font-size:calc(14px * var(--fs,1)); font-weight:750; line-height:1.3; overflow-wrap:break-word;}
+#wdupcard .wdup-ctx p{margin:4px 0 0; font-size:calc(13px * var(--fs,1)); line-height:1.45; color:var(--ink2); overflow-wrap:break-word;}
+#wdupcard .wdup-notes{list-style:none; margin:10px 0 0; padding:0; display:grid; gap:7px;}
+#wdupcard .wdup-notes li{display:flex; gap:10px; align-items:baseline; font-size:calc(13.5px * var(--fs,1)); line-height:1.4; color:var(--ink); overflow-wrap:anywhere;}
+#wdupcard .wdup-notes li::before{content:""; flex:0 0 auto; width:7px; height:7px; border-radius:50%; background:var(--tone); transform:translateY(-1px);}
+#wdupcard .wdup-ctx .wdup-take{margin-top:8px;}
+#wdupcard .wdup-ctx .wdup-adm{margin-top:10px; padding:9px 12px; border-radius:12px; background:var(--surface2); border:1px solid var(--line); color:var(--ink);
+  font-weight:650; font-size:calc(13px * var(--fs,1));}
+#wdupcard .wdup-ctx .wdup-err{margin-top:10px; padding:8px 10px; border-radius:10px; background:var(--rose-soft); color:var(--ink); font-size:calc(13px * var(--fs,1));}
+#wdupcard .wdup-prog{height:6px; margin-top:10px; border-radius:3px; background:var(--tone-soft); overflow:hidden;}
+#wdupcard .wdup-prog i{display:block; height:100%; border-radius:3px; background:var(--tone); transition:width .4s ease;}
+#wdupcard .wdup-prog.ind i{width:38%; animation:wdupind 1.4s ease-in-out infinite;}
+@keyframes wdupind{0%{transform:translateX(-100%)}100%{transform:translateX(265%)}}
+@media (prefers-reduced-motion:reduce){ #wdupcard .wdup-prog.ind i{animation:none;} }
+:root[data-motion="off"] #wdupcard .wdup-prog.ind i{animation:none !important;}
+#wdupcard .wdup-cacts{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; margin-right:-34px;}
+#wdupcard .wdup-x{position:absolute; top:4px; right:4px; width:44px; height:44px; padding:0; border:0; border-radius:12px; background:none;
+  color:var(--ink3); display:grid; place-items:center; cursor:pointer;}
+#wdupcard .wdup-x svg{width:16px; height:16px;}
+@media (max-width:760px){ #wdupcard{left:12px; right:12px; width:auto; bottom:calc(var(--wd-bot, 0px) + 12px); max-height:calc(100vh - var(--wd-bot, 0px) - 24px);} }
+</style>
+<style>html, body{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+input:not([type]), input[type=text], input[type=search], input[type=email], input[type=url], input[type=tel],
+input[type=password], input[type=number], textarea, [contenteditable]:not([contenteditable=false]){
+  -webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
+</style>
 <style>
 
 #topbar{flex-wrap:nowrap; gap:12px; padding:12px 22px 8px;}
@@ -23151,6 +23867,37 @@ function ic(n, cls){ return '<svg viewBox="0 0 24 24" fill="none" stroke="curren
 
 const T = {
 fr:{
+'nav.short_security':'Sécurité',
+'upd.chip':'Mise à jour · {v}',
+'upd.chip_dl':'Téléchargement…',
+'upd.chip_done':'Prêt · redémarrer',
+'upd.chip_rs':'Redémarrage…',
+'upd.avail_t':'{name} {v} est disponible',
+'upd.have':'Vous avez {v}.',
+'upd.have_news':'Vous avez {v}. Les nouveautés :',
+'upd.restart_note':'À la fin, vous redémarrez Home Assistant (environ une minute). Les écrans se reconnectent tout seuls.',
+'upd.update':'Mettre à jour',
+'upd.later':'Plus tard',
+'upd.retry':'Réessayer',
+'upd.no_notes':'Les notes de cette version ne peuvent pas encore être lues ici, et sans elles votre licence ne peut pas la vérifier. Réessayez plus tard.',
+'upd.no_check':'Nous n’avons pas pu vérifier si votre licence inclut cette version. Réessayez plus tard.',
+'upd.unc_ent':'Votre licence inclut les versions sorties jusqu’au {date}, et la {v} est sortie après. Restez sur votre version ou prolongez vos mises à jour d’un an.',
+'upd.unc_lts':'Votre licence inclut les versions sorties jusqu’au {date} et les correctifs de votre branche LTS, et la {v} n’en fait pas partie. Restez sur votre version ou prolongez vos mises à jour d’un an.',
+'upd.unc':'Votre licence n’inclut pas la version {v}. Restez sur votre version ou prolongez vos mises à jour d’un an.',
+'upd.dl_t':'Téléchargement de {name} {v}…',
+'upd.dl_s':'Vous pouvez utiliser le tableau de bord en attendant.',
+'upd.done_t':'Terminé. Redémarrez Home Assistant pour lancer la {v}.',
+'upd.done_s':'Après le redémarrage, les écrans se reconnectent tout seuls.',
+'upd.restart':'Redémarrer maintenant',
+'upd.rs_t':'Home Assistant redémarre…',
+'upd.rs_s':'Cela prend environ une minute. Les écrans se reconnectent tout seuls.',
+'upd.rs_q':'Redémarrer Home Assistant maintenant ?',
+'upd.rs_qp':'Cela prend environ une minute. Pendant le redémarrage, les automatisations et les écrans attendent.',
+'upd.e_warning':'Le compte Home Assistant de cet écran n’a pas encore accepté l’avertissement du Marketplace. Avec ce compte, ouvrez une fois Paramètres › Marketplace, acceptez-le, puis mettez à jour ici.',
+'upd.e_install':'La mise à jour n’a pas abouti. Home Assistant indique : {msg}',
+'upd.e_restart':'Home Assistant n’a pas redémarré. Message : {msg}',
+'upd.e_failed':'Cela n’a pas fonctionné. Réessayez.',
+'upd.region':'Mise à jour de {name}',
 'lic.s_t':'Une étape de plus, si vous le souhaitez',
 'lic.s_p':'Laissez-nous votre adresse e-mail. C’est facultatif : l’essai démarre aussi sans elle.',
 'lic.s_email':'Votre adresse e-mail',
@@ -23345,11 +24092,11 @@ fr:{
 'lic.m_revoked_t':'Cette licence a été arrêtée',
 'lic.m_revoked_p':'La clé de cette licence n’est plus valable, par exemple parce qu’elle a été rendue publique. Écrivez-nous : si c’est votre licence, nous vous envoyons une nouvelle clé.',
 'lic.m_uncovered_t':'Cette version est sortie après votre année de mises à jour',
-'lic.m_uncovered_p':'Votre licence unique comprend les versions sorties pendant son année de mises à jour. Réinstallez depuis HACS une version qu’elle couvre (elle vous appartient pour toujours, avec ses correctifs de sécurité) ou prolongez les mises à jour d’une année.',
+'lic.m_uncovered_p':'Votre licence unique comprend les versions sorties pendant son année de mises à jour. Revenez à une version qu’elle couvre (elle vous appartient pour toujours, avec ses correctifs de sécurité) : dans le Marketplace, Nucleum Hub Dashboard › ⋮ › « Install another version », choisissez la version (dans HACS, ⋮ › « Redownload »), puis redémarrez Home Assistant. Ou prolongez les mises à jour d’une année.',
 'lic.m_blocked_t':'Nucleum Hub a besoin d’une licence',
 'lic.m_blocked_p':'La licence de cette maison n’est pas active pour le moment. Ouvrez les paramètres de l’intégration dans Home Assistant pour savoir pourquoi et pour saisir votre clé.',
 'lic.m_no_integration_t':'L’intégration Nucleum Hub ne fonctionne pas',
-'lic.m_no_integration_p':'Le tableau de bord reçoit sa licence de l’intégration Nucleum Hub dans Home Assistant, et elle ne répond pas : elle n’est pas installée ou elle est désactivée. Installez-la depuis HACS ou activez-la dans Paramètres › Appareils et services, puis réessayez.',
+'lic.m_no_integration_p':'Le tableau de bord reçoit sa licence de l’intégration Nucleum Hub dans Home Assistant, et elle ne répond pas : elle n’est pas installée, pas encore ajoutée ou elle est désactivée. Ajoutez notre dépôt à partir de son lien, dans le Marketplace (dans HACS avant Home Assistant 2026.11), et installez-le : les étapes sont sur notre site, à la page Installation. Ensuite, ajoutez l’intégration ou activez-la dans Paramètres › Appareils et services, et réessayez.',
 'lic.b_payment_due_b':'Le paiement de votre abonnement a échoué.',
 'lic.b_payment_due_s':'Le tableau de bord fonctionne encore {days}. Mettez à jour le paiement pour qu’il ne s’arrête pas.',
 'lic.b_payment_due_s0':'Le tableau de bord s’arrête dans moins d’un jour. Mettez à jour le paiement pour qu’il ne s’arrête pas.',
@@ -24934,6 +25681,37 @@ fr:{
 'tap_toggle':'En direct · connecté à Home Assistant',
 },
 de:{
+'nav.short_security':'Sicherheit',
+'upd.chip':'Update · {v}',
+'upd.chip_dl':'Wird geladen…',
+'upd.chip_done':'Fertig · neu starten',
+'upd.chip_rs':'Neustart…',
+'upd.avail_t':'{name} {v} ist verfügbar',
+'upd.have':'Du hast {v}.',
+'upd.have_news':'Du hast {v}. Neu ist:',
+'upd.restart_note':'Am Ende startest du Home Assistant neu (etwa eine Minute). Die Bildschirme verbinden sich von selbst wieder.',
+'upd.update':'Aktualisieren',
+'upd.later':'Später',
+'upd.retry':'Erneut versuchen',
+'upd.no_notes':'Die Hinweise zu dieser Version lassen sich hier noch nicht lesen, und ohne sie kann deine Lizenz sie nicht prüfen. Versuche es später erneut.',
+'upd.no_check':'Wir konnten nicht prüfen, ob deine Lizenz diese Version umfasst. Versuche es später erneut.',
+'upd.unc_ent':'Deine Lizenz umfasst die Versionen, die bis zum {date} erschienen sind, und {v} kam danach. Bleib bei deiner Version oder verlängere die Updates um ein weiteres Jahr.',
+'upd.unc_lts':'Deine Lizenz umfasst die Versionen bis zum {date} und die Korrekturen deiner LTS-Linie, und {v} gehört nicht dazu. Bleib bei deiner Version oder verlängere die Updates um ein weiteres Jahr.',
+'upd.unc':'Deine Lizenz umfasst Version {v} nicht. Bleib bei deiner Version oder verlängere die Updates um ein weiteres Jahr.',
+'upd.dl_t':'{name} {v} wird heruntergeladen…',
+'upd.dl_s':'Du kannst das Dashboard währenddessen weiter nutzen.',
+'upd.done_t':'Fertig. Starte Home Assistant neu, damit {v} startet.',
+'upd.done_s':'Nach dem Neustart verbinden sich die Bildschirme von selbst wieder.',
+'upd.restart':'Jetzt neu starten',
+'upd.rs_t':'Home Assistant startet neu…',
+'upd.rs_s':'Das dauert etwa eine Minute. Die Bildschirme verbinden sich von selbst wieder.',
+'upd.rs_q':'Home Assistant jetzt neu starten?',
+'upd.rs_qp':'Das dauert etwa eine Minute. Während des Neustarts warten Automationen und Bildschirme.',
+'upd.e_warning':'Das Home-Assistant-Konto dieses Bildschirms hat den Hinweis des Marketplace noch nicht bestätigt. Öffne mit diesem Konto einmal Einstellungen › Marketplace, bestätige ihn und aktualisiere dann hier.',
+'upd.e_install':'Das Update hat nicht geklappt. Home Assistant meldet: {msg}',
+'upd.e_restart':'Home Assistant wurde nicht neu gestartet. Meldung: {msg}',
+'upd.e_failed':'Das hat nicht geklappt. Versuche es erneut.',
+'upd.region':'{name}-Update',
 'lic.s_t':'Noch ein Schritt, wenn du magst',
 'lic.s_p':'Gib uns deine E-Mail-Adresse. Das ist freiwillig: Die Testphase startet auch ohne sie.',
 'lic.s_email':'Deine E-Mail-Adresse',
@@ -25128,11 +25906,11 @@ de:{
 'lic.m_revoked_t':'Diese Lizenz wurde gesperrt',
 'lic.m_revoked_p':'Der Schlüssel dieser Lizenz ist nicht mehr gültig, zum Beispiel weil er öffentlich wurde. Schreib uns: Wenn es deine Lizenz ist, schicken wir dir einen neuen Schlüssel.',
 'lic.m_uncovered_t':'Diese Version ist nach deinem Update-Jahr erschienen',
-'lic.m_uncovered_p':'Deine Einmallizenz umfasst die Versionen, die in ihrem Update-Jahr erschienen sind. Installiere über HACS eine Version, die sie abdeckt (sie gehört dir für immer, mit ihren Sicherheitskorrekturen), oder verlängere die Updates um ein weiteres Jahr.',
+'lic.m_uncovered_p':'Deine Einmallizenz umfasst die Versionen, die in ihrem Update-Jahr erschienen sind. Kehre zu einer Version zurück, die sie abdeckt (sie gehört dir für immer, mit ihren Sicherheitskorrekturen): im Marketplace Nucleum Hub Dashboard › ⋮ › „Install another version“, wähle die Version (in HACS ⋮ › „Redownload“), dann starte Home Assistant neu. Oder verlängere die Updates um ein weiteres Jahr.',
 'lic.m_blocked_t':'Nucleum Hub braucht eine Lizenz',
 'lic.m_blocked_p':'Die Lizenz dieses Hauses ist gerade nicht aktiv. Öffne die Einstellungen der Integration in Home Assistant, um zu sehen, warum, und um deinen Schlüssel einzugeben.',
 'lic.m_no_integration_t':'Die Integration Nucleum Hub läuft nicht',
-'lic.m_no_integration_p':'Das Dashboard bekommt seine Lizenz von der Integration Nucleum Hub in Home Assistant, und sie antwortet nicht: Sie ist nicht installiert oder ausgeschaltet. Installiere sie über HACS oder schalte sie unter Einstellungen › Geräte & Dienste ein und versuche es dann erneut.',
+'lic.m_no_integration_p':'Das Dashboard bekommt seine Lizenz von der Integration Nucleum Hub in Home Assistant, und sie antwortet nicht: Sie ist nicht installiert, noch nicht hinzugefügt oder ausgeschaltet. Füge unser Repository über seinen Link hinzu, im Marketplace (vor Home Assistant 2026.11 in HACS), und installiere es: Die Schritte stehen auf unserer Website unter Installation. Dann füge die Integration unter Einstellungen › Geräte & Dienste hinzu oder schalte sie dort ein und versuche es erneut.',
 'lic.b_payment_due_b':'Die Zahlung deines Abos ist fehlgeschlagen.',
 'lic.b_payment_due_s':'Das Dashboard läuft noch {days}. Aktualisiere die Zahlung, damit es nicht stoppt.',
 'lic.b_payment_due_s0':'Das Dashboard stoppt in weniger als einem Tag. Aktualisiere die Zahlung, damit es nicht stoppt.',
@@ -26717,6 +27495,37 @@ de:{
 'tap_toggle':'Live · mit Home Assistant verbunden',
 },
 en:{
+'nav.short_security':'Security',
+'upd.chip':'Update · {v}',
+'upd.chip_dl':'Downloading…',
+'upd.chip_done':'Done · restart',
+'upd.chip_rs':'Restarting…',
+'upd.avail_t':'{name} {v} is available',
+'upd.have':'You have {v}.',
+'upd.have_news':'You have {v}. What is new:',
+'upd.restart_note':'At the end you restart Home Assistant (about a minute). The screens reconnect by themselves.',
+'upd.update':'Update',
+'upd.later':'Later',
+'upd.retry':'Try again',
+'upd.no_notes':'The notes of this version cannot be read here yet, and without them your licence cannot check it. Try again later.',
+'upd.no_check':'We could not check whether your licence includes this version. Try again later.',
+'upd.unc_ent':'Your licence includes the versions released up to {date}, and {v} came out after that. Stay on your version or extend your updates by another year.',
+'upd.unc_lts':'Your licence includes the versions released up to {date} and the fixes of your LTS line, and {v} is not on it. Stay on your version or extend your updates by another year.',
+'upd.unc':'Your licence does not include version {v}. Stay on your version or extend your updates by another year.',
+'upd.dl_t':'Downloading {name} {v}…',
+'upd.dl_s':'You can use the dashboard meanwhile.',
+'upd.done_t':'Done. Restart Home Assistant to start {v}.',
+'upd.done_s':'After the restart, the screens reconnect by themselves.',
+'upd.restart':'Restart now',
+'upd.rs_t':'Home Assistant is restarting…',
+'upd.rs_s':'It takes about a minute. The screens reconnect by themselves.',
+'upd.rs_q':'Restart Home Assistant now?',
+'upd.rs_qp':'It takes about a minute. While it restarts, automations and screens wait.',
+'upd.e_warning':'This screen’s Home Assistant account has not accepted the Marketplace’s warning yet. With that account, open Settings › Marketplace once and accept it, then update here.',
+'upd.e_install':'The update did not go through. Home Assistant says: {msg}',
+'upd.e_restart':'Home Assistant did not restart. It says: {msg}',
+'upd.e_failed':'That did not work. Try again.',
+'upd.region':'{name} update',
 'lic.s_t':'One more step, if you like',
 'lic.s_p':'Leave us your e-mail address. It is optional: the trial starts without it too.',
 'lic.s_email':'Your e-mail address',
@@ -26912,11 +27721,11 @@ en:{
 'lic.m_revoked_t':'This licence was stopped',
 'lic.m_revoked_p':'This licence’s key is no longer valid, for example because it was made public. Write to us: if it is your licence, we send you a new key.',
 'lic.m_uncovered_t':'This version came out after your update year',
-'lic.m_uncovered_p':'Your one-time licence includes the versions released during its update year. Reinstall from HACS a version it covers (yours for good, with its security fixes) or extend the updates by another year.',
+'lic.m_uncovered_p':'Your one-time licence includes the versions released during its update year. Go back to a version it covers (yours for good, with its security fixes): in the Marketplace, Nucleum Hub Dashboard › ⋮ › “Install another version”, choose the version (in HACS, ⋮ › “Redownload”), then restart Home Assistant. Or extend the updates by another year.',
 'lic.m_blocked_t':'Nucleum Hub needs a licence',
 'lic.m_blocked_p':'The licence of this home is not active right now. Open the integration settings in Home Assistant to see why and to enter your key.',
 'lic.m_no_integration_t':'The Nucleum Hub integration is not running',
-'lic.m_no_integration_p':'The dashboard gets its licence from the Nucleum Hub integration in Home Assistant, and it does not answer: it is not installed, or it is turned off. Install it from HACS or turn it on in Settings › Devices & services, then try again.',
+'lic.m_no_integration_p':'The dashboard gets its licence from the Nucleum Hub integration in Home Assistant, and it does not answer: it is not installed, not added yet, or turned off. Add our repository from its link, in the Marketplace (HACS before Home Assistant 2026.11), and install it: the steps are on our site, under Install. Then add the integration or turn it on in Settings › Devices & services, and try again.',
 'lic.b_payment_due_b':'Your subscription payment failed.',
 'lic.b_payment_due_s':'The dashboard keeps working for another {days}. Update the payment so it does not stop.',
 'lic.b_payment_due_s0':'The dashboard stops within a day. Update the payment so it does not stop.',
@@ -28312,6 +29121,37 @@ choose_type:'What kind of card?', type_tiles:'Entity tiles', type_stats:'Big num
 washer_done:'done at', dish_prog:'Program', move_hint:'Drag to move', tap_toggle:'Live · connected to Home Assistant',
 },
 ro:{
+'nav.short_security':'Securitate',
+'upd.chip':'Actualizare · {v}',
+'upd.chip_dl':'Se descarcă…',
+'upd.chip_done':'Gata · repornește',
+'upd.chip_rs':'Se repornește…',
+'upd.avail_t':'{name} {v} e disponibil',
+'upd.have':'Acum ai {v}.',
+'upd.have_news':'Acum ai {v}. Ce e nou:',
+'upd.restart_note':'La sfârșit repornești Home Assistant (cam un minut). Ecranele se reconectează singure.',
+'upd.update':'Actualizează',
+'upd.later':'Mai târziu',
+'upd.retry':'Încearcă din nou',
+'upd.no_notes':'Notele acestei versiuni nu se pot citi încă aici, iar fără ele licența ta nu o poate verifica. Încearcă din nou mai târziu.',
+'upd.no_check':'Nu am putut verifica dacă licența ta include versiunea aceasta. Încearcă din nou mai târziu.',
+'upd.unc_ent':'Licența ta include versiunile apărute până la {date}, iar {v} a apărut după. Rămâi pe versiunea ta sau prelungește actualizările cu încă un an.',
+'upd.unc_lts':'Licența ta include versiunile apărute până la {date} și reparațiile liniei tale LTS, iar {v} nu e pe ea. Rămâi pe versiunea ta sau prelungește actualizările cu încă un an.',
+'upd.unc':'Licența ta nu include versiunea {v}. Rămâi pe versiunea ta sau prelungește actualizările cu încă un an.',
+'upd.dl_t':'Se descarcă {name} {v}…',
+'upd.dl_s':'Poți folosi dashboard-ul între timp.',
+'upd.done_t':'Gata. Repornește Home Assistant ca să pornească {v}.',
+'upd.done_s':'După repornire, ecranele se reconectează singure.',
+'upd.restart':'Repornește acum',
+'upd.rs_t':'Home Assistant repornește…',
+'upd.rs_s':'Durează cam un minut. Ecranele se reconectează singure.',
+'upd.rs_q':'Repornești Home Assistant acum?',
+'upd.rs_qp':'Durează cam un minut. Cât repornește, automatizările și ecranele așteaptă.',
+'upd.e_warning':'Contul Home Assistant al acestui ecran n-a acceptat încă avertismentul din Marketplace. Cu acel cont, deschide o dată Setări › Marketplace și acceptă-l, apoi actualizează de aici.',
+'upd.e_install':'Actualizarea n-a mers. Home Assistant spune: {msg}',
+'upd.e_restart':'Home Assistant n-a repornit. Spune: {msg}',
+'upd.e_failed':'N-a mers. Încearcă din nou.',
+'upd.region':'Actualizare {name}',
 'lic.s_t':'Încă un pas, dacă vrei',
 'lic.s_p':'Lasă-ne adresa ta de e-mail. E opțional: încercarea pornește și fără ea.',
 'lic.s_email':'Adresa ta de e-mail',
@@ -28507,11 +29347,11 @@ ro:{
 'lic.m_revoked_t':'Licența a fost oprită',
 'lic.m_revoked_p':'Cheia acestei licențe nu mai e valabilă, de exemplu pentru că a ajuns publică. Scrie-ne: dacă e licența ta, îți trimitem o cheie nouă.',
 'lic.m_uncovered_t':'Versiunea aceasta a apărut după anul tău de actualizări',
-'lic.m_uncovered_p':'Licența ta o dată include versiunile apărute în anul ei de actualizări. Reinstalează din HACS o versiune pe care o acoperă (a ta pentru totdeauna, cu reparațiile de securitate) sau prelungește actualizările cu încă un an.',
+'lic.m_uncovered_p':'Licența ta o dată include versiunile apărute în anul ei de actualizări. Întoarce-te la o versiune pe care o acoperă (a ta pentru totdeauna, cu reparațiile de securitate): în Marketplace, Nucleum Hub Dashboard › ⋮ › „Install another version”, alege versiunea (în HACS, ⋮ › „Redownload”), apoi repornește Home Assistant. Sau prelungește actualizările cu încă un an.',
 'lic.m_blocked_t':'Nucleum Hub are nevoie de o licență',
 'lic.m_blocked_p':'Licența acestei case nu e activă acum. Deschide setările integrării din Home Assistant ca să vezi de ce și să pui cheia.',
 'lic.m_no_integration_t':'Integrarea Nucleum Hub nu rulează',
-'lic.m_no_integration_p':'Dashboard-ul își primește licența de la integrarea Nucleum Hub din Home Assistant, iar ea nu răspunde: nu e instalată sau e oprită. Instaleaz-o din HACS sau pornește-o din Setări › Dispozitive și servicii, apoi încearcă din nou.',
+'lic.m_no_integration_p':'Dashboard-ul își primește licența de la integrarea Nucleum Hub din Home Assistant, iar ea nu răspunde: nu e instalată, nu e adăugată încă sau e oprită. Adaugă depozitul nostru din linkul lui, în Marketplace (în HACS înainte de Home Assistant 2026.11), și instalează integrarea: pașii sunt pe site-ul nostru, la Instalare. Apoi adaug-o sau pornește-o din Setări › Dispozitive și servicii și încearcă din nou.',
 'lic.b_payment_due_b':'Plata abonamentului n-a reușit.',
 'lic.b_payment_due_s':'Dashboard-ul mai merge {days}. Actualizează plata ca să nu se oprească.',
 'lic.b_payment_due_s0':'Dashboard-ul se oprește în mai puțin de o zi. Actualizează plata ca să nu se oprească.',
@@ -29907,6 +30747,37 @@ choose_type:'Ce fel de card?', type_tiles:'Tile-uri cu entități', type_stats:'
 washer_done:'gata la', dish_prog:'Program', move_hint:'Trage pentru a muta', tap_toggle:'Live · conectat la Home Assistant',
 },
 nl:{
+'nav.short_security':'Beveiliging',
+'upd.chip':'Update · {v}',
+'upd.chip_dl':'Downloaden…',
+'upd.chip_done':'Klaar · herstarten',
+'upd.chip_rs':'Herstarten…',
+'upd.avail_t':'{name} {v} is beschikbaar',
+'upd.have':'Je hebt {v}.',
+'upd.have_news':'Je hebt {v}. Wat is er nieuw:',
+'upd.restart_note':'Aan het eind herstart je Home Assistant (ongeveer een minuut). De schermen maken vanzelf weer verbinding.',
+'upd.update':'Bijwerken',
+'upd.later':'Later',
+'upd.retry':'Opnieuw proberen',
+'upd.no_notes':'De notities van deze versie kunnen hier nog niet worden gelezen, en zonder die notities kan je licentie deze versie niet controleren. Probeer het later opnieuw.',
+'upd.no_check':'We konden niet controleren of je licentie deze versie omvat. Probeer het later opnieuw.',
+'upd.unc_ent':'Je licentie omvat de versies die tot {date} zijn verschenen, en {v} kwam daarna. Blijf op je versie of verleng je updates met nog een jaar.',
+'upd.unc_lts':'Je licentie omvat de versies tot {date} en de fixes van je LTS-lijn, en {v} hoort daar niet bij. Blijf op je versie of verleng je updates met nog een jaar.',
+'upd.unc':'Je licentie omvat versie {v} niet. Blijf op je versie of verleng je updates met nog een jaar.',
+'upd.dl_t':'{name} {v} downloaden…',
+'upd.dl_s':'Je kunt het dashboard intussen gewoon gebruiken.',
+'upd.done_t':'Klaar. Herstart Home Assistant om {v} te starten.',
+'upd.done_s':'Na de herstart maken de schermen vanzelf weer verbinding.',
+'upd.restart':'Nu herstarten',
+'upd.rs_t':'Home Assistant herstart…',
+'upd.rs_s':'Dit duurt ongeveer een minuut. De schermen maken vanzelf weer verbinding.',
+'upd.rs_q':'Home Assistant nu herstarten?',
+'upd.rs_qp':'Dit duurt ongeveer een minuut. Tijdens de herstart wachten automatiseringen en schermen.',
+'upd.e_warning':'Het Home Assistant-account van dit scherm heeft de waarschuwing van de Marketplace nog niet geaccepteerd. Open met dat account eenmalig Instellingen › Marketplace, accepteer hem en werk daarna hier bij.',
+'upd.e_install':'Het bijwerken is niet gelukt. Home Assistant meldt: {msg}',
+'upd.e_restart':'Home Assistant is niet herstart. Melding: {msg}',
+'upd.e_failed':'Dat is niet gelukt. Probeer het opnieuw.',
+'upd.region':'{name}-update',
 'lic.s_t':'Nog één stap, als je wilt',
 'lic.s_p':'Laat je e-mailadres achter. Het is optioneel: de proefperiode start ook zonder.',
 'lic.s_email':'Je e-mailadres',
@@ -30101,11 +30972,11 @@ nl:{
 'lic.m_revoked_t':'Deze licentie is stopgezet',
 'lic.m_revoked_p':'De sleutel van deze licentie is niet meer geldig, bijvoorbeeld omdat hij openbaar is geworden. Schrijf ons: als het jouw licentie is, sturen we je een nieuwe sleutel.',
 'lic.m_uncovered_t':'Deze versie is verschenen na je updatejaar',
-'lic.m_uncovered_p':'Je eenmalige licentie omvat de versies die in haar updatejaar zijn verschenen. Installeer via HACS een versie die ze dekt (voor altijd van jou, met haar beveiligingsupdates) of verleng de updates met nog een jaar.',
+'lic.m_uncovered_p':'Je eenmalige licentie omvat de versies die in haar updatejaar zijn verschenen. Ga terug naar een versie die ze dekt (voor altijd van jou, met haar beveiligingsupdates): in de Marketplace Nucleum Hub Dashboard › ⋮ › ‘Install another version’, kies de versie (in HACS ⋮ › ‘Redownload’), en herstart daarna Home Assistant. Of verleng de updates met nog een jaar.',
 'lic.m_blocked_t':'Nucleum Hub heeft een licentie nodig',
 'lic.m_blocked_p':'De licentie van dit huis is nu niet actief. Open de instellingen van de integratie in Home Assistant om te zien waarom en om je sleutel in te vullen.',
 'lic.m_no_integration_t':'De integratie Nucleum Hub draait niet',
-'lic.m_no_integration_p':'Het dashboard krijgt zijn licentie van de integratie Nucleum Hub in Home Assistant, en die antwoordt niet: ze is niet geïnstalleerd of staat uit. Installeer haar via HACS of zet haar aan in Instellingen › Apparaten & diensten, en probeer het dan opnieuw.',
+'lic.m_no_integration_p':'Het dashboard krijgt zijn licentie van de integratie Nucleum Hub in Home Assistant, en die antwoordt niet: ze is niet geïnstalleerd, nog niet toegevoegd of staat uit. Voeg onze repository toe via de link, in de Marketplace (vóór Home Assistant 2026.11 in HACS), en installeer hem: de stappen staan op onze website, onder Installeren. Voeg dan de integratie toe of zet haar aan in Instellingen › Apparaten & diensten, en probeer het opnieuw.',
 'lic.b_payment_due_b':'De betaling van je abonnement is mislukt.',
 'lic.b_payment_due_s':'Het dashboard werkt nog {days}. Werk de betaling bij zodat het niet stopt.',
 'lic.b_payment_due_s0':'Het dashboard stopt binnen een dag. Werk de betaling bij zodat het niet stopt.',
@@ -31690,6 +32561,37 @@ nl:{
 'tap_toggle':'Live · verbonden met Home Assistant',
 },
 es:{
+'nav.short_security':'Seguridad',
+'upd.chip':'Actualización · {v}',
+'upd.chip_dl':'Descargando…',
+'upd.chip_done':'Listo · reinicia',
+'upd.chip_rs':'Reiniciando…',
+'upd.avail_t':'{name} {v} está disponible',
+'upd.have':'Tienes {v}.',
+'upd.have_news':'Tienes {v}. Novedades:',
+'upd.restart_note':'Al final reinicias Home Assistant (alrededor de un minuto). Las pantallas se vuelven a conectar solas.',
+'upd.update':'Actualizar',
+'upd.later':'Más tarde',
+'upd.retry':'Reintentar',
+'upd.no_notes':'Las notas de esta versión aún no se pueden leer aquí, y sin ellas tu licencia no puede comprobarla. Inténtalo más tarde.',
+'upd.no_check':'No pudimos comprobar si tu licencia incluye esta versión. Inténtalo más tarde.',
+'upd.unc_ent':'Tu licencia incluye las versiones publicadas hasta el {date}, y la {v} salió después. Quédate en tu versión o amplía las actualizaciones un año más.',
+'upd.unc_lts':'Tu licencia incluye las versiones publicadas hasta el {date} y las correcciones de tu línea LTS, y la {v} no está en ella. Quédate en tu versión o amplía las actualizaciones un año más.',
+'upd.unc':'Tu licencia no incluye la versión {v}. Quédate en tu versión o amplía las actualizaciones un año más.',
+'upd.dl_t':'Descargando {name} {v}…',
+'upd.dl_s':'Mientras tanto puedes usar el panel.',
+'upd.done_t':'Listo. Reinicia Home Assistant para que arranque la {v}.',
+'upd.done_s':'Tras el reinicio, las pantallas se vuelven a conectar solas.',
+'upd.restart':'Reiniciar ahora',
+'upd.rs_t':'Home Assistant se está reiniciando…',
+'upd.rs_s':'Tarda alrededor de un minuto. Las pantallas se vuelven a conectar solas.',
+'upd.rs_q':'¿Reiniciar Home Assistant ahora?',
+'upd.rs_qp':'Tarda alrededor de un minuto. Mientras se reinicia, las automatizaciones y las pantallas esperan.',
+'upd.e_warning':'La cuenta de Home Assistant de esta pantalla aún no ha aceptado el aviso del Marketplace. Con esa cuenta, abre una vez Ajustes › Marketplace, acéptalo y luego actualiza desde aquí.',
+'upd.e_install':'La actualización no se completó. Home Assistant dice: {msg}',
+'upd.e_restart':'Home Assistant no se reinició. Dice: {msg}',
+'upd.e_failed':'No funcionó. Inténtalo de nuevo.',
+'upd.region':'Actualización de {name}',
 'lic.s_t':'Un paso más, si quieres',
 'lic.s_p':'Déjanos tu correo electrónico. Es opcional: la prueba empieza también sin él.',
 'lic.s_email':'Tu correo electrónico',
@@ -31884,11 +32786,11 @@ es:{
 'lic.m_revoked_t':'Esta licencia se ha detenido',
 'lic.m_revoked_p':'La clave de esta licencia ya no es válida, por ejemplo porque se hizo pública. Escríbenos: si es tu licencia, te enviamos una clave nueva.',
 'lic.m_uncovered_t':'Esta versión salió después de tu año de actualizaciones',
-'lic.m_uncovered_p':'Tu licencia de pago único incluye las versiones publicadas durante su año de actualizaciones. Reinstala desde HACS una versión que cubra (tuya para siempre, con sus correcciones de seguridad) o amplía las actualizaciones un año más.',
+'lic.m_uncovered_p':'Tu licencia de pago único incluye las versiones publicadas durante su año de actualizaciones. Vuelve a una versión que cubra (tuya para siempre, con sus correcciones de seguridad): en el Marketplace, Nucleum Hub Dashboard › ⋮ › «Install another version», elige la versión (en HACS, ⋮ › «Redownload»), y reinicia Home Assistant. O amplía las actualizaciones un año más.',
 'lic.m_blocked_t':'Nucleum Hub necesita una licencia',
 'lic.m_blocked_p':'La licencia de esta casa no está activa ahora. Abre los ajustes de la integración en Home Assistant para ver por qué y para introducir tu clave.',
 'lic.m_no_integration_t':'La integración Nucleum Hub no está funcionando',
-'lic.m_no_integration_p':'El panel recibe su licencia de la integración Nucleum Hub en Home Assistant, y no responde: no está instalada o está desactivada. Instálala desde HACS o actívala en Ajustes › Dispositivos y servicios y vuelve a intentarlo.',
+'lic.m_no_integration_p':'El panel recibe su licencia de la integración Nucleum Hub en Home Assistant, y no responde: no está instalada, aún no se ha añadido o está desactivada. Añade nuestro repositorio desde su enlace, en el Marketplace (en HACS antes de Home Assistant 2026.11), e instálalo: los pasos están en nuestra web, en Instalación. Luego añade la integración o actívala en Ajustes › Dispositivos y servicios y vuelve a intentarlo.',
 'lic.b_payment_due_b':'El pago de tu suscripción ha fallado.',
 'lic.b_payment_due_s':'El panel sigue funcionando {days} más. Actualiza el pago para que no se detenga.',
 'lic.b_payment_due_s0':'El panel se detiene en menos de un día. Actualiza el pago para que no se detenga.',
@@ -33473,6 +34375,37 @@ es:{
 'tap_toggle':'En vivo · conectado a Home Assistant',
 },
 it:{
+'nav.short_security':'Sicurezza',
+'upd.chip':'Aggiornamento · {v}',
+'upd.chip_dl':'Scaricamento…',
+'upd.chip_done':'Pronto · riavvia',
+'upd.chip_rs':'Riavvio…',
+'upd.avail_t':'{name} {v} è disponibile',
+'upd.have':'Hai {v}.',
+'upd.have_news':'Hai {v}. Le novità:',
+'upd.restart_note':'Alla fine riavvii Home Assistant (circa un minuto). Gli schermi si ricollegano da soli.',
+'upd.update':'Aggiorna',
+'upd.later':'Più tardi',
+'upd.retry':'Riprova',
+'upd.no_notes':'Le note di questa versione non si possono ancora leggere qui, e senza di esse la tua licenza non può verificarla. Riprova più tardi.',
+'upd.no_check':'Non siamo riusciti a verificare se la tua licenza include questa versione. Riprova più tardi.',
+'upd.unc_ent':'La tua licenza include le versioni uscite fino al {date}, e la {v} è uscita dopo. Resta sulla tua versione o estendi gli aggiornamenti di un altro anno.',
+'upd.unc_lts':'La tua licenza include le versioni uscite fino al {date} e le correzioni della tua linea LTS, e la {v} non ne fa parte. Resta sulla tua versione o estendi gli aggiornamenti di un altro anno.',
+'upd.unc':'La tua licenza non include la versione {v}. Resta sulla tua versione o estendi gli aggiornamenti di un altro anno.',
+'upd.dl_t':'Scaricamento di {name} {v}…',
+'upd.dl_s':'Nel frattempo puoi usare la plancia.',
+'upd.done_t':'Fatto. Riavvia Home Assistant per avviare la {v}.',
+'upd.done_s':'Dopo il riavvio gli schermi si ricollegano da soli.',
+'upd.restart':'Riavvia ora',
+'upd.rs_t':'Home Assistant si sta riavviando…',
+'upd.rs_s':'Ci vuole circa un minuto. Gli schermi si ricollegano da soli.',
+'upd.rs_q':'Riavviare Home Assistant ora?',
+'upd.rs_qp':'Ci vuole circa un minuto. Durante il riavvio automazioni e schermi restano in attesa.',
+'upd.e_warning':'L’account Home Assistant di questo schermo non ha ancora accettato l’avviso del Marketplace. Con quell’account apri una volta Impostazioni › Marketplace, accettalo e poi aggiorna da qui.',
+'upd.e_install':'L’aggiornamento non è riuscito. Home Assistant dice: {msg}',
+'upd.e_restart':'Home Assistant non si è riavviato. Dice: {msg}',
+'upd.e_failed':'Non ha funzionato. Riprova.',
+'upd.region':'Aggiornamento di {name}',
 'lic.s_t':'Un altro passo, se vuoi',
 'lic.s_p':'Lasciaci il tuo indirizzo e-mail. È facoltativo: la prova parte anche senza.',
 'lic.s_email':'Il tuo indirizzo e-mail',
@@ -33667,11 +34600,11 @@ it:{
 'lic.m_revoked_t':'Questa licenza è stata fermata',
 'lic.m_revoked_p':'La chiave di questa licenza non è più valida, per esempio perché è diventata pubblica. Scrivici: se è la tua licenza, ti mandiamo una chiave nuova.',
 'lic.m_uncovered_t':'Questa versione è uscita dopo il tuo anno di aggiornamenti',
-'lic.m_uncovered_p':'La tua licenza a pagamento unico include le versioni uscite durante il suo anno di aggiornamenti. Reinstalla da HACS una versione coperta (tua per sempre, con le sue correzioni di sicurezza) oppure estendi gli aggiornamenti di un altro anno.',
+'lic.m_uncovered_p':'La tua licenza a pagamento unico include le versioni uscite durante il suo anno di aggiornamenti. Torna a una versione coperta (tua per sempre, con le sue correzioni di sicurezza): nel Marketplace, Nucleum Hub Dashboard › ⋮ › «Install another version», scegli la versione (in HACS, ⋮ › «Redownload»), poi riavvia Home Assistant. Oppure estendi gli aggiornamenti di un altro anno.',
 'lic.m_blocked_t':'Nucleum Hub ha bisogno di una licenza',
 'lic.m_blocked_p':'La licenza di questa casa ora non è attiva. Apri le impostazioni dell’integrazione in Home Assistant per vedere perché e per inserire la tua chiave.',
 'lic.m_no_integration_t':'L’integrazione Nucleum Hub non è in funzione',
-'lic.m_no_integration_p':'La plancia riceve la licenza dall’integrazione Nucleum Hub in Home Assistant, che non risponde: non è installata oppure è disattivata. Installala da HACS o attivala in Impostazioni › Dispositivi e servizi, poi riprova.',
+'lic.m_no_integration_p':'La plancia riceve la licenza dall’integrazione Nucleum Hub in Home Assistant, che non risponde: non è installata, non è ancora aggiunta oppure è disattivata. Aggiungi il nostro repository dal suo link, nel Marketplace (in HACS prima di Home Assistant 2026.11), e installalo: i passaggi sono sul nostro sito, in Installazione. Poi aggiungi l’integrazione o attivala in Impostazioni › Dispositivi e servizi, e riprova.',
 'lic.b_payment_due_b':'Il pagamento dell’abbonamento non è andato a buon fine.',
 'lic.b_payment_due_s':'La plancia funziona ancora per {days}. Aggiorna il pagamento perché non si fermi.',
 'lic.b_payment_due_s0':'La plancia si ferma entro un giorno. Aggiorna il pagamento perché non si fermi.',
@@ -35256,6 +36189,37 @@ it:{
 'tap_toggle':'In tempo reale · connesso a Home Assistant',
 },
 pl:{
+'nav.short_security':'Ochrona',
+'upd.chip':'Aktualizacja · {v}',
+'upd.chip_dl':'Pobieranie…',
+'upd.chip_done':'Gotowe · restart',
+'upd.chip_rs':'Restart…',
+'upd.avail_t':'{name} {v} jest dostępny',
+'upd.have':'Masz {v}.',
+'upd.have_news':'Masz {v}. Co nowego:',
+'upd.restart_note':'Na koniec uruchamiasz ponownie Home Assistant (około minuty). Ekrany połączą się same.',
+'upd.update':'Aktualizuj',
+'upd.later':'Później',
+'upd.retry':'Spróbuj ponownie',
+'upd.no_notes':'Informacji o tej wersji nie da się tu jeszcze odczytać, a bez nich Twoja licencja nie może jej sprawdzić. Spróbuj ponownie później.',
+'upd.no_check':'Nie udało się sprawdzić, czy Twoja licencja obejmuje tę wersję. Spróbuj ponownie później.',
+'upd.unc_ent':'Twoja licencja obejmuje wersje wydane do {date}, a {v} ukazała się później. Zostań przy swojej wersji albo przedłuż aktualizacje o kolejny rok.',
+'upd.unc_lts':'Twoja licencja obejmuje wersje wydane do {date} i poprawki Twojej linii LTS, a {v} do niej nie należy. Zostań przy swojej wersji albo przedłuż aktualizacje o kolejny rok.',
+'upd.unc':'Twoja licencja nie obejmuje wersji {v}. Zostań przy swojej wersji albo przedłuż aktualizacje o kolejny rok.',
+'upd.dl_t':'Pobieranie {name} {v}…',
+'upd.dl_s':'W tym czasie możesz korzystać z panelu.',
+'upd.done_t':'Gotowe. Uruchom ponownie Home Assistant, aby włączyć {v}.',
+'upd.done_s':'Po ponownym uruchomieniu ekrany połączą się same.',
+'upd.restart':'Uruchom ponownie',
+'upd.rs_t':'Home Assistant uruchamia się ponownie…',
+'upd.rs_s':'Trwa to około minuty. Ekrany połączą się same.',
+'upd.rs_q':'Uruchomić ponownie Home Assistant teraz?',
+'upd.rs_qp':'Trwa to około minuty. W tym czasie automatyzacje i ekrany czekają.',
+'upd.e_warning':'Konto Home Assistant tego ekranu nie zaakceptowało jeszcze ostrzeżenia Marketplace. Na tym koncie otwórz raz Ustawienia › Marketplace, zaakceptuj je, a potem zaktualizuj tutaj.',
+'upd.e_install':'Aktualizacja się nie udała. Home Assistant podaje: {msg}',
+'upd.e_restart':'Home Assistant nie uruchomił się ponownie. Komunikat: {msg}',
+'upd.e_failed':'Nie udało się. Spróbuj ponownie.',
+'upd.region':'Aktualizacja {name}',
 'lic.s_t':'Jeszcze jeden krok, jeśli chcesz',
 'lic.s_p':'Zostaw nam swój adres e-mail. To opcjonalne: okres próbny ruszy także bez niego.',
 'lic.s_email':'Twój adres e-mail',
@@ -35450,11 +36414,11 @@ pl:{
 'lic.m_revoked_t':'Ta licencja została unieważniona',
 'lic.m_revoked_p':'Klucz tej licencji nie jest już ważny, na przykład dlatego, że stał się publiczny. Napisz do nas: jeśli to Twoja licencja, wyślemy Ci nowy klucz.',
 'lic.m_uncovered_t':'Ta wersja ukazała się po Twoim roku aktualizacji',
-'lic.m_uncovered_p':'Twoja licencja jednorazowa obejmuje wersje wydane w jej roku aktualizacji. Zainstaluj ponownie z HACS wersję, którą obejmuje (Twoją na zawsze, z jej poprawkami bezpieczeństwa), albo przedłuż aktualizacje o kolejny rok.',
+'lic.m_uncovered_p':'Twoja licencja jednorazowa obejmuje wersje wydane w jej roku aktualizacji. Wróć do wersji, którą obejmuje (Twojej na zawsze, z jej poprawkami bezpieczeństwa): w Marketplace Nucleum Hub Dashboard › ⋮ › „Install another version”, wybierz wersję (w HACS ⋮ › „Redownload”), potem uruchom ponownie Home Assistant. Albo przedłuż aktualizacje o kolejny rok.',
 'lic.m_blocked_t':'Nucleum Hub potrzebuje licencji',
 'lic.m_blocked_p':'Licencja tego domu nie jest teraz aktywna. Otwórz ustawienia integracji w Home Assistant, aby sprawdzić dlaczego i wpisać klucz.',
 'lic.m_no_integration_t':'Integracja Nucleum Hub nie działa',
-'lic.m_no_integration_p':'Panel dostaje licencję od integracji Nucleum Hub w Home Assistant, a ona nie odpowiada: nie jest zainstalowana albo jest wyłączona. Zainstaluj ją z HACS lub włącz w Ustawienia › Urządzenia oraz usługi, a potem spróbuj ponownie.',
+'lic.m_no_integration_p':'Panel dostaje licencję od integracji Nucleum Hub w Home Assistant, a ona nie odpowiada: nie jest zainstalowana, nie została jeszcze dodana albo jest wyłączona. Dodaj nasze repozytorium z jego linku, w Marketplace (przed Home Assistant 2026.11 w HACS), i zainstaluj je: kroki są na naszej stronie, w części Instalacja. Potem dodaj integrację lub włącz ją w Ustawienia › Urządzenia oraz usługi i spróbuj ponownie.',
 'lic.b_payment_due_b':'Płatność za subskrypcję się nie powiodła.',
 'lic.b_payment_due_s':'Panel będzie działać jeszcze {days}. Zaktualizuj płatność, żeby się nie zatrzymał.',
 'lic.b_payment_due_s0':'Panel zatrzyma się w ciągu doby. Zaktualizuj płatność, żeby się nie zatrzymał.',
@@ -37039,6 +38003,37 @@ pl:{
 'tap_toggle':'Na żywo · połączono z Home Assistant',
 },
 sv:{
+'nav.short_security':'Säkerhet',
+'upd.chip':'Uppdatering · {v}',
+'upd.chip_dl':'Laddar ner…',
+'upd.chip_done':'Klart · starta om',
+'upd.chip_rs':'Startar om…',
+'upd.avail_t':'{name} {v} finns tillgänglig',
+'upd.have':'Du har {v}.',
+'upd.have_news':'Du har {v}. Nytt:',
+'upd.restart_note':'Till sist startar du om Home Assistant (ungefär en minut). Skärmarna ansluter igen av sig själva.',
+'upd.update':'Uppdatera',
+'upd.later':'Senare',
+'upd.retry':'Försök igen',
+'upd.no_notes':'Anteckningarna för den här versionen kan inte läsas här än, och utan dem kan din licens inte kontrollera den. Försök igen senare.',
+'upd.no_check':'Vi kunde inte kontrollera om din licens omfattar den här versionen. Försök igen senare.',
+'upd.unc_ent':'Din licens omfattar versionerna som släppts fram till {date}, och {v} kom efter det. Stanna på din version eller förläng uppdateringarna med ett år till.',
+'upd.unc_lts':'Din licens omfattar versionerna fram till {date} och rättningarna i din LTS-linje, och {v} ingår inte i den. Stanna på din version eller förläng uppdateringarna med ett år till.',
+'upd.unc':'Din licens omfattar inte version {v}. Stanna på din version eller förläng uppdateringarna med ett år till.',
+'upd.dl_t':'Laddar ner {name} {v}…',
+'upd.dl_s':'Du kan använda panelen under tiden.',
+'upd.done_t':'Klart. Starta om Home Assistant för att starta {v}.',
+'upd.done_s':'Efter omstarten ansluter skärmarna igen av sig själva.',
+'upd.restart':'Starta om nu',
+'upd.rs_t':'Home Assistant startar om…',
+'upd.rs_s':'Det tar ungefär en minut. Skärmarna ansluter igen av sig själva.',
+'upd.rs_q':'Starta om Home Assistant nu?',
+'upd.rs_qp':'Det tar ungefär en minut. Under omstarten väntar automationer och skärmar.',
+'upd.e_warning':'Den här skärmens Home Assistant-konto har inte godkänt Marketplace-varningen än. Öppna Inställningar › Marketplace en gång med det kontot, godkänn den och uppdatera sedan här.',
+'upd.e_install':'Uppdateringen gick inte igenom. Home Assistant säger: {msg}',
+'upd.e_restart':'Home Assistant startade inte om. Meddelande: {msg}',
+'upd.e_failed':'Det fungerade inte. Försök igen.',
+'upd.region':'Uppdatering av {name}',
 'lic.s_t':'Ett steg till, om du vill',
 'lic.s_p':'Lämna din e-postadress. Det är frivilligt: provperioden startar även utan den.',
 'lic.s_email':'Din e-postadress',
@@ -37233,11 +38228,11 @@ sv:{
 'lic.m_revoked_t':'Den här licensen har stoppats',
 'lic.m_revoked_p':'Nyckeln till den här licensen gäller inte längre, till exempel för att den har blivit offentlig. Skriv till oss: om det är din licens skickar vi en ny nyckel.',
 'lic.m_uncovered_t':'Den här versionen kom efter ditt uppdateringsår',
-'lic.m_uncovered_p':'Din engångslicens omfattar de versioner som släpptes under dess uppdateringsår. Installera om från HACS en version som den täcker (din för alltid, med dess säkerhetsrättningar) eller förläng uppdateringarna med ett år till.',
+'lic.m_uncovered_p':'Din engångslicens omfattar de versioner som släpptes under dess uppdateringsår. Gå tillbaka till en version som den täcker (din för alltid, med dess säkerhetsrättningar): i Marketplace, Nucleum Hub Dashboard › ⋮ › ”Install another version”, välj versionen (i HACS, ⋮ › ”Redownload”), och starta sedan om Home Assistant. Eller förläng uppdateringarna med ett år till.',
 'lic.m_blocked_t':'Nucleum Hub behöver en licens',
 'lic.m_blocked_p':'Licensen för det här hemmet är inte aktiv just nu. Öppna integrationens inställningar i Home Assistant för att se varför och för att ange din nyckel.',
 'lic.m_no_integration_t':'Integrationen Nucleum Hub körs inte',
-'lic.m_no_integration_p':'Panelen får sin licens från integrationen Nucleum Hub i Home Assistant, och den svarar inte: den är inte installerad eller är avstängd. Installera den från HACS eller slå på den under Inställningar › Enheter och tjänster och försök sedan igen.',
+'lic.m_no_integration_p':'Panelen får sin licens från integrationen Nucleum Hub i Home Assistant, och den svarar inte: den är inte installerad, inte tillagd än eller är avstängd. Lägg till vårt repository från dess länk, i Marketplace (i HACS före Home Assistant 2026.11), och installera det: stegen finns på vår webbplats, under Installation. Lägg sedan till integrationen eller slå på den under Inställningar › Enheter och tjänster och försök igen.',
 'lic.b_payment_due_b':'Betalningen för ditt abonnemang misslyckades.',
 'lic.b_payment_due_s':'Panelen fungerar i {days} till. Uppdatera betalningen så att den inte stannar.',
 'lic.b_payment_due_s0':'Panelen stannar inom ett dygn. Uppdatera betalningen så att den inte stannar.',
@@ -38822,6 +39817,37 @@ sv:{
 'tap_toggle':'Live · ansluten till Home Assistant',
 },
 cs:{
+'nav.short_security':'Ochrana',
+'upd.chip':'Aktualizace · {v}',
+'upd.chip_dl':'Stahuje se…',
+'upd.chip_done':'Hotovo · restartujte',
+'upd.chip_rs':'Restartuje se…',
+'upd.avail_t':'{name} {v} je k dispozici',
+'upd.have':'Máte {v}.',
+'upd.have_news':'Máte {v}. Co je nového:',
+'upd.restart_note':'Na konci restartujete Home Assistant (asi minutu). Obrazovky se znovu připojí samy.',
+'upd.update':'Aktualizovat',
+'upd.later':'Později',
+'upd.retry':'Zkusit znovu',
+'upd.no_notes':'Poznámky k této verzi zde zatím nelze přečíst a bez nich ji vaše licence nemůže ověřit. Zkuste to později.',
+'upd.no_check':'Nepodařilo se ověřit, zda vaše licence zahrnuje tuto verzi. Zkuste to později.',
+'upd.unc_ent':'Vaše licence zahrnuje verze vydané do {date} a verze {v} vyšla později. Zůstaňte u své verze, nebo si prodlužte aktualizace o další rok.',
+'upd.unc_lts':'Vaše licence zahrnuje verze vydané do {date} a opravy vaší řady LTS, do které verze {v} nepatří. Zůstaňte u své verze, nebo si prodlužte aktualizace o další rok.',
+'upd.unc':'Vaše licence nezahrnuje verzi {v}. Zůstaňte u své verze, nebo si prodlužte aktualizace o další rok.',
+'upd.dl_t':'Stahuje se {name} {v}…',
+'upd.dl_s':'Mezitím můžete panel dál používat.',
+'upd.done_t':'Hotovo. Restartujte Home Assistant, aby se spustila verze {v}.',
+'upd.done_s':'Po restartu se obrazovky znovu připojí samy.',
+'upd.restart':'Restartovat nyní',
+'upd.rs_t':'Home Assistant se restartuje…',
+'upd.rs_s':'Trvá to asi minutu. Obrazovky se znovu připojí samy.',
+'upd.rs_q':'Restartovat Home Assistant nyní?',
+'upd.rs_qp':'Trvá to asi minutu. Během restartu automatizace a obrazovky čekají.',
+'upd.e_warning':'Účet Home Assistant tohoto displeje ještě nepřijal upozornění Marketplace. S tímto účtem jednou otevřete Nastavení › Marketplace, přijměte ho a pak aktualizujte tady.',
+'upd.e_install':'Aktualizace se nepodařila. Home Assistant hlásí: {msg}',
+'upd.e_restart':'Home Assistant se nerestartoval. Hlásí: {msg}',
+'upd.e_failed':'Nepodařilo se. Zkuste to znovu.',
+'upd.region':'Aktualizace {name}',
 'lic.s_t':'Ještě jeden krok, pokud chcete',
 'lic.s_p':'Nechte nám svou e-mailovou adresu. Je to nepovinné: zkušební doba se spustí i bez ní.',
 'lic.s_email':'Vaše e-mailová adresa',
@@ -39016,11 +40042,11 @@ cs:{
 'lic.m_revoked_t':'Tato licence byla zrušena',
 'lic.m_revoked_p':'Klíč této licence už neplatí, například proto, že se stal veřejným. Napište nám: pokud je to vaše licence, pošleme vám nový klíč.',
 'lic.m_uncovered_t':'Tato verze vyšla po vašem roce aktualizací',
-'lic.m_uncovered_p':'Vaše jednorázová licence zahrnuje verze vydané během jejího roku aktualizací. Přeinstalujte z HACS verzi, kterou pokrývá (vaši navždy, s jejími bezpečnostními opravami), nebo si prodlužte aktualizace o další rok.',
+'lic.m_uncovered_p':'Vaše jednorázová licence zahrnuje verze vydané během jejího roku aktualizací. Vraťte se k verzi, kterou pokrývá (vaši navždy, s jejími bezpečnostními opravami): v Marketplace Nucleum Hub Dashboard › ⋮ › „Install another version“, vyberte verzi (v HACS ⋮ › „Redownload“), pak restartujte Home Assistant. Nebo si prodlužte aktualizace o další rok.',
 'lic.m_blocked_t':'Nucleum Hub potřebuje licenci',
 'lic.m_blocked_p':'Licence tohoto domu teď není aktivní. Otevřete nastavení integrace v Home Assistantu, abyste zjistili proč, a zadejte svůj klíč.',
 'lic.m_no_integration_t':'Integrace Nucleum Hub neběží',
-'lic.m_no_integration_p':'Panel dostává licenci od integrace Nucleum Hub v Home Assistantu a ta neodpovídá: není nainstalovaná nebo je vypnutá. Nainstalujte ji z HACS nebo ji zapněte v Nastavení › Zařízení a služby a pak to zkuste znovu.',
+'lic.m_no_integration_p':'Panel dostává licenci od integrace Nucleum Hub v Home Assistantu a ta neodpovídá: není nainstalovaná, ještě není přidaná nebo je vypnutá. Přidejte náš repozitář z jeho odkazu, v Marketplace (před Home Assistantem 2026.11 v HACS), a nainstalujte ho: postup najdete na našem webu, v části Instalace. Pak integraci přidejte nebo ji zapněte v Nastavení › Zařízení a služby a zkuste to znovu.',
 'lic.b_payment_due_b':'Platba za předplatné se nezdařila.',
 'lic.b_payment_due_s':'Panel bude fungovat ještě {days}. Aktualizujte platbu, aby se nezastavil.',
 'lic.b_payment_due_s0':'Panel se zastaví do jednoho dne. Aktualizujte platbu, aby se nezastavil.',
@@ -40605,6 +41631,37 @@ cs:{
 'tap_toggle':'Živě · připojeno k Home Assistant',
 },
 da:{
+'nav.short_security':'Sikkerhed',
+'upd.chip':'Opdatering · {v}',
+'upd.chip_dl':'Henter…',
+'upd.chip_done':'Klar · genstart',
+'upd.chip_rs':'Genstarter…',
+'upd.avail_t':'{name} {v} er tilgængelig',
+'upd.have':'Du har {v}.',
+'upd.have_news':'Du har {v}. Nyt:',
+'upd.restart_note':'Til sidst genstarter du Home Assistant (cirka et minut). Skærmene forbinder sig igen af sig selv.',
+'upd.update':'Opdater',
+'upd.later':'Senere',
+'upd.retry':'Prøv igen',
+'upd.no_notes':'Noterne til denne version kan ikke læses her endnu, og uden dem kan din licens ikke tjekke den. Prøv igen senere.',
+'upd.no_check':'Vi kunne ikke tjekke, om din licens omfatter denne version. Prøv igen senere.',
+'upd.unc_ent':'Din licens omfatter de versioner, der er udkommet frem til {date}, og {v} kom efter. Bliv på din version, eller forlæng opdateringerne med et år mere.',
+'upd.unc_lts':'Din licens omfatter versionerne frem til {date} og rettelserne i din LTS-linje, og {v} hører ikke til den. Bliv på din version, eller forlæng opdateringerne med et år mere.',
+'upd.unc':'Din licens omfatter ikke version {v}. Bliv på din version, eller forlæng opdateringerne med et år mere.',
+'upd.dl_t':'Henter {name} {v}…',
+'upd.dl_s':'Du kan bruge dashboardet imens.',
+'upd.done_t':'Klar. Genstart Home Assistant for at starte {v}.',
+'upd.done_s':'Efter genstarten forbinder skærmene sig igen af sig selv.',
+'upd.restart':'Genstart nu',
+'upd.rs_t':'Home Assistant genstarter…',
+'upd.rs_s':'Det tager cirka et minut. Skærmene forbinder sig igen af sig selv.',
+'upd.rs_q':'Genstart Home Assistant nu?',
+'upd.rs_qp':'Det tager cirka et minut. Mens den genstarter, venter automatiseringer og skærme.',
+'upd.e_warning':'Denne skærms Home Assistant-konto har ikke accepteret Marketplace-advarslen endnu. Åbn Indstillinger › Marketplace én gang med den konto, accepter den, og opdater så her.',
+'upd.e_install':'Opdateringen lykkedes ikke. Home Assistant siger: {msg}',
+'upd.e_restart':'Home Assistant genstartede ikke. Besked: {msg}',
+'upd.e_failed':'Det lykkedes ikke. Prøv igen.',
+'upd.region':'Opdatering af {name}',
 'lic.s_t':'Ét trin mere, hvis du vil',
 'lic.s_p':'Giv os din e-mailadresse. Det er frivilligt: prøveperioden starter også uden.',
 'lic.s_email':'Din e-mailadresse',
@@ -40799,11 +41856,11 @@ da:{
 'lic.m_revoked_t':'Denne licens er blevet stoppet',
 'lic.m_revoked_p':'Nøglen til denne licens er ikke længere gyldig, for eksempel fordi den er blevet offentlig. Skriv til os: hvis det er din licens, sender vi dig en ny nøgle.',
 'lic.m_uncovered_t':'Denne version udkom efter dit opdateringsår',
-'lic.m_uncovered_p':'Din engangslicens omfatter de versioner, der udkom i dens opdateringsår. Geninstallér fra HACS en version, den dækker (din for altid, med dens sikkerhedsrettelser), eller forlæng opdateringerne med endnu et år.',
+'lic.m_uncovered_p':'Din engangslicens omfatter de versioner, der udkom i dens opdateringsår. Gå tilbage til en version, den dækker (din for altid, med dens sikkerhedsrettelser): i Marketplace, Nucleum Hub Dashboard › ⋮ › »Install another version«, vælg versionen (i HACS, ⋮ › »Redownload«), og genstart så Home Assistant. Eller forlæng opdateringerne med endnu et år.',
 'lic.m_blocked_t':'Nucleum Hub skal bruge en licens',
 'lic.m_blocked_p':'Licensen til dette hjem er ikke aktiv lige nu. Åbn integrationens indstillinger i Home Assistant for at se hvorfor og for at indtaste din nøgle.',
 'lic.m_no_integration_t':'Integrationen Nucleum Hub kører ikke',
-'lic.m_no_integration_p':'Dashboardet får sin licens fra integrationen Nucleum Hub i Home Assistant, og den svarer ikke: den er ikke installeret, eller den er slået fra. Installér den fra HACS, eller slå den til under Indstillinger › Enheder og tjenester, og prøv så igen.',
+'lic.m_no_integration_p':'Dashboardet får sin licens fra integrationen Nucleum Hub i Home Assistant, og den svarer ikke: den er ikke installeret, ikke tilføjet endnu, eller den er slået fra. Tilføj vores repository fra dets link, i Marketplace (i HACS før Home Assistant 2026.11), og installér det: trinnene står på vores websted under Installation. Tilføj derefter integrationen, eller slå den til under Indstillinger › Enheder og tjenester, og prøv igen.',
 'lic.b_payment_due_b':'Betalingen af dit abonnement mislykkedes.',
 'lic.b_payment_due_s':'Dashboardet virker i {days} mere. Opdater betalingen, så det ikke stopper.',
 'lic.b_payment_due_s0':'Dashboardet stopper inden for et døgn. Opdater betalingen, så det ikke stopper.',
@@ -42388,6 +43445,37 @@ da:{
 'tap_toggle':'Live · forbundet til Home Assistant',
 },
 'pt-BR':{
+'nav.short_security':'Segurança',
+'upd.chip':'Atualização · {v}',
+'upd.chip_dl':'Baixando…',
+'upd.chip_done':'Pronto · reinicie',
+'upd.chip_rs':'Reiniciando…',
+'upd.avail_t':'{name} {v} está disponível',
+'upd.have':'Você tem a {v}.',
+'upd.have_news':'Você tem a {v}. Novidades:',
+'upd.restart_note':'No final você reinicia o Home Assistant (cerca de um minuto). As telas se reconectam sozinhas.',
+'upd.update':'Atualizar',
+'upd.later':'Mais tarde',
+'upd.retry':'Tentar de novo',
+'upd.no_notes':'As notas desta versão ainda não podem ser lidas aqui, e sem elas a sua licença não consegue verificá-la. Tente de novo mais tarde.',
+'upd.no_check':'Não conseguimos verificar se a sua licença inclui esta versão. Tente de novo mais tarde.',
+'upd.unc_ent':'Sua licença inclui as versões lançadas até {date}, e a {v} saiu depois. Fique na sua versão ou estenda as atualizações por mais um ano.',
+'upd.unc_lts':'Sua licença inclui as versões lançadas até {date} e as correções da sua linha LTS, e a {v} não faz parte dela. Fique na sua versão ou estenda as atualizações por mais um ano.',
+'upd.unc':'Sua licença não inclui a versão {v}. Fique na sua versão ou estenda as atualizações por mais um ano.',
+'upd.dl_t':'Baixando {name} {v}…',
+'upd.dl_s':'Enquanto isso, você pode usar o painel.',
+'upd.done_t':'Pronto. Reinicie o Home Assistant para iniciar a {v}.',
+'upd.done_s':'Depois de reiniciar, as telas se reconectam sozinhas.',
+'upd.restart':'Reiniciar agora',
+'upd.rs_t':'O Home Assistant está reiniciando…',
+'upd.rs_s':'Leva cerca de um minuto. As telas se reconectam sozinhas.',
+'upd.rs_q':'Reiniciar o Home Assistant agora?',
+'upd.rs_qp':'Leva cerca de um minuto. Enquanto reinicia, as automações e as telas aguardam.',
+'upd.e_warning':'A conta do Home Assistant desta tela ainda não aceitou o aviso do Marketplace. Com essa conta, abra uma vez Configurações › Marketplace, aceite-o e depois atualize aqui.',
+'upd.e_install':'A atualização não deu certo. O Home Assistant diz: {msg}',
+'upd.e_restart':'O Home Assistant não reiniciou. Ele diz: {msg}',
+'upd.e_failed':'Não deu certo. Tente de novo.',
+'upd.region':'Atualização do {name}',
 'lic.s_t':'Mais um passo, se quiser',
 'lic.s_p':'Deixe seu e-mail. É opcional: o teste começa também sem ele.',
 'lic.s_email':'Seu e-mail',
@@ -42582,11 +43670,11 @@ da:{
 'lic.m_revoked_t':'Esta licença foi interrompida',
 'lic.m_revoked_p':'A chave desta licença não é mais válida, por exemplo porque se tornou pública. Fale conosco: se a licença for sua, enviamos uma chave nova.',
 'lic.m_uncovered_t':'Esta versão saiu depois do seu ano de atualizações',
-'lic.m_uncovered_p':'Sua licença única inclui as versões lançadas durante o ano de atualizações dela. Reinstale pelo HACS uma versão coberta por ela (sua para sempre, com as correções de segurança) ou estenda as atualizações por mais um ano.',
+'lic.m_uncovered_p':'Sua licença única inclui as versões lançadas durante o ano de atualizações dela. Volte para uma versão coberta por ela (sua para sempre, com as correções de segurança): no Marketplace, Nucleum Hub Dashboard › ⋮ › “Install another version”, escolha a versão (no HACS, ⋮ › “Redownload”), depois reinicie o Home Assistant. Ou estenda as atualizações por mais um ano.',
 'lic.m_blocked_t':'O Nucleum Hub precisa de uma licença',
 'lic.m_blocked_p':'A licença desta casa não está ativa agora. Abra as configurações da integração no Home Assistant para ver o motivo e inserir sua chave.',
 'lic.m_no_integration_t':'A integração Nucleum Hub não está rodando',
-'lic.m_no_integration_p':'O painel recebe a licença da integração Nucleum Hub no Home Assistant, e ela não responde: não está instalada ou está desativada. Instale-a pelo HACS ou ative-a em Configurações › Dispositivos e serviços e tente de novo.',
+'lic.m_no_integration_p':'O painel recebe a licença da integração Nucleum Hub no Home Assistant, e ela não responde: não está instalada, ainda não foi adicionada ou está desativada. Adicione o nosso repositório a partir do link dele, no Marketplace (no HACS antes do Home Assistant 2026.11), e instale-o: os passos estão no nosso site, em Instalação. Depois adicione a integração ou ative-a em Configurações › Dispositivos e serviços e tente de novo.',
 'lic.b_payment_due_b':'O pagamento da sua assinatura falhou.',
 'lic.b_payment_due_s':'O painel continua funcionando por mais {days}. Atualize o pagamento para que ele não pare.',
 'lic.b_payment_due_s0':'O painel para em menos de um dia. Atualize o pagamento para que ele não pare.',
@@ -44653,11 +45741,13 @@ function wdTestWS(){ try{ return (window.parent!==window && window.parent.WD_TES
 async function wdAfterReconnect(){
 if(window.WD_ART) WD_ART.reconnected();
 if(window.WD_LICENSE) WD_LICENSE.reconnected();
+if(window.WD_UPDATE) WD_UPDATE.reconnected();
 try{ const states = await HA.conn.send({type:'get_states'});
 (states||[]).forEach(s=>{ if(!E[s.entity_id]) return; HA.st[s.entity_id]=s; haApply(s); DIRTY.add(s.entity_id); }); }catch(e){}
 }
 const WDCONN = {seen:false, lost:false, t:null};
 function wdConnStatus(s){
+if(s!=='online' && window.WD_UPDATE) WD_UPDATE.down();
 if(s==='online'){ clearTimeout(WDCONN.t); WDCONN.t=null; if(WDCONN.lost){ WDCONN.lost=false; try{ toast(t('ui.reconnected'),'check'); }catch(e){} } WDCONN.seen=true; return; }
 if(!WDCONN.seen || WDCONN.lost || WDCONN.t) return;
 WDCONN.t=setTimeout(()=>{ WDCONN.t=null; if(HA.conn && HA.conn.status && HA.conn.status()!=='online'){ WDCONN.lost=true; try{ toast(t('ui.connection_lost'),'plug'); }catch(e){} } }, 4000);
@@ -44750,15 +45840,19 @@ const unsub = HA.conn.sub(ev=>{ const ns=ev.data&&ev.data.new_state; if(!ns||!E[
 if(window.wdOnLeave) wdOnLeave(()=>Promise.resolve(unsub).then(u=>{ if(typeof u==='function') return u(); }).catch(()=>{}));
 setInterval(haFlush, 1500);
 if(window.WD_LICENSE) WD_LICENSE.start();
+if(window.WD_UPDATE) WD_UPDATE.start();
 if(!HA.standalone && !WDHS.w && window.WD_HASTART && !(typeof WD_DEMO!=='undefined' && WD_DEMO.active)){ try{
   const ph = window.parent.document.querySelector('home-assistant').hass;
-  if(ph && ph.connection){ WDHS.w = WD_HASTART.watch(ph.connection, {back: wdHaBack}); if(window.wdOnLeave) wdOnLeave(()=>{ WDHS.w.stop(); }); }
+  if(ph && ph.connection){ WDHS.w = WD_HASTART.watch(ph.connection, {back: wdHaBack}); if(window.wdOnLeave) wdOnLeave(()=>{ WDHS.w.stop(); });
+    if(window.WD_UPDATE && typeof ph.connection.addEventListener==='function'){ const c=ph.connection, dn=()=>{ try{ WD_UPDATE.down(); }catch(e){} };
+      c.addEventListener('disconnected', dn); if(window.wdOnLeave) wdOnLeave(()=>{ try{ c.removeEventListener('disconnected', dn); }catch(e){} }); } }
 }catch(e){} }
 }
 const WDHS = {w: null};
 async function wdHaBack(){
 if(document.body.classList.contains('edit') || (typeof dragging!=='undefined' && dragging) || document.getElementById('sheet').classList.contains('on')){ setTimeout(wdHaBack, 3000); return; }
 if(window.WD_ART) WD_ART.reconnected();
+if(window.WD_UPDATE) WD_UPDATE.reconnected();
 let states; try{ states = await HA.conn.send({type:'get_states'}); }catch(e){ return; }
 if((states||[]).some(st=>st && !E[st.entity_id])){
   try{ await haInit(); }catch(e){ return; }
@@ -45756,8 +46850,8 @@ return '';
 function renderNav(){
 document.getElementById('logo').innerHTML = ic('home');
 try{ document.getElementById('rail').setAttribute('aria-label', t('aria.pages')); }catch(e){}
-document.getElementById('navlist').innerHTML = NAVDEF.map(n=>
-'<button class="navbtn'+(cur===n.id?' on':'')+'" data-nav="'+esc(n.id)+'" style="--nav-c:'+n.c+';--nav-bg:'+n.cs+'">'+ic(n.icon)+'<span>'+esc(WD_PAGES.label(n.id))+'</span>'+WD_PAGES.navMark(n.id)+'</button>').join('')+WD_PAGES.addBtnHTML();
+document.getElementById('navlist').innerHTML = NAVDEF.map(n=>{ const lb=WD_PAGES.label(n.id), bl=WD_PAGES.barLabel(n.id); return (
+'<button class="navbtn'+(cur===n.id?' on':'')+'"'+(bl!==lb?' aria-label="'+esc(lb)+'" title="'+esc(lb)+'"':'')+' data-nav="'+esc(n.id)+'" style="--nav-c:'+n.c+';--nav-bg:'+n.cs+'">'+ic(n.icon)+'<span>'+esc(bl)+'</span>'+WD_PAGES.navMark(n.id)+'</button>'); }).join('')+WD_PAGES.addBtnHTML();
 }
 function updateHeader(){
 renderHeader();
@@ -52757,6 +53851,13 @@ if(typeof renderHeader === 'function'){
 if(!window.WD_LICENSE_UI || typeof renderHeader !== 'function') return;
 const _rhLic = renderHeader;
 renderHeader = function(){ const r = _rhLic.apply(this, arguments); try{ WD_LICENSE_UI.header(); }catch(e){} return r; };
+})();
+</script>
+<script>
+(function(){
+if(!window.WD_UPDATE) return;
+if(typeof renderHeader === 'function'){ const _rhUpd = renderHeader; renderHeader = function(){ const r = _rhUpd.apply(this, arguments); try{ WD_UPDATE.header(); }catch(e){} return r; }; }
+if(typeof haApply === 'function'){ const _haUpd = haApply; haApply = function(so){ const r = _haUpd.apply(this, arguments); try{ WD_UPDATE.live(so); }catch(e){} return r; }; }
 })();
 </script>
 <script>

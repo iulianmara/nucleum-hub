@@ -1,14 +1,14 @@
 {
   "edition": "sale",
-  "version": "1.0.2",
-  "build": "2026-10-30.d8b3482",
-  "commit": "d8b3482",
-  "commitSha": "d8b348263ae2d8d835e07695f8ff5aa36dc037d8",
+  "version": "1.0.3",
+  "build": "2026-10-31.3d02e5c",
+  "commit": "3d02e5c",
+  "commitSha": "3d02e5c8ebb75925cc0d196b443a205f2f9e1e11",
   "dirty": false,
-  "date": "2026-10-30",
-  "sourceDateEpoch": 1793366047,
+  "date": "2026-10-31",
+  "sourceDateEpoch": 1793453374,
   "dateFrom": "commit",
-  "file": "wall-dashboard-sale-1.0.2.html",
-  "sha256": "1bee5734b17caa2c3c28aa784542b736e4bee569e59103d9c7fccbe19ac104a1",
-  "bytes": 3289245
+  "file": "wall-dashboard-sale-1.0.3.html",
+  "sha256": "18218ad1259ab3f05595f80c6b63f426972d6cbe2d04fc90193978b36bf5d155",
+  "bytes": 3363144
 }

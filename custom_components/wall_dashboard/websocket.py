@@ -10,6 +10,10 @@
 - ``wall_dashboard/licence/trial``, in the sale edition only: "Start the free trial" on the activation screen (D-090).
   Only a Home Assistant admin (``require_admin``: anyone else gets the error ``unauthorized``), checked here and not
   only on the screen, since the trial is once per home and wall tablets often run with an ordinary user.
+- ``wall_dashboard/update/status`` (D-103), in every edition: the new version's state for the dashboard's notice and
+  for the loader's look, which claims the provider's daily refresh here (updates.py; contract v2:
+  docs/ACTUALIZARE-INTEGRARE.md). Only a Home Assistant admin: only an admin can install it or restart Home Assistant,
+  and a wall tablet's ordinary user is shown nothing.
 
 Later ones go here too: ``wall_dashboard/feedback/info`` and ``/send`` (docs/FEEDBACK-INTEGRARE.md), the
 configuration (plan §4.8).
@@ -27,7 +31,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import convert
+from . import convert, updates
 from .const import (
     DATA_LICENCE_ENTRY,
     SIGNAL_LICENCE,
@@ -35,6 +39,7 @@ from .const import (
     WS_LICENCE,
     WS_LICENCE_SUBSCRIBE,
     WS_LICENCE_TRIAL,
+    WS_UPDATE_STATUS,
 )
 from .models import WallDashboardData, async_loaded_data
 
@@ -64,6 +69,7 @@ TRIAL_ERRORS: frozenset[str] = frozenset({"trial_used", "licensed", "rate_limite
 def async_register_websocket(hass: HomeAssistant) -> None:
     """Register the commands of every edition, once per Home Assistant run."""
     websocket_api.async_register_command(hass, ws_artwork_info)
+    websocket_api.async_register_command(hass, ws_update_status)
 
 
 @callback
@@ -97,6 +103,36 @@ def ws_artwork_info(
             "formats": list(data.formats),
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): WS_UPDATE_STATUS,
+    vol.Optional("candidate"): updates.request_candidate,
+    vol.Optional("claim_refresh"): bool,
+})
+@callback
+def ws_update_status(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """``{"provider", "repository_id", "entity_id", "installed", "latest", "available", "in_progress", "percentage",
+    "restart_needed", "covered", "reason", "covered_until", "edition", "pending_version", "latest_raw",
+    "supports_version", "warning_accepted", "refresh_due", "refresh_claimed"}`` (updates.async_status; contract v2).
+
+    ``candidate``: the new version as the dashboard read it from the release notes, null or exactly ``{"version",
+    "released", "lts"}`` (updates.request_candidate: any other form is ``invalid_format``, before the command runs), for
+    ``covered``; without it (the loader's look, or notes without the block) ``covered`` is None with the reason
+    ``no_candidate``. ``claim_refresh: true``: the caller sends the provider's refresh if the answer says
+    ``refresh_claimed``, and only then (one caller a day per Home Assistant run). ``warning_accepted`` is said of the
+    calling user. A user who is not an admin gets the error ``unauthorized``; while no entry is loaded,
+    ``unknown_command``, as Home Assistant answers without the integration."""
+    data = async_loaded_data(hass)
+    if data is None:
+        connection.send_error(msg["id"], ERR_UNKNOWN_COMMAND, "Unknown command.")
+        return
+    user_id = getattr(connection.user, "id", None)
+    connection.send_result(msg["id"], updates.async_status(
+        hass, data, msg.get("candidate"), claim_refresh=msg.get("claim_refresh") is True, user_id=user_id))
 
 
 def _sale(hass: HomeAssistant) -> WallDashboardData | None:

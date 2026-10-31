@@ -111,7 +111,7 @@
         "provisional": "Your licence needs one check with the licence server. Connect Home Assistant to the internet before {until}.",
         "renewal_due": "Your licence needs renewing before {until}.",
         "kept_lts": "Your year of updates has ended: you keep this version, with the security fixes of its LTS line.",
-        "uncovered": "This version came out after your updates ended. Go back to a version your licence covers, or renew.",
+        "uncovered": "This version came out after your updates ended. Go back to a version your licence covers, or renew. To go back: in the Marketplace, Nucleum Hub Dashboard › ⋮ › “Install another version”, choose the version (in HACS, ⋮ › “Redownload”), then restart Home Assistant.",
         "broken_environment": "The licence cannot be checked on this Home Assistant (its log says why), so the dashboard stays fully usable.",
         "no_token": "No licence yet. Paste the key from your purchase e-mail.",
         "trial_available": "No licence yet. Start the 3-day free trial from the Nucleum Hub dashboard, or paste the key from your purchase e-mail.",

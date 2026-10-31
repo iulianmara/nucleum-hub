@@ -111,7 +111,7 @@
         "provisional": "Din licens skal kontrolleres én gang hos licensserveren. Forbind Home Assistant til internettet før {until}.",
         "renewal_due": "Din licens skal fornyes før {until}.",
         "kept_lts": "Dit år med opdateringer er slut: du beholder denne version med sikkerhedsrettelserne for dens LTS-linje.",
-        "uncovered": "Denne version udkom, efter dine opdateringer sluttede. Gå tilbage til en version, som din licens dækker, eller forny.",
+        "uncovered": "Denne version udkom, efter dine opdateringer sluttede. Gå tilbage til en version, som din licens dækker, eller forny. Sådan går du tilbage: i Marketplace, Nucleum Hub Dashboard › ⋮ › »Install another version«, vælg versionen (i HACS, ⋮ › »Redownload«), og genstart så Home Assistant.",
         "broken_environment": "Licensen kan ikke kontrolleres på denne Home Assistant (loggen siger hvorfor), så dashboardet kan stadig bruges fuldt ud.",
         "no_token": "Ingen licens endnu. Indsæt nøglen fra din købsmail.",
         "trial_available": "Ingen licens endnu. Start den gratis prøveperiode på 3 dage fra Nucleum Hub-dashboardet, eller indsæt nøglen fra din købsmail.",

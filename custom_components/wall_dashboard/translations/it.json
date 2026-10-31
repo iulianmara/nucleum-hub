@@ -111,7 +111,7 @@
         "provisional": "La tua licenza ha bisogno di una verifica con il server delle licenze. Collega Home Assistant a internet prima del {until}.",
         "renewal_due": "La tua licenza va rinnovata prima del {until}.",
         "kept_lts": "Il tuo anno di aggiornamenti è finito: tieni questa versione, con le correzioni di sicurezza della sua linea LTS.",
-        "uncovered": "Questa versione è uscita dopo la fine dei tuoi aggiornamenti. Torna a una versione coperta dalla licenza, oppure rinnova.",
+        "uncovered": "Questa versione è uscita dopo la fine dei tuoi aggiornamenti. Torna a una versione coperta dalla licenza, oppure rinnova. Per tornare indietro: nel Marketplace, Nucleum Hub Dashboard › ⋮ › «Install another version», scegli la versione (in HACS, ⋮ › «Redownload»), poi riavvia Home Assistant.",
         "broken_environment": "La licenza non può essere verificata su questo Home Assistant (il registro dice perché), quindi la plancia resta completamente utilizzabile.",
         "no_token": "Ancora nessuna licenza. Incolla la chiave dell’e-mail di acquisto.",
         "trial_available": "Ancora nessuna licenza. Avvia la prova gratuita di 3 giorni dalla plancia di Nucleum Hub o incolla la chiave dell’e-mail di acquisto.",

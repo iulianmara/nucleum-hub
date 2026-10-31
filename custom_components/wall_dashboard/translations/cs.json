@@ -111,7 +111,7 @@
         "provisional": "Vaše licence potřebuje jedno ověření u licenčního serveru. Připojte Home Assistant k internetu do {until}.",
         "renewal_due": "Vaši licenci je třeba obnovit do {until}.",
         "kept_lts": "Váš rok aktualizací skončil: tuto verzi si ponecháváte, s bezpečnostními opravami její řady LTS.",
-        "uncovered": "Tato verze vyšla až po konci vašich aktualizací. Vraťte se k verzi, kterou licence pokrývá, nebo licenci obnovte.",
+        "uncovered": "Tato verze vyšla až po konci vašich aktualizací. Vraťte se k verzi, kterou licence pokrývá, nebo licenci obnovte. Návrat: v Marketplace Nucleum Hub Dashboard › ⋮ › „Install another version“, vyberte verzi (v HACS ⋮ › „Redownload“), pak restartujte Home Assistant.",
         "broken_environment": "Licenci nelze na tomto Home Assistantu ověřit (důvod je v protokolu), takže panel zůstává plně použitelný.",
         "no_token": "Zatím žádná licence. Vložte klíč z e-mailu o nákupu.",
         "trial_available": "Zatím žádná licence. Spusťte bezplatnou 3denní zkušební dobu v panelu Nucleum Hub, nebo vložte klíč z e-mailu o nákupu.",
