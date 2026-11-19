@@ -360,6 +360,17 @@ _WIDE_GREY_MODES = frozenset(("I", "I;16", "I;16B", "I;16L", "I;16N"))
 
 _heif_lock = threading.Lock()
 _heif_ready: bool | None = None
+# Not a requirement of the manifest (D-178, P3-7): Home Assistant does not load an integration whose requirement it
+# cannot install, and this one serves only HEIC pictures. __init__.py installs it in the background after the setup.
+HEIF_REQUIREMENT = "pillow-heif==1.8.0"
+
+
+def forget_heif() -> None:
+    """Look for pillow_heif again on the next HEIC (after it was installed while Home Assistant runs)."""
+    global _heif_ready  # noqa: PLW0603
+    with _heif_lock:
+        if _heif_ready is False:
+            _heif_ready = None
 
 
 def _register_heif() -> bool:
@@ -404,8 +415,10 @@ def to_jpeg(
     quality: int = JPEG_QUALITY,
     background: tuple[int, int, int] = BACKGROUND,
     max_pixels: int = MAX_PIXELS,
+    limit: int = MAX_SIZE,
 ) -> bytes:
-    """A JPEG of ``data`` that fits in ``size`` x ``size``, ratio kept, never enlarged.
+    """A JPEG of ``data`` that fits in ``size`` x ``size``, ratio kept, never enlarged. ``size`` is at most ``limit``
+    (MAX_SIZE for a cover; the idle screen's photos ask for more, photos.py).
 
     Baseline (not progressive), EXIF orientation applied and EXIF dropped, transparency flattened on
     ``background``, an RGB colour profile kept. Raises NotAnImage (unknown magic bytes) or
@@ -420,7 +433,7 @@ def to_jpeg(
         raise NotDecodable("Pillow is not available") from err
     if kind in ("heic", "heif") and not _register_heif():
         raise NotDecodable("no HEIF decoder (pillow-heif) here")
-    size = max(1, min(int(size), MAX_SIZE))
+    size = max(1, min(int(size), int(limit)))
     try:
         with Image.open(io.BytesIO(bytes(data)), formats=_PIL_FORMATS[kind]) as src:
             if src.format in ("JPEG", "MPO"):

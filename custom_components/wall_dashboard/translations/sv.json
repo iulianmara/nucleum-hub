@@ -137,5 +137,15 @@
         "payment": "Ditt konto: {link}"
       }
     }
+  },
+  "issues": {
+    "licence_not_covered": {
+      "title": "Version {version} ingår inte i din licens",
+      "description": "Din licens omfattar versionerna som släppts fram till {until}, och {version} kom efter det.\n\n**Installera den inte från Uppdateringar:** Nucleum Hub skulle stanna på en skärm som ber dig gå tillbaka till {installed} eller förlänga uppdateringarna.\n\nStanna på {installed}, som förblir din, eller se alternativen på {link}. Den här reparationen försvinner av sig själv när din licens omfattar {version}."
+    },
+    "licence_not_covered_nodate": {
+      "title": "Version {version} ingår inte i din licens",
+      "description": "Din licens omfattar inte {version}.\n\n**Installera den inte från Uppdateringar:** Nucleum Hub skulle stanna på en skärm som ber dig gå tillbaka till {installed} eller förlänga uppdateringarna.\n\nStanna på {installed}, som förblir din, eller se alternativen på {link}. Den här reparationen försvinner av sig själv när din licens omfattar {version}."
+    }
   }
 }

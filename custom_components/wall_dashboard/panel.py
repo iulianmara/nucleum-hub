@@ -4,9 +4,10 @@
   ``nucleum-hub-panel``, comes from ``frontend/panel.js``, the loader: it asks ``/api/wall_dashboard/app``
   with the user's token and shows the dashboard in a full-size frame of the same origin, so the
   dashboard finds Home Assistant around it exactly as it does today from ``/local``.
-- Two public static paths (nothing secret in them): ``/nucleum_hub/panel.js`` (cached; the panel asks
+- Three public static paths (nothing secret in them): ``/nucleum_hub/panel.js`` (cached; the panel asks
   it as ``?v=<version>``, so a new version is a new address) and ``/nucleum_hub/wall-dashboard-weather/``
-  (the weather card's landscape pictures, cached).
+  (the weather card's landscape pictures, cached), and ``/nucleum_hub/vendor/`` (hls.js, committed with its licence:
+  the cameras' HLS live image, loaded by the dashboard only when a camera opens; D-106).
 - Two authenticated views: ``/api/wall_dashboard/app``, the dashboard's file exactly as it was built
   (nothing injected, ``no-store``, its sha256 in ``X-Nucleum-Hub-Sha256``), and
   ``/api/wall_dashboard/info``, the integration's version, the build of the dashboard it carries
@@ -41,6 +42,7 @@ from .const import (
     FRONTEND_DIR_NAME,
     FRONTEND_HTML,
     FRONTEND_PANEL_JS,
+    FRONTEND_VENDOR,
     FRONTEND_WEATHER,
     HEADER_SHA256,
     PANEL_COMPONENT,
@@ -50,6 +52,7 @@ from .const import (
     URL_APP,
     URL_INFO,
     URL_PANEL_JS,
+    URL_VENDOR,
     URL_WEATHER,
 )
 from .models import async_loaded_data
@@ -234,11 +237,12 @@ def async_register_views(hass: HomeAssistant) -> None:
 
 
 async def async_register_static_paths(hass: HomeAssistant, folder: Path = FRONTEND) -> None:
-    """The loader and the weather pictures, public and cached, once per Home Assistant run."""
+    """The loader, the weather pictures and the vendored scripts (hls.js), public and cached, once per Home Assistant run."""
     await hass.http.async_register_static_paths(
         [
             StaticPathConfig(URL_PANEL_JS, str(folder / FRONTEND_PANEL_JS), cache_headers=True),
             StaticPathConfig(URL_WEATHER, str(folder / FRONTEND_WEATHER), cache_headers=True),
+            StaticPathConfig(URL_VENDOR, str(folder / FRONTEND_VENDOR), cache_headers=True),
         ]
     )
 

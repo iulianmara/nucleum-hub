@@ -50,6 +50,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DATA_UPDATE_REFRESH,
+    DOMAIN,
     EDITION_SALE,
     UPDATE_PROVIDERS,
     UPDATE_REFRESH_EARLY_AFTER,
@@ -87,6 +88,12 @@ _DAY_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 # The request's own forms (contract v2): an LTS line "<1-3 digits>.<1-3 digits>"; a candidate's version this long at most
 _LINE_RE = re.compile(r"[0-9]{1,3}\.[0-9]{1,3}")
 MAX_REQUEST_VERSION = 64
+
+# D-105 (variant C): our repair in Settings › Repairs, beside the update Home Assistant offers there, while the version
+# offered is one the licence does not cover; two forms, with and without the day the covered versions end
+REPAIR_UNCOVERED = "licence_not_covered"
+REPAIR_UNCOVERED_NODATE = "licence_not_covered_nodate"
+SITE_FALLBACK = "nucleumhub.com"
 
 
 # --- pure ---------------------------------------------------------------------------------------------------------
@@ -363,6 +370,54 @@ def _refresh(hass: HomeAssistant, provider: str | None, state: Any, in_progress:
     if timing == "early":
         kept["early"] += 1
     return True, True
+
+
+def repair_of(status: Mapping[str, Any]) -> tuple[str, dict[str, str]] | None | bool:
+    """What the repair of an uncovered version should be, from a status answer: (translation key, placeholders) to
+    raise; None to remove it (the owner's edition, nothing offered, or the licence covers the version); False to leave
+    it as it is (the licence's word unknown: a status asked without the release notes' block, or a licence that
+    cannot judge)."""
+    if status.get("edition") != "sale" or not status.get("available") or not status.get("latest") \
+            or status.get("covered") is True:
+        return None
+    if status.get("covered") is not False:
+        return False
+    until = status.get("covered_until")
+    placeholders = {"version": str(status["latest"]), "installed": str(status.get("installed") or "")}
+    if isinstance(until, str) and is_day(until):
+        placeholders["until"] = until
+        return REPAIR_UNCOVERED, placeholders
+    return REPAIR_UNCOVERED_NODATE, placeholders
+
+
+@callback
+def async_sync_repair(hass: HomeAssistant, status: Mapping[str, Any], licence: Any = None) -> None:
+    """Raise, update or remove our repair for an uncovered version (repair_of), after each status answer. Not
+    persistent: after a restart the dashboard's next look raises it again, once it has read the release notes."""
+    want = repair_of(status)
+    if want is False:
+        return
+    if want is None:
+        for issue_id in (REPAIR_UNCOVERED, REPAIR_UNCOVERED_NODATE):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+    key, placeholders = want
+    placeholders["link"] = _pricing_link(hass, licence)
+    ir.async_delete_issue(hass, DOMAIN, REPAIR_UNCOVERED_NODATE if key == REPAIR_UNCOVERED else REPAIR_UNCOVERED)
+    ir.async_create_issue(hass, DOMAIN, key, is_fixable=False, is_persistent=False, severity=ir.IssueSeverity.WARNING,
+                          translation_key=key, translation_placeholders=placeholders)
+
+
+def _pricing_link(hass: HomeAssistant, licence: Any) -> str:
+    """The site's options page in Home Assistant's language, from the sale edition's licence (only it raises the
+    repair; never imported here: the owner's package has no licence/)."""
+    try:
+        language = getattr(hass.config, "language", None)
+        if isinstance(language, str) and language != "pt-BR":
+            language = language.split("-")[0]
+        return licence.pricing_link(language) or SITE_FALLBACK
+    except Exception:  # noqa: BLE001 (the words still read without the page)
+        return SITE_FALLBACK
 
 
 def _coverage(data: WallDashboardData, edition: str,

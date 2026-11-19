@@ -31,7 +31,7 @@
    The file is asked for once per page load (CACHE): a panel shown again, re-attached or reloaded by the dashboard
    (WD_HOST.reload(): the demo, a restore) uses it without asking again. The iframe element carries
    wdHost, which the dashboard reads as WD_HOST (src/modules/boot.js; its side of D-054: src/modules/hostui.js):
-     {kind: 'panel', version, files: '/nucleum_hub/', reload(),
+     {kind: 'panel', version, files: '/nucleum_hub/', hass() (Home Assistant's hass, as given to the panel), reload(),
       menu(), toggleMenu(),              Home Assistant's menu, on every screen (D-054, D-088: the whole screen)
       update(), applyUpdate(),           a new version installed, and the reload it needs (D-054, "a new version" below)
       on('menu' | 'update', fn) -> off}  told when either changes, until the frame is replaced
@@ -212,6 +212,22 @@ export function sidebarBlocked(doc) {
 /* ------------------------------------------------------------------ Home Assistant */
 /* the dashboard as Home Assistant gave it, once per page load, with the sha256 the integration sent with it;
    p: the request on its way, shared */
+/* the page's safe-area insets (an iPhone's island and corners): an invisible element padded by env(), read back; 0 where the
+   browser has none or the page is not viewport-fit=cover */
+let SA_EL = null;
+function safeArea() {
+  try {
+    if (!SA_EL || !SA_EL.isConnected) {
+      SA_EL = document.createElement('div');
+      SA_EL.setAttribute('aria-hidden', 'true');
+      SA_EL.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;' +
+        'padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';
+      document.body.appendChild(SA_EL);
+    }
+    const c = getComputedStyle(SA_EL), n = x => parseFloat(x) || 0;
+    return { t: n(c.paddingTop), r: n(c.paddingRight), b: n(c.paddingBottom), l: n(c.paddingLeft) };
+  } catch (e) { return { t: 0, r: 0, b: 0, l: 0 }; }
+}
 const CACHE = { html: null, sha: '', p: null };
 export function forget() { CACHE.html = null; CACHE.sha = ''; CACHE.p = null; }
 /* the integration's public folder, as a whole address on Home Assistant's origin */
@@ -523,6 +539,18 @@ export class NucleumHubPanel extends Base {
     /* back on screen after the period: ask once now rather than wait for the timer */
     if (UP.base && UP.last && Date.now() - UP.last > UP.every) checkNow('shown');
   }
+  /* the screen's safe area for the dashboard (11.11.2026, the owner's iPhone: the clock under the island, the title cut in
+     the corner): iOS gives an iframe no inset, so the page's own are measured here, less what lies between the frame and
+     the screen's edge (Home Assistant's bar, when it shows, already keeps the top), and passed as --wd-sat / -sar / -sab /
+     -sal on the dashboard's root (header.css pads the app by them) */
+  _insets() {
+    try {
+      const f = this._frame, d = f && f.contentDocument; if (!d || !d.documentElement) return;
+      const a = safeArea(), r = f.getBoundingClientRect(), W = window.innerWidth, H = window.innerHeight;
+      const v = { t: a.t - r.top, r: a.r - (W - r.right), b: a.b - (H - r.bottom), l: a.l - r.left };
+      Object.keys(v).forEach(k => d.documentElement.style.setProperty('--wd-sa' + k, Math.max(0, Math.round(v[k])) + 'px'));
+    } catch (e) {}
+  }
   disconnectedCallback() {
     clearTimeout(this._timer); UP.els.delete(this);
     kioskRelease(this);
@@ -535,6 +563,7 @@ export class NucleumHubPanel extends Base {
      screen beside the sidebar), measured again when the window or that box changes size (its own height cleared first,
      or the boxes it fills would measure themselves). A container with a height of its own keeps height:100%. */
   _fit() {
+    this._insets();
     if (!this.isConnected || typeof ShadowRoot === 'undefined') return;
     if (this._fitted) { this.style.height = ''; this._fitted = false; }
     if (this.offsetHeight > 0) return;
@@ -582,6 +611,9 @@ export class NucleumHubPanel extends Base {
     const ls = this._ls = { menu: new Set(), update: new Set() };
     f.wdHost = Object.freeze({
       kind: 'panel', version: VERSION, files: FILES,
+      /* Home Assistant's own hass, as it gives it to this panel (D-178, P2-7): the dashboard reads the house, the
+         language and the connection from it, not from Home Assistant's page around */
+      hass: () => this._hass || null,
       reload: () => { setTimeout(() => this._reload(), 0); },
       /* Home Assistant's menu (D-054): whether its own menu button would show here, and a tap on it */
       menu: () => this._menu,
@@ -601,6 +633,7 @@ export class NucleumHubPanel extends Base {
       this.loads++;
       const w = this._box.querySelector('.wait'); if (w) w.remove();
       this._state = 'shown';
+      this._insets();
       this._focus();
       this._updated();
     });

@@ -8,7 +8,7 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://nucleumhub.com/support",
-  "requirements": ["pillow-heif==1.8.0"],
+  "requirements": [],
   "single_config_entry": true,
-  "version": "1.0.3"
+  "version": "1.1"
 }

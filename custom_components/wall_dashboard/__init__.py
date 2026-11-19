@@ -36,6 +36,12 @@ from homeassistant.loader import async_get_integration
 
 from . import convert, dashboard, panel, websocket
 from .artwork import ArtworkService, async_register_views
+from .lists import ListsTracker
+from .notify_lists import ListNotifier
+from .heat_resume import HeatResume
+from .config_store import ConfigStore
+from . import camera_photos, photos
+from .tiles import MapTiles
 from .const import (
     DATA_LICENCE_ENTRY,
     DATA_LICENCE_REGISTERED,
@@ -66,6 +72,24 @@ def _startup_reads(folder: Path) -> tuple[list[str], list[str], dict[str, Any] |
     return convert.supported_formats(), panel.missing_files(folder), _build_info(folder)
 
 
+async def _async_heif(hass: HomeAssistant, entry: WallDashboardConfigEntry) -> None:
+    """pillow-heif installed after the setup, in the background (D-178, P3-7): it is not a requirement of the manifest, so a
+    Home Assistant that cannot install it (a new Python without its wheel) still loads the panel, the licence and the rest;
+    only HEIC covers and photos are then not converted."""
+    try:
+        from homeassistant.requirements import async_process_requirements  # noqa: PLC0415
+
+        await async_process_requirements(hass, DOMAIN, [convert.HEIF_REQUIREMENT])
+        convert.forget_heif()
+        formats = await hass.async_add_executor_job(convert.supported_formats)
+    except Exception:  # noqa: BLE001 (RequirementsNotFound, no network, a wheel that fails to load)
+        formats = []
+    if "heic" in formats:
+        entry.runtime_data.formats = formats
+        return
+    _LOGGER.warning("pillow-heif could not be loaded: HEIC covers cannot be converted on this Home Assistant")
+
+
 def _import_licence() -> types.SimpleNamespace:
     """In the executor: the licence's manager and options flow (the first import reads their files)."""
     return types.SimpleNamespace(manager=importlib.import_module(f"{__name__}.licence.manager"),
@@ -78,10 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallDashboardConfigEntry
     integration = await async_get_integration(hass, DOMAIN)
     version = str(integration.version or "0.0.0")
     formats, missing, build_info = await hass.async_add_executor_job(_startup_reads, panel.FRONTEND)
-    if "heic" not in formats:
-        _LOGGER.warning(
-            "pillow-heif could not be loaded: HEIC covers cannot be converted on this Home Assistant"
-        )
     if missing:
         _LOGGER.warning(
             "The Nucleum Hub package is incomplete (frontend/%s missing): install the package again, "
@@ -97,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallDashboardConfigEntry
         dashboard=panel.DashboardFile(hass, panel.FRONTEND),
         edition=edition if isinstance(edition, str) else None,
     )
+    entry.runtime_data.config = ConfigStore(hass)
 
     # aiohttp's router cannot drop a view or a static path, and a WebSocket command registered twice
     # would only be replaced: all of them are registered once per Home Assistant run and answer
@@ -105,6 +126,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallDashboardConfigEntry
         hass.data[DATA_REGISTERED] = True
         async_register_views(hass)
         panel.async_register_views(hass)
+        camera_photos.async_register_views(hass)
+        photos.async_register_views(hass)
         websocket.async_register_websocket(hass)
         await panel.async_register_static_paths(hass, panel.FRONTEND)
 
@@ -117,11 +140,68 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallDashboardConfigEntry
     # The same dashboard in the lists of Lovelace dashboards, for the kiosk apps (D-087); it leaves with the entry too.
     entry.runtime_data.lovelace = dashboard.async_register(hass, _title(entry), entry.runtime_data.module_url)
     entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
+    if "heic" not in formats:
+        hass.async_create_background_task(_async_heif(hass, entry), "wall_dashboard pillow-heif")
 
     async def _async_close(_event: Event) -> None:
         await artwork.async_close()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close))
+
+    # The Lists' memory (D-104): every to-do list followed on the server, whether or not a screen is on.
+    try:
+        entry.runtime_data.lists = ListsTracker(hass)
+        await entry.runtime_data.lists.async_start()
+    except Exception:  # noqa: BLE001 (the panel works without it; the Lists page then shows no history)
+        _LOGGER.exception("The Lists' memory could not start")
+        entry.runtime_data.lists = None
+
+    # The Lists' notifications on the phones (D-111): each person's own choices, sent by us.
+    try:
+        entry.runtime_data.notify = ListNotifier(hass, entry.runtime_data.lists)
+        await entry.runtime_data.notify.async_start()
+    except Exception:  # noqa: BLE001 (the Lists work without them; nothing is sent)
+        _LOGGER.exception("The Lists' notifications could not start")
+        entry.runtime_data.notify = None
+
+    # The heating stopped from a window's notification (D-146): back on by itself once its windows close.
+    try:
+        entry.runtime_data.heat = HeatResume(hass)
+        await entry.runtime_data.heat.async_start()
+    except Exception:  # noqa: BLE001 (the screens then do it themselves while they are open)
+        _LOGGER.exception("The heating's pauses could not start")
+        entry.runtime_data.heat = None
+
+    # Our pictures of the cameras without recordings (D-106): off until a person turns them on.
+    try:
+        entry.runtime_data.camera_photos = camera_photos.CameraPhotos(hass)
+        await entry.runtime_data.camera_photos.async_start()
+    except Exception:  # noqa: BLE001 (the rest works without them)
+        _LOGGER.exception("The cameras' pictures could not start")
+        entry.runtime_data.camera_photos = None
+
+    # The places' map (D-116): OpenStreetMap's tiles, kept 6 months from their last use.
+    try:
+        entry.runtime_data.tiles = MapTiles(hass, version)
+        await entry.runtime_data.tiles.async_start()
+    except Exception:  # noqa: BLE001 (the places work without it: "I am here now")
+        _LOGGER.exception("The places' map could not start")
+        entry.runtime_data.tiles = None
+
+    # The idle screen's pictures (D-126): the free pictures (asked of our Worker only once a screen wants them) and the
+    # house's albums.
+    try:
+        entry.runtime_data.pictures = photos.PictureFeed(hass, version)
+        await entry.runtime_data.pictures.async_start()
+    except Exception:  # noqa: BLE001 (the albums and the rest work without them)
+        _LOGGER.exception("The idle screen's free pictures could not start")
+        entry.runtime_data.pictures = None
+    try:
+        entry.runtime_data.albums = photos.HouseAlbums(hass)
+        await entry.runtime_data.albums.async_start()
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception("The house's albums could not start")
+        entry.runtime_data.albums = None
 
     # The licence, last and apart: the panel is already there whatever happens below.
     if entry.runtime_data.edition == EDITION_SALE:
@@ -173,6 +253,44 @@ async def async_unload_entry(hass: HomeAssistant, entry: WallDashboardConfigEntr
     The views, the static paths and the command stay registered (Home Assistant cannot remove them)
     and answer as if the integration were absent. The licence stops its timer; its stores stay."""
     data = entry.runtime_data
+    if data.notify is not None:
+        try:
+            await data.notify.async_stop()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("The Lists' notifications did not stop cleanly")
+        data.notify = None
+    if data.lists is not None:
+        try:
+            await data.lists.async_stop()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("The Lists' memory did not stop cleanly")
+        data.lists = None
+    if getattr(data, "heat", None) is not None:
+        try:
+            await data.heat.async_stop()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("The heating's pauses did not stop cleanly")
+        data.heat = None
+    if data.camera_photos is not None:
+        try:
+            await data.camera_photos.async_stop()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("The cameras' pictures did not stop cleanly")
+        data.camera_photos = None
+    if data.tiles is not None:
+        try:
+            await data.tiles.async_stop()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("The places' map did not stop cleanly")
+        data.tiles = None
+    for part in ("pictures", "albums"):
+        keeper = getattr(data, part)
+        if keeper is not None:
+            try:
+                await keeper.async_stop()
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("The idle screen's %s did not stop cleanly", part)
+            setattr(data, part, None)
     if data.licence is not None:
         try:
             await data.licence.async_stop()

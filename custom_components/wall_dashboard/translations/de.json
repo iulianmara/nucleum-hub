@@ -137,5 +137,15 @@
         "payment": "Dein Konto: {link}"
       }
     }
+  },
+  "issues": {
+    "licence_not_covered": {
+      "title": "Version {version} ist nicht in deiner Lizenz enthalten",
+      "description": "Deine Lizenz umfasst die Versionen, die bis zum {until} erschienen sind, und {version} kam danach.\n\n**Installiere sie nicht über Updates:** Nucleum Hub bliebe bei einem Bildschirm stehen, der dich bittet, zu {installed} zurückzukehren oder deine Updates zu verlängern.\n\nBleib bei {installed}, die dir bleibt, oder sieh dir die Optionen auf {link} an. Diese Reparatur verschwindet von selbst, sobald deine Lizenz {version} umfasst."
+    },
+    "licence_not_covered_nodate": {
+      "title": "Version {version} ist nicht in deiner Lizenz enthalten",
+      "description": "Deine Lizenz umfasst {version} nicht.\n\n**Installiere sie nicht über Updates:** Nucleum Hub bliebe bei einem Bildschirm stehen, der dich bittet, zu {installed} zurückzukehren oder deine Updates zu verlängern.\n\nBleib bei {installed}, die dir bleibt, oder sieh dir die Optionen auf {link} an. Diese Reparatur verschwindet von selbst, sobald deine Lizenz {version} umfasst."
+    }
   }
 }

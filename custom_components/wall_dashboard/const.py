@@ -61,12 +61,16 @@ FRONTEND_PANEL_JS: Final = "panel.js"
 FRONTEND_HTML: Final = "wall-dashboard.html"
 FRONTEND_BUILD_INFO: Final = "build-info.json"
 FRONTEND_WEATHER: Final = "wall-dashboard-weather"
+# hls.js 1.7.3 (Apache-2.0, its licence beside it), committed: the cameras' live image where Home Assistant gives HLS and the
+# browser has no HLS of its own (Chrome, Android WebView, Fully Kiosk; D-106). The dashboard loads it only when a camera opens.
+FRONTEND_VENDOR: Final = "vendor"
 
 # Public static paths: they hold nothing secret (the loader, landscape pictures). The dashboard's
 # relative "wall-dashboard-weather/" resolves here through the <base href> the loader sets.
 STATIC_PREFIX: Final = "/nucleum_hub"
 URL_PANEL_JS: Final = f"{STATIC_PREFIX}/{FRONTEND_PANEL_JS}"
 URL_WEATHER: Final = f"{STATIC_PREFIX}/{FRONTEND_WEATHER}"
+URL_VENDOR: Final = f"{STATIC_PREFIX}/{FRONTEND_VENDOR}"
 
 # The dashboard itself and what is installed: only to a signed-in user (the loader sends its token).
 URL_APP: Final = f"/api/{DOMAIN}/app"
@@ -122,6 +126,33 @@ UPDATE_PROVIDERS: Final = ("marketplace", "hacs")
 # {"type": "wall_dashboard/update/status", "candidate"?: null | {"version", "released", "lts"}, "claim_refresh"?: bool}
 # (websocket.py, updates.py).
 WS_UPDATE_STATUS: Final = f"{DOMAIN}/update/status"
+# The Lists (D-104, lists.py): the history, the removed items and the suggestions; a removed item brought back
+WS_LISTS_INFO: Final = f"{DOMAIN}/lists/info"
+WS_LISTS_RESTORE: Final = f"{DOMAIN}/lists/restore"
+WS_LISTS_PIN: Final = f"{DOMAIN}/lists/pin"
+WS_LISTS_SNOOZE: Final = f"{DOMAIN}/lists/snooze"
+# the heating stopped from a window's notification (D-146, heat_resume.py): handed over, and forgotten when turned on
+WS_HEAT_PAUSE: Final = f"{DOMAIN}/heat/pause"
+WS_HEAT_RESUME: Final = f"{DOMAIN}/heat/resume"
+# the Lists' notifications (D-111, notify_lists.py): a person's choices (another member's for an admin), a test, a
+# moment told by a screen (going shopping, done, a ping)
+WS_NOTIFY_PREFS: Final = f"{DOMAIN}/notify/prefs"
+WS_NOTIFY_TEST: Final = f"{DOMAIN}/notify/test"
+WS_NOTIFY_SEND: Final = f"{DOMAIN}/notify/send"
+WS_PLACES = "wall_dashboard/places"
+# Music Assistant through Home Assistant's own Music Assistant integration (D-178, P2-6; ma_bridge.py)
+WS_MA: Final = f"{DOMAIN}/ma"
+# the configuration of every screen (D-178, P3-6; config_store.py)
+WS_CONFIG_READ: Final = f"{DOMAIN}/config/read"
+WS_CONFIG_WRITE: Final = f"{DOMAIN}/config/write"
+WS_MA_INFO: Final = f"{DOMAIN}/ma/info"
+WS_MA_SUBSCRIBE: Final = f"{DOMAIN}/ma/subscribe"
+# the places' map (D-116, tiles.py): an OpenStreetMap tile, fetched and kept by the integration
+WS_MAP_TILE: Final = f"{DOMAIN}/map/tile"
+# our pictures of the cameras without recordings (D-106, camera_photos.py)
+WS_CAMERA_PHOTOS: Final = f"{DOMAIN}/camera/photos"
+WS_CAMERA_PHOTOS_SETTINGS: Final = f"{DOMAIN}/camera/photos/settings"
+URL_CAMERA_PHOTO: Final = "/api/wall_dashboard/camera_photo/{photo_id}"
 # The provider's refresh of our repository, claimed through the status (claim_refresh, refresh_claimed): once a day per
 # Home Assistant run, whichever browser or device asks first; sooner, an hour after the last claim and at most
 # UPDATE_REFRESH_EARLY_MAX times a run, while the update entity is unavailable (the Marketplace marks a repository it
@@ -131,6 +162,21 @@ DATA_UPDATE_REFRESH: Final = f"{DOMAIN}_update_refresh"
 UPDATE_REFRESH_EVERY: Final = 24 * 60 * 60.0
 UPDATE_REFRESH_EARLY_AFTER: Final = 60 * 60.0
 UPDATE_REFRESH_EARLY_MAX: Final = 6
+
+# the idle screen's pictures (D-126, photos.py): the free pictures of the chosen themes; the house's albums, a photo sent in
+# pieces, the QR code's link
+WS_PHOTOS_FEED: Final = f"{DOMAIN}/photos/feed"
+# what the kept free pictures take, and their removal (D-150): a Home Assistant admin only
+WS_PHOTOS_STORAGE: Final = f"{DOMAIN}/photos/storage"
+WS_PHOTOS_CLEAR: Final = f"{DOMAIN}/photos/clear"
+WS_PHOTOS_REFRESH: Final = f"{DOMAIN}/photos/refresh"
+WS_PHOTOS_PREFETCH: Final = f"{DOMAIN}/photos/prefetch"
+WS_ALBUM_LIST: Final = f"{DOMAIN}/album/list"
+WS_ALBUM_PHOTOS: Final = f"{DOMAIN}/album/photos"
+WS_ALBUM_CREATE: Final = f"{DOMAIN}/album/create"
+WS_ALBUM_REMOVE: Final = f"{DOMAIN}/album/remove"
+WS_ALBUM_UPLOAD: Final = f"{DOMAIN}/album/upload"
+WS_ALBUM_LINK: Final = f"{DOMAIN}/album/link"
 
 # --- Later features, not built yet (plan §4.2, §6.3, Anexa G) --------------------------------
 # WS_FEEDBACK_INFO = f"{DOMAIN}/feedback/info"      # docs/FEEDBACK-INTEGRARE.md

@@ -137,5 +137,15 @@
         "payment": "Váš účet: {link}"
       }
     }
+  },
+  "issues": {
+    "licence_not_covered": {
+      "title": "Verze {version} není zahrnuta ve vaší licenci",
+      "description": "Vaše licence zahrnuje verze vydané do {until} a verze {version} vyšla později.\n\n**Neinstalujte ji z Aktualizací:** Nucleum Hub by se zastavil na obrazovce, která vás požádá o návrat k verzi {installed} nebo o prodloužení aktualizací.\n\nZůstaňte u verze {installed}, která vám zůstává, nebo si prohlédněte možnosti na {link}. Tato oprava zmizí sama, jakmile licence bude zahrnovat verzi {version}."
+    },
+    "licence_not_covered_nodate": {
+      "title": "Verze {version} není zahrnuta ve vaší licenci",
+      "description": "Vaše licence nezahrnuje verzi {version}.\n\n**Neinstalujte ji z Aktualizací:** Nucleum Hub by se zastavil na obrazovce, která vás požádá o návrat k verzi {installed} nebo o prodloužení aktualizací.\n\nZůstaňte u verze {installed}, která vám zůstává, nebo si prohlédněte možnosti na {link}. Tato oprava zmizí sama, jakmile licence bude zahrnovat verzi {version}."
+    }
   }
 }

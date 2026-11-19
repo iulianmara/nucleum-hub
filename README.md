@@ -50,7 +50,8 @@ default list: you add this repository from a link, once. Needs Home Assistant 20
 4. **Settings › Devices & services › Add integration › Nucleum Hub › Submit**.
 5. **Nucleum Hub** appears in the sidebar.
 
-The first time, Home Assistant installs the `pillow-heif` library from PyPI by itself (once, it takes a moment).
+Right after it starts, the integration asks Home Assistant to install the `pillow-heif` library from PyPI (once, in the background),
+for HEIC covers and photos. If it cannot be installed, only HEIC pictures are not converted; everything else works.
 
 ## What it does
 
@@ -65,6 +66,11 @@ The first time, Home Assistant installs the `pillow-heif` library from PyPI by i
 - **Music artwork converted at home.** A cover that a tablet's browser cannot show (an Apple TV's HEIC covers on
   Android, for example) is converted to JPEG inside Home Assistant, so the dashboard does not need to fetch it from the
   internet.
+- **The configuration of every screen, kept in Home Assistant.** Layouts, the top bar, the dashboards and the photos are
+  kept by the integration in Home Assistant's storage (and so in its backups), for every user: a wall tablet signed in as
+  an ordinary user saves too.
+- **Music Assistant wherever it runs.** "Up next", the history, "Picked for you" and a playlist's tracks go through Home
+  Assistant's own Music Assistant integration: an add-on, its own Docker container or another machine, all the same.
 
 ## Your licence
 

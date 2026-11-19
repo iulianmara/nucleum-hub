@@ -37,6 +37,12 @@ exception, MIT and BSD). [AV] To confirm with the lawyer before the first sale: 
 as a requirement, which the customer's Home Assistant downloads from PyPI, puts no obligation on us
 beyond this notice, given that its wheels carry x265 under GPL-2.0.
 
+Shipped with the integration (its `frontend/vendor/` folder, served at `/nucleum_hub/vendor/`):
+
+| Component | Used as | Licence | Source |
+|---|---|---|---|
+| hls.js 1.7.3 (11.09.2026), `dist/hls.light.min.js` unchanged | the cameras' live image over HLS in browsers without HLS of their own (D-106), loaded by the dashboard only when a camera opens | Apache-2.0, its text beside it in `frontend/vendor/LICENSE-hls.js.txt` | https://github.com/video-dev/hls.js , npm `hls.js@1.7.3` (tarball sha256 a7290f1645f7c605baec75638acda6c6f7b08dde8a615c841a19d0e38df88729) |
+
 ## To verify before the first sale
 - Origin and rights of the default images embedded in the source (car, robot vacuum, lawn mower,
   air purifier and media artwork, `WD_IMG`). Manufacturer product photos cannot be shipped in a

@@ -362,6 +362,11 @@ class LicenceManager:
             "link_kind": kind_page[0] if kind_page else None,
         }
 
+    def pricing_link(self, language: Any = None) -> str | None:
+        """The site's options page in that language (D-105: the repair of an uncovered version names it), or None
+        while the site's address is a placeholder."""
+        return site_link("pricing", language)
+
     def coverage(self, candidate: Any) -> dict[str, Any]:
         """Whether the licence held here covers another build of the dashboard, the one a new version would install
         (D-103, docs/ACTUALIZARE-INTEGRARE.md): the state rule (state.py) run with that build's stamps in place of this

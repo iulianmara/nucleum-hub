@@ -137,5 +137,15 @@
         "payment": "Je account: {link}"
       }
     }
+  },
+  "issues": {
+    "licence_not_covered": {
+      "title": "Versie {version} zit niet in je licentie",
+      "description": "Je licentie omvat de versies die tot {until} zijn verschenen, en {version} kwam daarna.\n\n**Installeer haar niet via Updates:** Nucleum Hub zou stoppen bij een scherm dat je vraagt terug te gaan naar {installed} of je updates te verlengen.\n\nBlijf op {installed}, die van jou blijft, of bekijk de opties op {link}. Deze reparatie verdwijnt vanzelf zodra je licentie {version} omvat."
+    },
+    "licence_not_covered_nodate": {
+      "title": "Versie {version} zit niet in je licentie",
+      "description": "Je licentie omvat {version} niet.\n\n**Installeer haar niet via Updates:** Nucleum Hub zou stoppen bij een scherm dat je vraagt terug te gaan naar {installed} of je updates te verlengen.\n\nBlijf op {installed}, die van jou blijft, of bekijk de opties op {link}. Deze reparatie verdwijnt vanzelf zodra je licentie {version} omvat."
+    }
   }
 }

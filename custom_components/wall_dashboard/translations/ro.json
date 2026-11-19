@@ -137,5 +137,15 @@
         "payment": "Contul tău: {link}"
       }
     }
+  },
+  "issues": {
+    "licence_not_covered": {
+      "title": "Versiunea {version} nu e inclusă în licența ta",
+      "description": "Licența ta include versiunile apărute până la {until}, iar {version} a apărut după.\n\n**N-o instala din Actualizări:** Nucleum Hub s-ar opri la un ecran care îți cere să revii la {installed} sau să prelungești actualizările.\n\nRămâi pe {installed}, care îți rămâne, sau vezi opțiunile pe {link}. Reparația dispare singură când licența include {version}."
+    },
+    "licence_not_covered_nodate": {
+      "title": "Versiunea {version} nu e inclusă în licența ta",
+      "description": "Licența ta nu include {version}.\n\n**N-o instala din Actualizări:** Nucleum Hub s-ar opri la un ecran care îți cere să revii la {installed} sau să prelungești actualizările.\n\nRămâi pe {installed}, care îți rămâne, sau vezi opțiunile pe {link}. Reparația dispare singură când licența include {version}."
+    }
   }
 }
